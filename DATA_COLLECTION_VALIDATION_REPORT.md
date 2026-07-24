@@ -1,7 +1,9 @@
 # 데이터 수집 검증 보고서
 
-> 기준일: 2026-07-24  
-> 상태: 초기 범위 품질 게이트 통과 · 수집기 구현 전  
+> 기준일: 2026-07-24
+>
+> 상태: 초기 범위 품질 게이트 통과 · 수집기 구현 전
+>
 > 대상: Visa, Mastercard, American Express, UnionPay, JCB, EMVCo, PCI Security Standards Council
 
 ## 1. 문서 목적
