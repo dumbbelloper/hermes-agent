@@ -93,4 +93,3 @@ class VisaPressAdapter:
         if not parser.items:
             raise AdapterError("Visa listing contained no press release items")
         return parser.items
-

@@ -90,4 +90,3 @@ class Record:
         data = dict(value)
         data.setdefault("metadata", {})
         return cls(**data)
-

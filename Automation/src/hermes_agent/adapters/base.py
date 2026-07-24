@@ -50,4 +50,3 @@ def built_in_adapters() -> AdapterRegistry:
     registry.register("rss_atom", RssAtomAdapter)
     registry.register("visa_press_html", VisaPressAdapter)
     return registry
-

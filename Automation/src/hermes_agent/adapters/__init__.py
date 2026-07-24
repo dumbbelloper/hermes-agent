@@ -5,4 +5,3 @@ from .rss import RssAtomAdapter
 from .visa import VisaPressAdapter
 
 __all__ = ["JcbJsonAdapter", "RssAtomAdapter", "VisaPressAdapter"]
-

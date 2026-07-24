@@ -35,4 +35,3 @@ class CompositeHook:
     def handle(self, event: Event) -> None:
         for hook in self._hooks:
             hook.handle(event)
-

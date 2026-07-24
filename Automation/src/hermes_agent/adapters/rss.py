@@ -110,4 +110,3 @@ class RssAtomAdapter:
             if local_name(child.tag) == "category":
                 return child.attrib.get("term") or child.text
         return None
-

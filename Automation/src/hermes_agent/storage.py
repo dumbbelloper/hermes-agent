@@ -295,4 +295,3 @@ class FileStore:
             key=lambda item: (item.published_at, item.id),
             reverse=True,
         )
-
