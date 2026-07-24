@@ -331,7 +331,7 @@ git diff --check
 - 공식 공개 URI 4곳을 읽기 전용으로 조회했다.
 - 실제 수집 결과는 `/private/tmp` 아래에 저장했으며 저장소에는 포함하지 않았다.
 - 외부 package index에서는 임시 가상환경에 빌드 도구만 내려받았고 프로젝트 package를 게시하지 않았다.
-- Git push, PR 생성 또는 배포는 아직 수행하지 않았다.
+- package 게시나 배포는 수행하지 않았다.
 
 ### Git 작업
 
@@ -343,6 +343,9 @@ git diff --check
   - `f2e3da1` — README에 라이선스와 최소 수집기 연결
   - `d26c0dd` — 프로젝트 계획에 최소 수집기 현황 반영
 - `WORK_LOG.md`는 본 기록을 별도 커밋으로 관리한다.
+- 작업 브랜치를 `origin/feat/minimum-collector`로 push했다.
+- 생성한 Pull Request:
+  - [#3 최소 공식 데이터 수집기 구현](https://github.com/dumbbelloper/hermes-agent/pull/3)
 
 ### 알려진 한계와 남은 작업
 
