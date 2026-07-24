@@ -11,3 +11,7 @@ Visa, Mastercard, American Express, UnionPay, JCB 등의 공식 웹사이트, �
 구체적인 수집·선별·문서화 설계는 [PROJECT_PLAN.md](./PROJECT_PLAN.md)에서 관리합니다.
 
 전체 추적 대상과 초기 수집 범위는 [SOURCE_SCOPE_CHECKLIST.md](./SOURCE_SCOPE_CHECKLIST.md)에서 체크리스트로 관리합니다.
+
+AI agent를 회사와 팀 업무에 안전하게 적용하기 위한 조직 수준의 통제 기준은 [ENTERPRISE_AI_GUARDRAILS.md](./ENTERPRISE_AI_GUARDRAILS.md)에서 관리합니다.
+
+프로젝트에서 수행한 작업과 검증 결과는 [WORK_LOG.md](./WORK_LOG.md)에서 확인할 수 있습니다.
