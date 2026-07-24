@@ -1,0 +1,45 @@
+# macOS
+.DS_Store
+.AppleDouble
+
+# Obsidian 개인 작업공간 및 캐시
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+.obsidian/cache/
+.trash/
+
+# 에디터 및 임시 파일
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# 환경 변수 및 비밀정보
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# 자동화 실행 중 생성되는 로컬 데이터
+Automation/logs/
+Automation/state/
+Automation/cache/
+Automation/tmp/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Node.js
+node_modules/
+.npm/
+.pnpm-store/
+coverage/
+dist/

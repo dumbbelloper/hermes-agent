@@ -1,0 +1,13 @@
+# Hermes Agent
+
+글로벌 결제 네트워크 생태계의 변화와 기술 트렌드를 꾸준히 수집하고 학습하기 위한 Obsidian 기반 지식 저장소입니다.
+
+Visa, Mastercard, American Express, UnionPay, JCB 등의 공식 웹사이트, 블로그, YouTube, GitHub와 신뢰할 수 있는 뉴스 출처를 추적합니다. 수집한 자료는 원문 링크, 핵심 요약, 학습할 기술 키워드와 함께 문서로 정리합니다.
+
+추적 범위는 글로벌 결제 네트워크를 시작점으로 하며, 향후 Ethereum, Solana 등의 블록체인 생태계, 스테이블코인, Samsung Pay, Apple Pay와 같은 디지털 월렛, HCE를 비롯한 결제 기술로 확장할 수 있습니다. 또한 국내 카드사와 관련 사업자의 서비스, 기술, 정책 및 시장 트렌드도 수집 대상에 포함할 수 있습니다.
+
+향후 데이터 수집과 문서 작성을 자동화하는 agent 및 skill 단위로 기능을 확장할 예정입니다.
+
+구체적인 수집·선별·문서화 설계는 [PROJECT_PLAN.md](./PROJECT_PLAN.md)에서 관리합니다.
+
+전체 추적 대상과 초기 수집 범위는 [SOURCE_SCOPE_CHECKLIST.md](./SOURCE_SCOPE_CHECKLIST.md)에서 체크리스트로 관리합니다.
