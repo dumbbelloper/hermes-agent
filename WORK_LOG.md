@@ -148,5 +148,13 @@ docs/enterprise-ai-guardrails
 - `285ffb0` — 엔터프라이즈 AI 가드레일 문서 추가 (`ENTERPRISE_AI_GUARDRAILS.md`)
 - `9c8d934` — 프로젝트 설계에 가드레일 기준 연결 (`PROJECT_PLAN.md`)
 - `9d44f11` — 프로젝트 주요 문서 링크 추가 (`README.md`)
+- `ae405bf` — 초기 작업 내역과 검증 결과 기록 (`WORK_LOG.md`)
+- `f70158d` — 가드레일 문서 서식 정리 (`ENTERPRISE_AI_GUARDRAILS.md`)
 
 각 커밋은 하나의 파일만 변경하도록 분리했다. `WORK_LOG.md` 역시 별도 커밋으로 관리한다.
+
+생성한 Pull Request:
+
+- [#1 엔터프라이즈 AI 에이전트 가드레일 문서화](https://github.com/dumbbelloper/hermes-agent/pull/1)
+
+작업 브랜치를 `origin/docs/enterprise-ai-guardrails`로 push했고, GitHub CLI 재인증 후 PR을 생성했다.
