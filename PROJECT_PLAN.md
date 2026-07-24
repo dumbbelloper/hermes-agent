@@ -180,6 +180,8 @@ status: "reviewed"
 
 ## 7. Agent와 Skill 경계
 
+Agent와 skill의 권한, 승인, 운영 환경 및 감사 기준은 [ENTERPRISE_AI_GUARDRAILS.md](./ENTERPRISE_AI_GUARDRAILS.md)를 따른다.
+
 ### Agent 후보
 
 - **Collector Agent**: 여러 수집 skill을 실행하고 체크포인트와 실패를 관리한다.
