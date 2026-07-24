@@ -236,5 +236,8 @@ docs/enterprise-ai-guardrails
 - 파일별 한글 커밋:
   - `8461407` — 데이터 수집 검증 보고서 추가 (`DATA_COLLECTION_VALIDATION_REPORT.md`)
   - `ff25a42` — README에 데이터 수집 검증 보고서 연결 (`README.md`)
-- `WORK_LOG.md`는 본 기록만 포함하는 별도 커밋으로 관리한다.
-- 원격 push와 Pull Request 생성 결과는 완료 후 후속 기록한다.
+  - `9f75f8d` — 데이터 수집 검증 작업 기록 추가 (`WORK_LOG.md`)
+  - `0c9e0ed` — 데이터 수집 검증 보고서 서식 보정 (`DATA_COLLECTION_VALIDATION_REPORT.md`)
+- 작업 브랜치를 `origin/docs/data-collection-validation`로 push했다.
+- 생성한 Pull Request:
+  - [#2 공식 데이터 수집 검증 결과 문서화](https://github.com/dumbbelloper/hermes-agent/pull/2)
