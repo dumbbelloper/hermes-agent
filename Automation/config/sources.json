@@ -1,0 +1,75 @@
+{
+  "schema_version": "1.0",
+  "sources": [
+    {
+      "id": "visa-press",
+      "organization": "Visa",
+      "channel": "press",
+      "uri": "https://usa.visa.com/about-visa/newsroom/press-releases-listing.html",
+      "adapter": "visa_press_html",
+      "enabled": true,
+      "priority": 1,
+      "freshness_days": 14,
+      "allowed_domains": [
+        "usa.visa.com"
+      ],
+      "language": "en",
+      "options": {
+        "max_quarantine_ratio": 0.1
+      }
+    },
+    {
+      "id": "jcb-press",
+      "organization": "JCB",
+      "channel": "press",
+      "uri": "https://www.global.jcb/en/press/news_file.json",
+      "adapter": "jcb_json",
+      "enabled": true,
+      "priority": 1,
+      "freshness_days": 21,
+      "allowed_domains": [
+        "www.global.jcb"
+      ],
+      "language": "en",
+      "options": {
+        "article_base_uri": "https://www.global.jcb/en/press/",
+        "max_quarantine_ratio": 0.1
+      }
+    },
+    {
+      "id": "emvco-news",
+      "organization": "EMVCo",
+      "channel": "news",
+      "uri": "https://www.emvco.com/news/feed/",
+      "adapter": "rss_atom",
+      "enabled": true,
+      "priority": 1,
+      "freshness_days": 90,
+      "allowed_domains": [
+        "www.emvco.com"
+      ],
+      "language": "en",
+      "options": {
+        "max_quarantine_ratio": 0.1
+      }
+    },
+    {
+      "id": "pci-blog",
+      "organization": "PCI Security Standards Council",
+      "channel": "blog",
+      "uri": "https://blog.pcisecuritystandards.org/rss.xml",
+      "adapter": "rss_atom",
+      "enabled": true,
+      "priority": 1,
+      "freshness_days": 14,
+      "allowed_domains": [
+        "blog.pcisecuritystandards.org"
+      ],
+      "language": "en",
+      "options": {
+        "max_quarantine_ratio": 0.1
+      }
+    }
+  ]
+}
+
