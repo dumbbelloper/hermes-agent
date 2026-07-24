@@ -1,7 +1,9 @@
 # Enterprise AI Agent Guardrails
 
-> 상태: Draft  
-> 기준일: 2026-07-24  
+> 상태: Draft
+>
+> 기준일: 2026-07-24
+>
 > 적용 대상: Codex를 포함해 코드, 인프라, 데이터, 업무 시스템을 조작할 수 있는 모든 AI agent
 
 ## 1. 목적
