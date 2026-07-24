@@ -1,0 +1,23 @@
+[
+  {
+    "year": "2026",
+    "yearList": [
+      {
+        "fileName": "202607141000_products.html",
+        "date": "JUL 14, 2026",
+        "category": "PRODUCTS & TECHNOLOGIES",
+        "title": "JCB Tests a New Payment Capability",
+        "thumbnail": "/example.png",
+        "target": ""
+      },
+      {
+        "fileName": "202607011000_alliance.html",
+        "date": "JUL 01, 2026",
+        "category": "ALLIANCE",
+        "title": "JCB Expands Contactless Acceptance",
+        "thumbnail": "/example.png",
+        "target": ""
+      }
+    ]
+  }
+]

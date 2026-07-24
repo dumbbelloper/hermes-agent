@@ -218,6 +218,20 @@ Agent는 작업 순서와 상태를 조정하고, skill은 입력과 출력이 �
 
 ## 9. 단계별 구현 계획
 
+### 구현 현황 — 2026-07-24
+
+- [x] versioned Source Registry와 공식 도메인 allowlist
+- [x] Visa HTML, JCB JSON, EMVCo RSS, PCI SSC RSS adapter
+- [x] 공통 스키마, URL·날짜 정규화와 레코드 검증
+- [x] 원본·snapshot·누적 정상 상태·격리·source health 저장
+- [x] 빈 snapshot과 수집 실패 시 마지막 정상 상태 보존
+- [x] CLI와 네트워크 없는 fixture 회귀 테스트
+- [ ] GitHub Release adapter
+- [ ] 원문 본문 수집과 Obsidian Inbox 문서 생성
+- [ ] scheduler, retry, 알림과 운영 지표
+
+구현 세부 사항과 실행법은 [Automation/README.md](./Automation/README.md)에서 관리한다.
+
 ### Phase 0 — 설계 검증
 
 - 추적 대상별 공식 채널 목록 작성

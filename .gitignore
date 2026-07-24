@@ -27,6 +27,7 @@ Automation/logs/
 Automation/state/
 Automation/cache/
 Automation/tmp/
+Automation/data/
 
 # Python
 __pycache__/

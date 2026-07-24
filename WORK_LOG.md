@@ -241,3 +241,116 @@ docs/enterprise-ai-guardrails
 - 작업 브랜치를 `origin/docs/data-collection-validation`로 push했다.
 - 생성한 Pull Request:
   - [#2 공식 데이터 수집 검증 결과 문서화](https://github.com/dumbbelloper/hermes-agent/pull/2)
+
+## 2026-07-24 — 최소 공식 데이터 수집기 구현
+
+### 요청과 목적
+
+- 검증용 실험을 재현 가능한 프로젝트 코드로 승격
+- 향후 agent, skill, hook, frontend와 newsletter로 확장할 수 있는 데이터 기반 마련
+- Obsidian 문서 생성보다 공식 데이터의 수집·정규화·보존 품질을 우선 확보
+
+### 완료한 작업
+
+- [x] Python 3.9 이상에서 실행되는 표준 라이브러리 기반 패키지 구성
+- [x] versioned Source Registry와 엄격한 설정 타입 검증 구현
+- [x] Visa 공식 보도자료 HTML adapter 구현
+- [x] JCB 공식 보도자료 JSON adapter 구현
+- [x] EMVCo와 PCI SSC RSS·Atom adapter 구현
+- [x] 공식 도메인 allowlist, URL·날짜·HTML 텍스트 정규화 구현
+- [x] 안정적인 레코드 ID, 중복 및 수정 판정 구현
+- [x] 원본 응답, SHA-256, snapshot, 누적 정상 상태와 격리 저장 구현
+- [x] 빈 snapshot과 장애 발생 시 이전 정상 상태 보존 구현
+- [x] source health와 연속 실패 상태 구현
+- [x] 향후 skill·알림·관측 연동을 위한 Hook 이벤트 경계 구현
+- [x] CLI와 오프라인 fixture 회귀 테스트 구현
+- [x] 실제 공식 출처 반복 dry-run과 멱등성 검증
+- [x] Apache License 2.0 공식 전문과 package metadata 적용
+- [x] wheel에 라이선스와 기본 Source Registry를 포함하는 배포 구조 구현
+- [x] 저장소 밖의 가상환경에서 wheel 설치 후 CLI 실행 검증
+- [x] 최초 URI와 redirect 목적지의 HTTPS·도메인 사전 차단 구현
+
+### 생성·수정한 파일
+
+- [LICENSE](./LICENSE)
+- [pyproject.toml](./pyproject.toml)
+- [Automation/README.md](./Automation/README.md)
+- [Automation/config/sources.json](./Automation/config/sources.json)
+- [Automation/src/hermes_agent](./Automation/src/hermes_agent)
+- [Automation/tests](./Automation/tests)
+- [README.md](./README.md)
+- [PROJECT_PLAN.md](./PROJECT_PLAN.md)
+- [.gitignore](./.gitignore)
+
+### 검증 결과
+
+오프라인 fixture 기반 단위·통합 테스트 21개와 전체 Python compile 검사를 통과했다. Source Registry에는 활성 공식 출처 4개가 등록되어 있다.
+
+2026-07-24 실제 공식 출처 dry-run 결과:
+
+| 출처 | 후보 | 수락 | 격리 | 3차 동일 실행 |
+| --- | ---: | ---: | ---: | ---: |
+| EMVCo News | 2 | 2 | 0 | 2 unchanged |
+| JCB Press | 454 | 454 | 0 | 454 unchanged |
+| PCI SSC Blog | 50 | 50 | 0 | 50 unchanged |
+| Visa Press | 95 | 95 | 0 | 95 unchanged |
+| 합계 | 601 | 601 | 0 | 601 unchanged |
+
+첫 실행에서 JCB의 비정형 날짜 `FEB, 05,2024` 한 건을 발견해 격리했다. 날짜 정규화 규칙과 회귀 테스트를 추가한 후 454건 전부를 수락했다. HTML 설명의 markup과 구두점 공백도 정리했으며, 같은 코드로 세 번째 실행했을 때 601건이 모두 `unchanged`로 판정됐다.
+
+검증 명령:
+
+```text
+PYTHONPATH=Automation/src python3 -m unittest discover -s Automation/tests -v
+PYTHONPATH=Automation/src python3 -m compileall -q Automation/src Automation/tests
+PYTHONPATH=Automation/src python3 -m hermes_agent validate-registry
+PYTHONPATH=Automation/src python3 -m hermes_agent collect --data-dir <임시 디렉터리>
+git diff --check
+```
+
+별도의 깨끗한 Python 3.9 가상환경에서 `hermes_agent-0.1.0-py3-none-any.whl`을 생성했다. wheel에 공식 `LICENSE`와 기본 Source Registry가 포함된 것을 확인하고, 저장소 밖에서 설치한 `hermes-collector validate-registry`가 4개 출처를 정상적으로 읽는 것도 검증했다.
+
+보안 재검토에서 redirect 이후에만 도메인을 확인하던 사각지대를 발견했다. 최초 URI와 redirect 목적지를 실제 요청 전에 HTTPS·allowlist로 검사하도록 변경하고, 허용되지 않은 최초 URI·redirect와 허용된 subdomain redirect 테스트를 추가했다. 강화 후 실제 공식 출처 4곳을 다시 수집해 601건 모두 `unchanged`, 격리 0건임을 확인했다.
+
+### 주요 결정과 근거
+
+1. runtime dependency를 추가하지 않고 표준 라이브러리로 최소 수집기를 시작했다.
+   - 설치·공급망 부담을 줄이고 adapter 계약과 데이터 품질을 먼저 검증하기 위함이다.
+2. 원본, 실행 snapshot과 누적 정상 상태를 분리했다.
+   - 출처 변경을 재현하고 일시 누락이나 장애로 기존 데이터를 잃지 않기 위함이다.
+3. 빈 응답과 과도한 격리는 성공으로 간주하지 않는다.
+   - 파서 파손을 정상적인 신규 0건으로 오판하는 것을 막기 위함이다.
+4. UI, 요약과 newsletter를 수집 계층에서 분리했다.
+   - 향후 여러 소비자가 같은 검증 데이터를 사용할 수 있게 하기 위함이다.
+5. 공개 라이선스는 Apache License 2.0으로 확정했다.
+   - 사용자의 명시적 결정에 따라 Apache 공식 라이선스 전문을 루트 `LICENSE`에 추가하고 패키지 메타데이터에 반영했다.
+
+### 전역 설정과 외부 시스템 변경
+
+- 없음
+- 공식 공개 URI 4곳을 읽기 전용으로 조회했다.
+- 실제 수집 결과는 `/private/tmp` 아래에 저장했으며 저장소에는 포함하지 않았다.
+- 외부 package index에서는 임시 가상환경에 빌드 도구만 내려받았고 프로젝트 package를 게시하지 않았다.
+- package 게시나 배포는 수행하지 않았다.
+
+### Git 작업
+
+- 작업 브랜치: `feat/minimum-collector`
+- 한글 로컬 커밋:
+  - `af29f4a` — 최소 공식 데이터 수집기 구현
+  - `4137e20` — 수집 실행 데이터 Git 추적 제외
+  - `09e5591` — 최소 수집기 실행과 확장 구조 문서화
+  - `f2e3da1` — README에 라이선스와 최소 수집기 연결
+  - `d26c0dd` — 프로젝트 계획에 최소 수집기 현황 반영
+- `WORK_LOG.md`는 본 기록을 별도 커밋으로 관리한다.
+- 작업 브랜치를 `origin/feat/minimum-collector`로 push했다.
+- 생성한 Pull Request:
+  - [#3 최소 공식 데이터 수집기 구현](https://github.com/dumbbelloper/hermes-agent/pull/3)
+
+### 알려진 한계와 남은 작업
+
+- GitHub Release, YouTube, Mastercard fallback과 국내 카드사 adapter는 아직 구현하지 않았다.
+- 현재는 목록 메타데이터만 수집하며 원문 본문, 관련성, 요약과 Obsidian 문서는 생성하지 않는다.
+- freshness 기반 요청, scheduler, retry, 알림과 운영 지표는 아직 구현하지 않았다.
+- Hook 구현체의 실패 격리 정책은 후속 설계가 필요하다.
+- `CONTRIBUTING.md`, 행동 강령, 보안 정책과 CI는 아직 없다.

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Official Test Feed</title>
+    <item>
+      <title>Payment Standard Updated</title>
+      <link>https://www.emvco.com/news/payment-standard-updated/</link>
+      <guid>emvco-test-1</guid>
+      <pubDate>Wed, 15 Jul 2026 09:00:00 +0000</pubDate>
+      <category>Specifications</category>
+      <description><![CDATA[An official payment standard update.]]></description>
+    </item>
+  </channel>
+</rss>
