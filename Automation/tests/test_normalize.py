@@ -86,6 +86,30 @@ class NormalizationTests(unittest.TestCase):
         self.assertEqual(first.id, second.id)
         self.assertEqual("https://usa.visa.com/item", first.canonical_url)
 
+    def test_editorial_source_is_not_marked_official(self) -> None:
+        source = SourceConfig(
+            id="payments-dive",
+            organization="Payments Dive",
+            channel="payments-news",
+            uri="https://www.paymentsdive.com/feeds/news/",
+            adapter="rss_atom",
+            enabled=True,
+            priority=2,
+            freshness_days=7,
+            allowed_domains=("www.paymentsdive.com",),
+            official=False,
+        )
+        record = normalize_candidate(
+            source,
+            Candidate(
+                title="Payments industry update",
+                url="https://www.paymentsdive.com/news/payment-update/123/",
+                published_at="2026-07-28",
+            ),
+            datetime(2026, 7, 28, tzinfo=timezone.utc),
+        )
+        self.assertFalse(record.official)
+
 
 if __name__ == "__main__":
     unittest.main()

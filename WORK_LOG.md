@@ -875,3 +875,124 @@ git diff --check
 - Visa Release Notes는 월 단위 날짜만 제공하므로 실제 일자를 추정하지 않고 `published_at_precision: month`를 유지한다.
 - EMVCo Specifications와 PCI SSC Document Library는 접근 가능하지만 항목별 버전·수정일 parser와 파일 hash 검증이 남아 있다.
 - scheduler, retry, 알림과 문서 writer orchestration은 후속 작업이다.
+
+## 2026-07-28 14:27 KST — 미국 금융·결제 언론 수집과 Telegram 문서 알림
+
+### 사용자 요청과 목적
+
+- 현재 구현 진척도와 프로젝트 문서의 상태·숫자가 일치하는지 재점검
+- 확정한 미국 금융·결제 언론 4곳을 RSS로 실제 수집
+- 출처별 결제 학습 가치가 높은 자료를 선별해 Obsidian Inbox 문서 작성
+- 작성 완료한 Markdown 문서의 전체 내용을 Telegram bot으로 알림
+- bot token과 chat ID는 로컬 환경변수에서만 읽고 저장소·로그·문서에 남기지 않음
+
+### 수행한 변경
+
+- Payments Dive, Banking Dive, PYMNTS, TechCrunch Fintech 공식 RSS를 운영 Registry에 추가
+- 공식기관 채널과 편집 언론을 구분하기 위해 `SourceConfig.official`을 추가
+- 신규 언론은 priority 2, `official: false`로 정규화하고 Record의 공식성 flag가 source 분류와 일치하는지 검증
+- 편집 언론 4곳을 두 차례 실제 수집하고 반복 멱등성 확인
+- 협찬·행사 홍보·비결제 일반 기사 대신 결제 기술·규제·위험과 직접 관련된 4건 선별
+- 편집 기사와 Mastercard, OCC, Natural 등 1차 자료를 가능한 범위에서 교차 확인
+- 환경변수 기반 Telegram Bot API 전송, UTF-8 문서 읽기, 4,096자 분할과 오류 비밀정보 비노출 구현
+- 신규 Inbox 문서 4건의 전체 Markdown을 Telegram으로 전송
+- 프로젝트 문서에서 남아 있던 “운영 4개”와 “GitHub Release 미구현” 상태를 현재 구현에 맞게 수정
+- 운영 상태를 공식 출처 9개·편집 언론 4개·누적 1,594건·Inbox 12건으로 현행화
+
+### 생성·수정한 문서와 파일
+
+구현과 설정:
+
+- [Telegram notifier](./Automation/src/hermes_agent/telegram.py)
+- [CLI](./Automation/src/hermes_agent/cli.py)
+- [Source models](./Automation/src/hermes_agent/models.py)
+- [Source Registry loader](./Automation/src/hermes_agent/registry.py)
+- [Record normalization](./Automation/src/hermes_agent/normalize.py)
+- [Record validation](./Automation/src/hermes_agent/validation.py)
+- [운영 Source Registry](./Automation/config/sources.json)
+- [패키지 기본 Source Registry](./Automation/src/hermes_agent/default_sources.json)
+- [Telegram tests](./Automation/tests/test_telegram.py)
+- [Normalization tests](./Automation/tests/test_normalize.py)
+- [Registry tests](./Automation/tests/test_registry.py)
+- [환경변수 이름 예시](./.env.example)
+
+현행화 문서:
+
+- [수집 출처 운영 분류](./SOURCE_CATALOG.md)
+- [수집 대상 범위 체크리스트](./SOURCE_SCOPE_CHECKLIST.md)
+- [프로젝트 설계](./PROJECT_PLAN.md)
+- [프로젝트 README](./README.md)
+- [수집기 README](./Automation/README.md)
+- [미국 금융 결제 언론 브리핑](./Digests/2026-07-28%20미국%20금융%20결제%20언론%20브리핑.md)
+
+신규 Inbox 문서:
+
+- [Mastercard bolsters scam defense](./Inbox/2026-07-27%20Mastercard%20Bolsters%20Scam%20Defense.md)
+- [OCC rejects Wise’s trust charter application](./Inbox/2026-07-24%20OCC%20Rejects%20Wise%20Trust%20Charter%20Application.md)
+- [The Stablecoin Sandwich Is Missing the Trust Layer](./Inbox/2026-07-27%20The%20Stablecoin%20Sandwich%20Is%20Missing%20the%20Trust%20Layer.md)
+- [Natural raises $30M to reinvent payments for AI agents](./Inbox/2026-07-20%20Natural%20Raises%2030M%20to%20Reinvent%20Payments%20for%20AI%20Agents.md)
+
+### 실행한 검증과 결과
+
+```text
+PYTHONPATH=Automation/src python3 -m unittest discover -s Automation/tests -v
+PYTHONPYCACHEPREFIX=/private/tmp/hermes-agent-pycache \
+  PYTHONPATH=Automation/src python3 -m compileall -q Automation/src Automation/tests
+PYTHONPATH=Automation/src python3 -m hermes_agent validate-registry
+PYTHONPATH=Automation/src python3 -m hermes_agent collect \
+  --source payments-dive --source banking-dive \
+  --source pymnts --source techcrunch-fintech
+PYTHONPATH=Automation/src python3 -m hermes_agent collect <동일 4개>
+PYTHONPATH=Automation/src python3 -m hermes_agent validate-notes --vault-dir .
+PYTHONPATH=Automation/src python3 -m hermes_agent note-status ...
+PYTHONPATH=Automation/src python3 -m hermes_agent notify-telegram --dry-run ...
+PYTHONPATH=Automation/src python3 -m hermes_agent notify-telegram ...
+git diff --check
+```
+
+- 전체 단위·통합 테스트 35개 통과
+- Python 전체 compile 검사 통과
+- Source Registry schema `1.0`, 활성 출처 13개 검증 통과
+- 신규 언론 4곳 실제 수집 2회 모두 4/4 성공
+- Payments Dive 10건, Banking Dive 10건, PYMNTS 10건, TechCrunch Fintech 20건 등 50건 수락
+- 격리 0건, snapshot 중복 0건
+- 두 번째 실행에서 50건 전부 `unchanged`
+- Vault Inbox 12건 검증: `status: ok`, issue 0건
+- 신규 문서 4건 모두 현재 수집 fingerprint 입력 시 `skip`
+- Telegram dry-run에서 문서 4건·메시지 4개 확인
+- Telegram 실제 전송: 문서 4건·메시지 4개 성공
+- `git diff --check` 통과
+
+### 결정과 근거
+
+1. 편집 언론은 공식 발표와 같은 `official: true`로 저장하지 않는다.
+   - 기사와 조직의 1차 주장을 구분하고 향후 Writer의 교차검증 정책에 활용하기 위함이다.
+2. 새 언론은 공식 출처보다 낮은 priority 2로 실행한다.
+   - 공식기관·기업 원문을 우선하고 언론은 맥락, 규제 영향과 시장 신호를 보완하기 위함이다.
+3. RSS의 모든 항목은 정상 레코드로 보존하되 문서 작성은 별도 선별한다.
+   - Payments Dive 협찬, TechCrunch 행사 홍보와 PYMNTS 일반 AI 기사처럼 feed 단위로 제거하기 어려운 잡음이 존재하기 때문이다.
+4. 언론 문서는 자료 성격과 verification status를 명시한다.
+   - 기사 해석을 공식 입장으로 오인하지 않고 1차 자료 확인 범위를 투명하게 남기기 위함이다.
+5. Telegram credential은 환경변수만 사용하고 CLI argument로 받지 않는다.
+   - process list, shell history, 작업 로그와 commit에 token이 노출될 가능성을 줄이기 위함이다.
+6. Telegram에는 문서 내용을 변경하지 않고 길이 제한에 맞춰 분할한다.
+   - Obsidian과 알림 내용의 sync를 유지하기 위함이다.
+
+### 전역 설정이나 외부 시스템에 적용한 변경
+
+- 사용자가 `~/.zshrc`에 설정한 `HERMES_TELEGRAM_BOT_TOKEN`, `HERMES_TELEGRAM_CHAT_ID`를 읽어 사용
+- 환경변수 값 자체는 출력·기록하지 않고 설정 여부만 확인
+- Telegram Bot API를 통해 지정 chat에 Markdown 문서 4건을 총 4개 메시지로 전송
+- 공식 RSS·편집 기사와 1차 자료를 읽기 전용으로 조회
+- 전역 설정을 추가·수정하지 않았고 credential 파일을 생성하지 않음
+- 실제 수집 데이터는 Git에서 제외된 `Automation/data/`에 저장
+
+### 알려진 한계와 남은 작업
+
+- 관련성·중요도 선별과 편집 기사–1차 자료 교차검증은 아직 사람이 수행한다.
+- 협찬 URL, 행사 홍보와 비결제 일반 기사의 자동 제외 규칙은 구현하지 않았다.
+- 같은 사건의 복수 매체 보도를 하나로 묶는 event key가 없다.
+- Telegram 알림은 수동 CLI이며 collector/writer Hook과 scheduler에 아직 연결되지 않았다.
+- Telegram API 전송 실패 시 자동 retry·backoff와 delivery state 저장이 없다.
+- 원문 수정 시 `update_pending` 판정 이후 문서 갱신과 재알림 workflow가 남아 있다.
+- branch commit, push와 Pull Request는 아래 Git 작업 완료 후 기록한다.

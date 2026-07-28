@@ -150,7 +150,7 @@ def normalize_candidate(
         published_at=parse_date(candidate.published_at),
         discovered_at=isoformat_utc(discovered_at),
         language=source.language,
-        official=True,
+        official=source.official,
         discovery_method=source.adapter,
         category=clean_text(candidate.category),
         description=clean_text(candidate.description),

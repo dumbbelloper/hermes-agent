@@ -101,6 +101,9 @@ class SourceRegistry:
             )
         if not isinstance(raw["enabled"], bool):
             raise RegistryError("enabled must be a boolean")
+        official = raw.get("official", True)
+        if not isinstance(official, bool):
+            raise RegistryError("official must be a boolean")
         for field_name in ("priority", "freshness_days"):
             value = raw[field_name]
             if isinstance(value, bool) or not isinstance(value, int):
@@ -128,6 +131,7 @@ class SourceRegistry:
             freshness_days=raw["freshness_days"],
             allowed_domains=tuple(domains),
             language=language,
+            official=official,
             options=options,
         )
 
