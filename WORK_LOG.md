@@ -1602,7 +1602,7 @@ git diff --check
 
 ### 수행한 변경
 
-- 전체 구현과 문서 변경을 `e42e5dc` 커밋으로 생성
+- 전체 구현과 문서 변경을 `e372d9f` 커밋으로 생성
 - `feat/hermes-unattended-automation` 브랜치를 `origin`에 push하고 upstream 연결
 - GitHub `main` 대상 [PR #8](https://github.com/dumbbelloper/hermes-agent/pull/8) 생성
 - PR 본문에 구현 범위, 47개 테스트와 release 전 실환경 검증 항목 명시
@@ -1617,14 +1617,14 @@ git diff --check
 
 ```text
 git diff --cached --check
-git commit -m "feat: package unattended news automation skill"
+git commit -m "Hermes 무인 뉴스 자동화 Skill 패키징"
 git push --set-upstream origin feat/hermes-unattended-automation
 gh pr create --base main --head feat/hermes-unattended-automation ...
 gh pr view 8 --json number,title,url,state,baseRefName,headRefName,isDraft,mergeable,statusCheckRollup
 ```
 
-- commit: `e42e5dc feat: package unattended news automation skill`
-- PR: [#8 feat: package unattended news automation skill](https://github.com/dumbbelloper/hermes-agent/pull/8)
+- commit: `e372d9f Hermes 무인 뉴스 자동화 Skill 패키징`
+- PR: [#8 Hermes 무인 뉴스 자동화 Skill 패키징](https://github.com/dumbbelloper/hermes-agent/pull/8)
 - PR 상태: `OPEN`, draft 아님, `main` 대상, `MERGEABLE`
 - GitHub Actions 확인 시 Ubuntu와 macOS 검증 성공
 - GitHub Actions 확인 시 Windows 검증은 실행 중
@@ -1701,3 +1701,61 @@ git diff --check
 
 - 수정 커밋 push 후 새 Windows GitHub Actions 결과 확인 필요
 - 실제 native Windows Hermes gateway와 cron end-to-end 검증은 여전히 필요
+
+## 2026-07-28 16:27 KST — PR과 commit 제목 규칙 통일
+
+### 사용자 요청과 목적
+
+- PR #8의 영어 Conventional Commit 제목이 기존 PR 및 `main` commit 이력과 이질적인 문제 해소
+
+### 수행한 변경
+
+- 기존 병합 PR #1~#7과 `main` commit 제목 규칙 확인
+- PR #8 제목을 `Hermes 무인 뉴스 자동화 Skill 패키징`으로 변경
+- 이번 브랜치의 영어 commit 제목 3개를 접두사 없는 한국어 제목으로 재작성
+- history rewrite로 바뀐 commit hash를 앞선 작업 기록에 현행화
+- `--force-with-lease`로 원격 feature branch를 안전하게 갱신
+
+### 생성·수정한 문서와 파일
+
+- [작업 로그](./WORK_LOG.md)
+- 구현 파일 내용은 변경하지 않음
+
+### 실행한 검증과 결과
+
+```text
+git log main --oneline -15
+gh pr list --state all --limit 15
+gh pr view 7 --json commits,title,mergeCommit
+gh pr view 6 --json commits,title,mergeCommit
+git rebase -i main
+git log main..HEAD --oneline
+```
+
+- 기존 PR #1~#7은 접두사 없는 한국어 제목 사용
+- 기존 PR 내부 commit도 한국어 작업 제목과 별도 작업 로그 commit으로 구성
+- 재작성된 브랜치 commit:
+  - `e372d9f Hermes 무인 뉴스 자동화 Skill 패키징`
+  - `db614f8 작업 로그에 Skill 배포 PR 기록`
+  - `d167fac Windows UTF-8 문서 읽기 호환성 수정`
+- 제목 재작성 후 최신 commit 기준 GitHub Actions는 Ubuntu, macOS와 Windows 모두 통과
+
+### 결정과 근거
+
+1. `feat:` 같은 Conventional Commit 접두사를 이 PR에만 사용하지 않는다.
+   - 현재 프로젝트의 일관된 공개 이력은 한국어 작업 제목이며 squash merge 후 PR 제목이 `main` commit 제목이 되기 때문이다.
+2. PR 제목만 바꾸지 않고 branch commit 제목도 함께 통일한다.
+   - reviewer가 PR commit 목록을 확인할 때도 기존 작업 이력과 같은 형식을 유지하기 위해서다.
+3. 구현 내용은 바꾸지 않고 commit metadata만 재작성한다.
+   - 요청 범위는 제목 일관성이며 이미 통과한 코드와 검증 결과를 변경할 이유가 없기 때문이다.
+
+### 전역 설정이나 외부 시스템에 적용한 변경
+
+- GitHub PR #8 제목 변경
+- 원격 feature branch를 `--force-with-lease`로 안전하게 갱신
+- `main`, 다른 branch, Hermes와 Telegram 설정은 변경하지 않음
+
+### 알려진 한계와 남은 작업
+
+- PR review와 병합은 아직 수행하지 않음
+- 실제 Hermes direct install, gateway와 cron end-to-end 검증은 병합 후 필요
