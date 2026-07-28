@@ -2,7 +2,7 @@
 
 > 기준일: 2026-07-28
 >
-> 상태: Phase 0 완료 · Phase 1 부분 완료 · 검토 기반 문서 작성 시작
+> 상태: Phase 0 완료 · Phase 1 운영 출처 9개 확정 · 검토 기반 문서 작성 진행
 
 ## 1. 목표
 
@@ -254,7 +254,7 @@ Agent는 작업 순서와 상태를 조정하고, skill은 입력과 출력이 �
 - [x] 운영 Source Registry 정의
 - [x] RSS/Atom, 공식 JSON과 정적 HTML 수집 구현
 - [x] 상태 저장, URL 정규화, 중복 제거 구현
-- [ ] 선별한 GitHub Release 수집 구현
+- [x] 선별한 GitHub Release Atom 수집 구현
 - [ ] 원문 링크 중심의 Inbox 문서 생성 자동화
 
 ### Phase 2 — 요약 및 품질 관리
@@ -283,7 +283,7 @@ Agent는 작업 순서와 상태를 조정하고, skill은 입력과 출력이 �
 | --- | --- | --- |
 | 구현 언어와 런타임 | 결정 | Python 3.9 이상, runtime dependency 없음 |
 | 현재 실행 환경 | 결정 | 로컬 수동 실행, `Automation/data/`에 상태 저장 |
-| 운영 출처 | 결정 | 직접 접근 가능한 공식 출처 4개, 세부 기준은 [SOURCE_CATALOG.md](./SOURCE_CATALOG.md) |
+| 운영 출처 | 결정 | 직접 접근 가능한 공식 출처 9개, 세부 기준은 [SOURCE_CATALOG.md](./SOURCE_CATALOG.md) |
 | 차단 출처 처리 | 결정 | WAF 우회, 검색 인덱스와 브라우저 자동화 폴백 없이 제외 |
 | 문서 식별과 중복 방지 | 결정 | `record_id`, `source_fingerprint`와 실행 시 Vault index 사용. 세부 기준은 [NOTE_IDENTITY_POLICY.md](./NOTE_IDENTITY_POLICY.md) |
 | 문서 승인 | 임시 결정 | `Inbox/` 초안을 사람이 검토한 뒤 `Notes/`로 이동 |
@@ -294,7 +294,7 @@ Agent는 작업 순서와 상태를 조정하고, skill은 입력과 출력이 �
 
 ## 11. 현재 문서 작성 작업
 
-운영 출처 4개의 최신 자료 중 결제 기술·표준·보안 변화와 직접 관련된 항목을 소량 선별해 `Inbox/` 초안을 작성한다.
+운영 출처 9개의 최신 자료 중 결제 기술·표준·보안 변화와 직접 관련된 항목을 소량 선별해 `Inbox/` 초안을 작성한다. 현재 누적 1,544건에서 8건을 문서화했다.
 
 - [x] 안정적인 신규 항목 탐지와 원문 제목·링크 보존 검증
 - [ ] 한국어 요약만으로 핵심 변화를 이해할 수 있는지 검토

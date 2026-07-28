@@ -41,12 +41,17 @@ class AdapterRegistry:
 
 
 def built_in_adapters() -> AdapterRegistry:
+    from .amex import AmexNewsroomAdapter
     from .jcb import JcbJsonAdapter
     from .rss import RssAtomAdapter
-    from .visa import VisaPressAdapter
+    from .unionpay import UnionPayNewsAdapter
+    from .visa import VisaPressAdapter, VisaReleaseNotesAdapter
 
     registry = AdapterRegistry()
+    registry.register("amex_newsroom_json", AmexNewsroomAdapter)
     registry.register("jcb_json", JcbJsonAdapter)
     registry.register("rss_atom", RssAtomAdapter)
+    registry.register("unionpay_news_json", UnionPayNewsAdapter)
     registry.register("visa_press_html", VisaPressAdapter)
+    registry.register("visa_release_notes_html", VisaReleaseNotesAdapter)
     return registry

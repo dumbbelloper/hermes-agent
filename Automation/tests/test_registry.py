@@ -28,9 +28,19 @@ class RegistryTests(unittest.TestCase):
     def test_project_registry(self) -> None:
         registry = SourceRegistry.load(CONFIG, built_in_adapters())
         self.assertEqual("1.0", registry.schema_version)
-        self.assertEqual(4, len(registry.sources))
+        self.assertEqual(9, len(registry.sources))
         self.assertEqual(
-            ["emvco-news", "jcb-press", "pci-blog", "visa-press"],
+            [
+                "amex-newsroom",
+                "emvco-news",
+                "jcb-press",
+                "pci-blog",
+                "unionpay-company-news",
+                "unionpay-market-news",
+                "visa-acceptance-devices-ios-releases",
+                "visa-developer-release-notes",
+                "visa-press",
+            ],
             sorted(source.id for source in registry.select()),
         )
 

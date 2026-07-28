@@ -2,7 +2,7 @@
 
 > 기준일: 2026-07-28
 >
-> 상태: 초기 조사 완료 · 운영 출처 4개 확정
+> 상태: 초기 조사 완료 · 운영 출처 9개 확정
 
 이 문서는 Hermes Agent가 추적할 수 있는 전체 범위와 초기 수집 범위를 함께 관리한다.
 실제 URI별 운영·후보·제외 판정은 [SOURCE_CATALOG.md](./SOURCE_CATALOG.md)를 기준으로 한다.
@@ -185,7 +185,7 @@
 - [ ] 디지털 월렛
 - [ ] 블록체인 및 스테이블코인
 
-위 체크는 조사 범위를 의미한다. 운영 자동 수집 범위는 접근 안정성과 구현 검증을 통과한 4개 출처로 제한한다.
+위 체크는 조사 범위를 의미한다. 운영 자동 수집 범위는 접근 안정성과 구현 검증을 통과한 9개 출처로 제한한다.
 
 ## 11. 초기 범위 조사 현황
 
@@ -207,15 +207,15 @@
 - [x] 최근 업데이트 시점과 예상 발행 빈도 확인
 - [x] 출처별 우선 수집 방식 결정
 - [x] 실험용 Source Registry 18개 분류
-- [x] 운영 Source Registry 4개 확정
+- [x] 운영 Source Registry 9개 확정
 - [x] 샘플 수집 성공
 
 ### 대상별 조사
 
 - [x] Visa
 - [x] Mastercard — 직접 수집 차단 출처는 운영 제외
-- [x] American Express — 브라우저 의존 출처는 운영 제외
-- [x] UnionPay — 뉴스 어댑터 구현 후보, 개발자 출처 제외
+- [x] American Express — Newsroom AEM JSON 운영, 브라우저 의존 Developer 출처 제외
+- [x] UnionPay — Company·Market News JSON 운영, 개발자 출처 제외
 - [x] JCB
 - [x] EMVCo
 - [x] PCI Security Standards Council

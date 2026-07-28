@@ -682,3 +682,186 @@ git diff --check
 - 자동·수동 본문을 안전하게 부분 갱신하려면 managed block 경계를 추가로 설계해야 한다.
 - Source ID 변경 또는 공식 URL 이전으로 `record_id`가 바뀌는 경우 alias migration 기능이 필요하다.
 - 같은 사건의 여러 공식 발표를 묶는 event key와 의미 기반 중복 판정은 별도 작업이다.
+
+## 2026-07-28 — 현시점 수집 대상 상태 점검
+
+### 요청과 목적
+
+- 현재 Source Registry의 운영 수집 대상 확인
+- 운영 4개 출처의 실제 접근·파싱·수락 상태와 최신 게시일 재검증
+- 추가 구현 후보와 주요 제외 출처의 일반 HTTP 접근 상태가 기존 분류와 일치하는지 확인
+
+### 수행한 점검과 결과
+
+운영 출처를 임시 데이터 경로에서 실제 수집했다.
+
+| Source ID | 결과 | 수락 | 격리 | 최신 게시일 |
+| --- | --- | ---: | ---: | --- |
+| `visa-press` | 성공 | 95 | 0 | 2026-07-22 |
+| `jcb-press` | 성공 | 454 | 0 | 2026-07-14 |
+| `emvco-news` | 성공 | 2 | 0 | 2026-07-15 |
+| `pci-blog` | 성공 | 50 | 0 | 2026-07-27 |
+| 합계 | 4/4 성공 | 601 | 0 |  |
+
+후보 출처:
+
+- UnionPay Media Center: HTTP 200, 정적 HTML
+- Visa Developer Release Notes: HTTP 200, 정적 HTML
+- American Express Newsroom: HTTP 200이나 4,253 byte의 불완전한 홈페이지 응답
+- EMVCo Specifications: HTTP 200, 검색 페이지로 redirect
+- PCI SSC Document Library: HTTP 200
+
+제외 출처:
+
+- Mastercard Press Releases: Akamai `Access Denied` HTTP 403 유지
+- Mastercard Developer Products: HTTP 200이나 1,629 byte JavaScript 셸
+- American Express Developer Documentation: HTTP 200이나 1,864 byte JavaScript 셸
+
+### 생성·수정한 문서와 파일
+
+- [WORK_LOG.md](./WORK_LOG.md)에 점검 결과 추가
+- Source Registry, 출처 분류와 구현 코드는 변경하지 않음
+- 실제 수집 결과는 `/private/tmp/hermes-target-check.HHtbr1`에 저장
+
+### 실행한 검증
+
+```text
+PYTHONPATH=Automation/src python3 -m hermes_agent validate-registry
+PYTHONPATH=Automation/src python3 -m hermes_agent collect --data-dir <임시 경로>
+curl -L -sS --max-time 25 <후보·제외 공식 URI>
+```
+
+- Registry schema `1.0`, 활성 출처 4개 확인
+- 운영 출처 4/4 수집 성공
+- 후보·제외 출처 HTTP 상태와 응답 크기 확인
+
+### 결정과 근거
+
+1. 현재 고정 운영 범위는 Visa Press, JCB Press, EMVCo News와 PCI SSC Blog 4개를 유지한다.
+2. 후보 출처는 HTTP 200만으로 승격하지 않는다.
+   - 항목 parser, fixture, 품질 게이트와 반복 수집 멱등성 검증이 아직 없기 때문이다.
+3. Mastercard 뉴스룸은 Akamai 403이 유지되므로 제외 상태를 유지한다.
+4. JavaScript 셸만 반환하는 개발자 포털은 브라우저 자동화 없이 제외 상태를 유지한다.
+
+### 전역 설정이나 외부 시스템에 적용한 변경
+
+- 전역 설정과 외부 시스템 변경 없음
+- 공식 공개 URI를 읽기 전용으로 조회
+- 로그인, credential, WAF 우회, push와 배포는 수행하지 않음
+
+### 알려진 한계와 남은 작업
+
+- 이번 실제 수집은 임시 새 상태에서 한 번 수행했으며 반복 실행 멱등성은 기존 검증 결과를 따른다.
+- HTTP 200은 항목 단위 수집 가능성을 보장하지 않으므로 후보 승격에는 adapter 구현이 필요하다.
+- 출처의 접근 정책과 구조는 이후 변경될 수 있어 운영 실행에서 계속 health를 확인해야 한다.
+
+## 2026-07-28 12:30 KST — RSS·API 우선 운영 출처 확장과 신규 문서 작성
+
+### 사용자 요청과 목적
+
+- 기존 조사 대상 중 RSS·Atom 또는 공식 API·JSON을 제공하는 곳을 최우선으로 운영 수집에 포함
+- feed/API가 없더라도 일반 HTTP에서 쉽게 파싱 가능한 정적 사이트까지 포함
+- 조건을 만족하는 출처를 실제 수집하고, 고가치 신규 자료를 Obsidian 문서로 작성
+- WAF 차단, JavaScript 렌더링 의존, 필수 게시일 부재 또는 장기 정체 출처는 명확한 근거로 제외·보류
+
+### 수행한 변경
+
+- 운영 Source Registry를 4개에서 9개로 확장
+- American Express Newsroom의 공개 AEM model JSON adapter 구현
+- UnionPay Media Center가 사용하는 Company News·Market News JSON adapter 구현
+- Visa Developer Release Notes의 월별 정적 HTML adapter 구현
+- Visa Acceptance Devices iOS SDK의 공식 GitHub Release Atom feed 등록
+- American Express AEM 중복 목록 제거, `/content/amex` 내부 경로의 공개 URL 변환 구현
+- Visa 월 단위 Release Notes에 `date_precision: month`를 기록하고 의미 query로 월별 안정 ID 분리
+- adapter별 네트워크 없는 fixture와 회귀 테스트 추가
+- 운영·후보·제외 출처 분류, 범위 체크리스트, 프로젝트 계획과 실행 문서 현행화
+- 신규 채널의 기술 신호가 높은 4건을 원문까지 검증해 Inbox 문서로 작성
+- 확장 결과와 문서 링크를 Digest로 작성
+
+### 생성·수정한 문서와 파일
+
+구현과 설정:
+
+- [American Express adapter](./Automation/src/hermes_agent/adapters/amex.py)
+- [UnionPay adapter](./Automation/src/hermes_agent/adapters/unionpay.py)
+- [Visa adapters](./Automation/src/hermes_agent/adapters/visa.py)
+- [Adapter registry](./Automation/src/hermes_agent/adapters/base.py)
+- [운영 Source Registry](./Automation/config/sources.json)
+- [패키지 기본 Source Registry](./Automation/src/hermes_agent/default_sources.json)
+- [Adapter tests](./Automation/tests/test_adapters.py)
+- [Registry tests](./Automation/tests/test_registry.py)
+- [American Express fixture](./Automation/tests/fixtures/amex.json)
+- [UnionPay fixture](./Automation/tests/fixtures/unionpay.json)
+- [Visa Release Notes fixture](./Automation/tests/fixtures/visa_release_notes.html)
+
+현행화 문서:
+
+- [수집 출처 운영 분류](./SOURCE_CATALOG.md)
+- [수집 대상 범위 체크리스트](./SOURCE_SCOPE_CHECKLIST.md)
+- [프로젝트 설계](./PROJECT_PLAN.md)
+- [프로젝트 README](./README.md)
+- [수집기 README](./Automation/README.md)
+- [수집 출처 확장 브리핑](./Digests/2026-07-28%20수집%20출처%20확장%20브리핑.md)
+
+신규 Inbox 문서:
+
+- [Visa Intelligent Commerce Agent APIs](./Inbox/2026-04-01%20Visa%20Intelligent%20Commerce%20Agent%20APIs.md)
+- [Visa Acceptance Devices iOS SDK 3.7.0](./Inbox/2026-05-29%20Visa%20Acceptance%20Devices%20iOS%20SDK%203.7.0.md)
+- [Amex Mid-Sized Businesses Prioritize AI Expense Management](./Inbox/2026-06-03%20Amex%20Mid-Sized%20Businesses%20Prioritize%20AI%20Expense%20Management.md)
+- [OpenWay Adds Full UnionPay Product Support to Way4](./Inbox/2026-03-10%20OpenWay%20Adds%20Full%20UnionPay%20Product%20Support%20to%20Way4.md)
+
+### 실행한 검증과 결과
+
+```text
+PYTHONPATH=Automation/src python3 -m unittest discover -s Automation/tests -v
+PYTHONPYCACHEPREFIX=/private/tmp/hermes-agent-pycache \
+  PYTHONPATH=Automation/src python3 -m compileall -q Automation/src Automation/tests
+PYTHONPATH=Automation/src python3 -m hermes_agent validate-registry
+PYTHONPATH=Automation/src python3 -m hermes_agent collect
+PYTHONPATH=Automation/src python3 -m hermes_agent collect
+PYTHONPATH=Automation/src python3 -m hermes_agent validate-notes --vault-dir .
+PYTHONPATH=Automation/src python3 -m hermes_agent note-status ...
+git diff --check
+```
+
+- 전체 단위·통합 테스트 29개 통과
+- Python 전체 compile 검사 통과
+- Source Registry schema `1.0`, 활성 출처 9개 검증 통과
+- 실제 수집 2회 모두 9/9 성공
+- 누적 정상 레코드 1,544건, 격리 0건, snapshot 중복 0건
+- 두 번째 실행에서 1,544건 전부 `unchanged`
+- Vault Inbox 8건 검증: `status: ok`, issue 0건
+- 신규 문서 4건 모두 현재 수집 fingerprint 입력 시 `skip`
+- `git diff --check` 통과
+
+### 결정과 근거
+
+1. 공식 RSS·Atom과 공개 JSON을 정적 HTML보다 우선한다.
+   - 항목 경계와 필수 메타데이터가 명확하고 브라우저 렌더링 없이 반복 재현할 수 있기 때문이다.
+2. American Express는 불완전한 HTML 홈페이지 대신 홈페이지가 직접 사용하는 AEM model JSON을 운영 원본으로 사용한다.
+   - 인증·우회 없이 기사 URL, 최초 게시일과 카테고리를 구조화해 제공하기 때문이다.
+3. UnionPay는 Media Center 내부 공개 JSON 중 Company News와 Market News만 운영한다.
+   - 두 채널은 2026년까지 갱신되고 1차 기업·시장 발표를 제공한다. Media Reports는 외부 기사 재게시 성격과 정체, Statements는 2017년 이후 정체로 제외했다.
+4. Visa Developer Use Cases는 정적 파싱이 가능해도 게시일이 없어 보류한다.
+   - 발견일을 게시일처럼 저장하면 과거 자료가 신규 자료로 오인되고 문서 identity의 의미가 훼손되기 때문이다.
+5. Visa GitHub는 조직 전체가 아니라 최근 release가 실제 존재하는 Acceptance Devices iOS SDK만 allowlist에 넣는다.
+   - 조사한 나머지 저장소는 release feed가 비어 있거나 2022년 이후 정체됐다.
+6. 누적 1,544건을 모두 문서로 만들지 않고 신규 채널별 고가치 기술 자료 4건을 우선 작성한다.
+   - 과거 전체 자료 복제보다 현재 학습 가치와 사람 검토 가능성을 우선하고, 나머지 정상 레코드는 향후 관련성·중요도 큐의 입력으로 보존한다.
+
+### 전역 설정이나 외부 시스템에 적용한 변경
+
+- 전역 설정 변경 없음
+- credential, token, 로그인, WAF 우회와 브라우저 자동화 사용 없음
+- 공식 공개 HTTPS 출처를 읽기 전용으로 조회
+- 수집 원본과 정규화 결과는 Git에서 제외된 로컬 `Automation/data/`에 저장
+- 아직 commit, push, Pull Request 또는 배포는 수행하지 않음
+
+### 알려진 한계와 남은 작업
+
+- 원문 본문 추출, 관련성·중요도 판정과 Inbox 작성은 아직 완전 자동화되지 않았다.
+- American Express 현재 homepage model은 최근·추천 목록 14건이며 과거 전체 카테고리 archive를 운영 Registry에서 수집하지 않는다.
+- UnionPay JSON은 전체 역사 목록을 반환하므로 향후 freshness 기반 증분 요청 또는 처리 최적화가 필요하다.
+- Visa Release Notes는 월 단위 날짜만 제공하므로 실제 일자를 추정하지 않고 `published_at_precision: month`를 유지한다.
+- EMVCo Specifications와 PCI SSC Document Library는 접근 가능하지만 항목별 버전·수정일 parser와 파일 hash 검증이 남아 있다.
+- scheduler, retry, 알림과 문서 writer orchestration은 후속 작업이다.

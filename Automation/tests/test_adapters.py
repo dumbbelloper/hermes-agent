@@ -6,7 +6,9 @@ from pathlib import Path
 
 from hermes_agent.adapters.jcb import JcbJsonAdapter
 from hermes_agent.adapters.rss import RssAtomAdapter
-from hermes_agent.adapters.visa import VisaPressAdapter
+from hermes_agent.adapters.amex import AmexNewsroomAdapter
+from hermes_agent.adapters.unionpay import UnionPayNewsAdapter
+from hermes_agent.adapters.visa import VisaPressAdapter, VisaReleaseNotesAdapter
 from hermes_agent.models import FetchResult, SourceConfig
 
 
@@ -126,6 +128,83 @@ class AdapterTests(unittest.TestCase):
         self.assertEqual(2, len(items))
         self.assertEqual("22596", items[0].external_id)
         self.assertEqual("22/07/2026", items[0].published_at)
+
+    def test_visa_release_notes_html(self) -> None:
+        config = source(
+            "visa-developer-release-notes",
+            "https://developer.visa.com/site/release_notes",
+            "visa_release_notes_html",
+            "developer.visa.com",
+        )
+        items = list(
+            VisaReleaseNotesAdapter().parse(
+                config,
+                response(
+                    FIXTURES / "visa_release_notes.html",
+                    config.uri,
+                    "text/html; charset=utf-8",
+                ),
+            )
+        )
+        self.assertEqual(2, len(items))
+        self.assertEqual("2026-04-01", items[0].published_at)
+        self.assertEqual(
+            "https://developer.visa.com/site/release_notes?month=2026-04",
+            items[0].url,
+        )
+        self.assertIn("Intelligent Commerce", items[0].description)
+        self.assertEqual("month", items[0].metadata["date_precision"])
+
+    def test_unionpay_json(self) -> None:
+        config = source(
+            "unionpay-company-news",
+            "https://www.unionpayintl.com/wap/newsList/en_companyNews.json",
+            "unionpay_news_json",
+            "www.unionpayintl.com",
+        )
+        items = list(
+            UnionPayNewsAdapter().parse(
+                config,
+                response(
+                    FIXTURES / "unionpay.json",
+                    config.uri,
+                    "application/json",
+                ),
+            )
+        )
+        self.assertEqual(2, len(items))
+        self.assertEqual("3016449", items[0].external_id)
+        self.assertEqual(
+            "https://www.unionpayintl.com/en/mediaCenter/newsCenter/companyNews/3016449.shtml",
+            items[0].url,
+        )
+
+    def test_amex_aem_json_deduplicates_lists(self) -> None:
+        config = source(
+            "amex-newsroom",
+            "https://www.americanexpress.com/en-us/newsroom/index.model.json",
+            "amex_newsroom_json",
+            "www.americanexpress.com",
+        )
+        items = list(
+            AmexNewsroomAdapter().parse(
+                config,
+                response(
+                    FIXTURES / "amex.json",
+                    config.uri,
+                    "application/json",
+                ),
+            )
+        )
+        self.assertEqual(1, len(items))
+        self.assertEqual(
+            "https://www.americanexpress.com/en-us/newsroom/articles/financial-news/second-quarter-results.html",
+            items[0].url,
+        )
+        self.assertEqual(
+            "2026-07-24T13:00:00.000+01:00",
+            items[0].published_at,
+        )
 
     @staticmethod
     def _normalized_date(value: str) -> str:

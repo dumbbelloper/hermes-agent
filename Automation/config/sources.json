@@ -19,6 +19,94 @@
       }
     },
     {
+      "id": "visa-developer-release-notes",
+      "organization": "Visa",
+      "channel": "developer-release-notes",
+      "uri": "https://developer.visa.com/site/release_notes",
+      "adapter": "visa_release_notes_html",
+      "enabled": true,
+      "priority": 1,
+      "freshness_days": 180,
+      "allowed_domains": [
+        "developer.visa.com"
+      ],
+      "language": "en",
+      "options": {
+        "max_quarantine_ratio": 0.1
+      }
+    },
+    {
+      "id": "visa-acceptance-devices-ios-releases",
+      "organization": "Visa",
+      "channel": "software-release",
+      "uri": "https://github.com/visa/acceptance-devices-ios-sdk/releases.atom",
+      "adapter": "rss_atom",
+      "enabled": true,
+      "priority": 1,
+      "freshness_days": 120,
+      "allowed_domains": [
+        "github.com"
+      ],
+      "language": "en",
+      "options": {
+        "max_quarantine_ratio": 0.1
+      }
+    },
+    {
+      "id": "amex-newsroom",
+      "organization": "American Express",
+      "channel": "newsroom",
+      "uri": "https://www.americanexpress.com/en-us/newsroom/index.model.json",
+      "adapter": "amex_newsroom_json",
+      "enabled": true,
+      "priority": 1,
+      "freshness_days": 30,
+      "allowed_domains": [
+        "www.americanexpress.com"
+      ],
+      "language": "en",
+      "options": {
+        "article_base_uri": "https://www.americanexpress.com/",
+        "max_quarantine_ratio": 0.1
+      }
+    },
+    {
+      "id": "unionpay-company-news",
+      "organization": "UnionPay International",
+      "channel": "company-news",
+      "uri": "https://www.unionpayintl.com/wap/newsList/en_companyNews.json",
+      "adapter": "unionpay_news_json",
+      "enabled": true,
+      "priority": 1,
+      "freshness_days": 120,
+      "allowed_domains": [
+        "www.unionpayintl.com"
+      ],
+      "language": "en",
+      "options": {
+        "article_base_uri": "https://www.unionpayintl.com/",
+        "max_quarantine_ratio": 0.1
+      }
+    },
+    {
+      "id": "unionpay-market-news",
+      "organization": "UnionPay International",
+      "channel": "market-news",
+      "uri": "https://www.unionpayintl.com/wap/newsList/en_marketUpdate.json",
+      "adapter": "unionpay_news_json",
+      "enabled": true,
+      "priority": 1,
+      "freshness_days": 180,
+      "allowed_domains": [
+        "www.unionpayintl.com"
+      ],
+      "language": "en",
+      "options": {
+        "article_base_uri": "https://www.unionpayintl.com/",
+        "max_quarantine_ratio": 0.1
+      }
+    },
+    {
       "id": "jcb-press",
       "organization": "JCB",
       "channel": "press",

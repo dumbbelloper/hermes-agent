@@ -38,22 +38,24 @@
 | Source ID | 조직·채널 | 공식 URI | 방식 | 판정 근거 |
 | --- | --- | --- | --- | --- |
 | `visa-press` | Visa Press Releases | [공식 목록](https://usa.visa.com/about-visa/newsroom/press-releases-listing.html) | 정적 HTML | 일반 HTTP 200, 제목·URL·게시일 추출, 실제 반복 수집과 회귀 테스트 통과 |
+| `visa-developer-release-notes` | Visa Developer Release Notes | [공식 Release Notes](https://developer.visa.com/site/release_notes) | 정적 HTML | 월별 제품·API 변경과 날짜 추출, 의미 query로 안정 ID 분리, 반복 수집 통과 |
+| `visa-acceptance-devices-ios-releases` | Visa Acceptance Devices iOS SDK | [GitHub Releases Atom](https://github.com/visa/acceptance-devices-ios-sdk/releases.atom) | Atom | 결제 SDK allowlist 저장소, 2026년 활성 release와 상세 변경 내역, 반복 수집 통과 |
+| `amex-newsroom` | American Express Newsroom | [공식 AEM model JSON](https://www.americanexpress.com/en-us/newsroom/index.model.json) | 공식 JSON | 홈페이지가 사용하는 공개 구조화 모델, 제목·URL·최초 게시일·카테고리 제공, 반복 수집 통과 |
+| `unionpay-company-news` | UnionPay Company News | [공식 JSON](https://www.unionpayintl.com/wap/newsList/en_companyNews.json) | 공식 JSON | Media Center가 사용하는 공개 JSON, 2026년까지 갱신, 779건 반복 수집 통과 |
+| `unionpay-market-news` | UnionPay Market News | [공식 JSON](https://www.unionpayintl.com/wap/newsList/en_marketUpdate.json) | 공식 JSON | Media Center가 사용하는 공개 JSON, 2026년까지 갱신, 140건 반복 수집 통과 |
 | `jcb-press` | JCB Press | [공식 JSON](https://www.global.jcb/en/press/news_file.json) | 공식 JSON | 일반 HTTP 200, 구조화 필드 제공, 실제 반복 수집과 회귀 테스트 통과 |
 | `emvco-news` | EMVCo News | [공식 RSS](https://www.emvco.com/news/feed/) | RSS | 일반 HTTP 200, 표준 feed, 실제 반복 수집과 RSS·Atom 테스트 통과 |
 | `pci-blog` | PCI SSC Blog | [공식 RSS](https://blog.pcisecuritystandards.org/rss.xml) | RSS | 일반 HTTP 200, 표준 feed, 실제 반복 수집과 RSS 테스트 통과 |
 
-이 네 출처가 현재 고정된 운영 범위다. Registry 변경은 이 문서의 판정과 코드·fixture 검증을 함께 갱신해야 한다.
+이 9개 출처가 현재 고정된 운영 범위다. 2026-07-28 두 차례 실수집에서 9/9 성공, 누적 1,544건, 격리 0건을 확인했고 두 번째 실행은 전부 `unchanged`였다. Registry 변경은 이 문서의 판정과 코드·fixture 검증을 함께 갱신해야 한다.
 
 ## 3. 추가 구현 후보
 
 | 조직·채널 | 공식 URI | 현재 상태 | 승격 조건 |
 | --- | --- | --- | --- |
-| UnionPay International Media Center | [공식 목록](https://www.unionpayintl.com/en/mediaCenter/) | 정적 HTML 직접 접근 가능 | 전용 adapter, fixture, 빈 목록·변경 감지와 실제 반복 수집 검증 |
-| Visa Developer Release Notes | [공식 Release Notes](https://developer.visa.com/site/release_notes) | 정적 HTML 직접 접근 가능 | 릴리스 항목 단위 parser와 변경 의미 검증 |
-| American Express Newsroom AEM model | [공식 Newsroom](https://www.americanexpress.com/en-us/newsroom/) | 과거 공식 category JSON 17개 검증, 홈페이지 자체는 불완전 | category URI 목록을 재확정하고 JSON adapter·fixture 검증 |
 | EMVCo Specifications | [공식 검색](https://www.emvco.com/specifications/) | 직접 접근 가능, 검색 페이지로 redirect | 규격명·버전·수정일·문서 URL 단위 parser와 파일 변경 검증 |
 | PCI SSC Document Library | [공식 문서함](https://www.pcisecuritystandards.org/document_library/) | 직접 접근 가능 | 문서명·버전·수정일·파일 URL 단위 parser와 파일 변경 검증 |
-| 선별 GitHub Release | [Visa GitHub](https://github.com/visa) 등 | 공식 조직 확인, 조직 전체는 저신호 | 결제 관련 저장소 allowlist와 GitHub Release adapter 검증 |
+| Visa Developer Use Cases | [공식 Use Cases](https://developer.visa.com/use-cases) | 정적 HTML에서 제목·URL 추출 가능하나 게시일 없음 | 공식 게시일 또는 별도 변경일을 재현 가능하게 얻을 수 있을 때 승격 |
 
 ## 4. 수집 제외 출처
 
@@ -65,7 +67,8 @@
 | UnionPay 개발자 문서 | [공식 홈페이지](https://www.unionpayintl.com/en/) | 현재 사용 가능한 공개 개발자 포털 URI를 확인하지 못함 | 현재 운영되는 공식 문서 URI 확인 |
 | JCB 별도 개발자 문서 허브 | [JCB Global](https://www.global.jcb/en/) | 별도 공개 개발자 문서 허브를 확인하지 못함 | 현재 운영되는 공식 문서 URI 확인 |
 | JCB YouTube | [공식 계정 안내](https://www.global.jcb/ja/policy/social-media/account.html) | 업데이트가 드물고 마케팅 비중이 높아 초기 목적 대비 저신호 | 기술 콘텐츠의 지속 발행 확인 |
-| 결제 네트워크 GitHub 조직 전체 | Visa·Mastercard·American Express 공식 조직 | 범용·비결제 저장소가 섞여 잡음이 큼 | 결제 관련 저장소 allowlist 확정 |
+| UnionPay Media Reports·Statements | [Media Center](https://www.unionpayintl.com/en/mediaCenter/) | JSON은 있으나 Media Reports는 외부 기사 재게시 성격이고 2025-03 이후 정체, Statements는 2017년 이후 정체 | 공식 1차 기술 자료가 지속 발행될 때 재검토 |
+| 결제 네트워크 GitHub 조직 전체 | Visa·Mastercard·American Express 공식 조직 | 범용·비결제 저장소가 섞여 잡음이 큼. 선별한 Visa 저장소 6개 중 4개 release feed는 비어 있고 1개는 2022년 이후 정체 | 결제 관련 저장소별 활성 release 확인 |
 | 검색 인덱스 기반 공식 페이지 발견 | 해당 없음 | 최신성·완전성과 재현성을 공식 출처가 보장하지 않음 | 사용하지 않음 |
 | 브라우저 자동화 기반 목록 수집 | 해당 없음 | 렌더링·challenge 의존성과 운영 복잡도가 큼 | 사용하지 않음 |
 
