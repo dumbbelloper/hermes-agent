@@ -37,12 +37,9 @@ def _runner() -> Path:
 
 
 def _command(workspace: Path, runner: Path, *arguments: str):
-    environment = os.environ.copy()
-    environment["HERMES_NEWS_WORKSPACE"] = str(workspace)
     return subprocess.run(
         [sys.executable, str(runner), *arguments],
         cwd=str(workspace),
-        env=environment,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,

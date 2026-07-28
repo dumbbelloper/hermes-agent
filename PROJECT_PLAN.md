@@ -2,7 +2,7 @@
 
 > 기준일: 2026-07-28
 >
-> 상태: Phase 0·1 완료 · self-contained Hermes Skill 배포 candidate 구현
+> 상태: Phase 0·1 완료 · self-contained Hermes Skill v0.1.0 공개 배포
 
 ## 1. 목표
 
@@ -242,7 +242,7 @@ Agent는 의미 판단을 담당하고 Python controller는 상태 전이, 임�
 - [x] GitHub direct install·Hermes tap 배포 구조와 격리 설치 smoke test
 - [x] macOS·Linux·Windows Skill CI matrix
 - [x] 선별 GitHub Release Atom 수집
-- [x] 환경변수 기반 Telegram 문서 알림
+- [x] workspace credential 파일 기반 Telegram 문서 알림
 - [x] Hermes gateway·cron 운영 가이드
 - [ ] 출처별 retry backoff, circuit breaker와 장기 운영 지표
 

@@ -28,6 +28,7 @@ Automation/state/
 Automation/cache/
 Automation/tmp/
 Automation/data/
+.hermes-news/
 
 # Python
 __pycache__/

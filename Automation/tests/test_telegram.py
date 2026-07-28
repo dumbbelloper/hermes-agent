@@ -10,6 +10,7 @@ from hermes_agent.telegram import (
     TELEGRAM_MESSAGE_LIMIT,
     TelegramError,
     TelegramNotifier,
+    load_telegram_credentials,
     split_message,
 )
 
@@ -25,6 +26,30 @@ class RecordingTransport:
 
 
 class TelegramTests(unittest.TestCase):
+    def test_load_credentials_from_utf8_json(self) -> None:
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / "telegram.json"
+            path.write_text(
+                json.dumps(
+                    {
+                        "bot_token": "secret-token",
+                        "chat_id": "12345",
+                    }
+                ),
+                encoding="utf-8",
+            )
+            self.assertEqual(
+                ("secret-token", "12345"),
+                load_telegram_credentials(path),
+            )
+
+    def test_load_credentials_rejects_missing_values(self) -> None:
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / "telegram.json"
+            path.write_text("{}", encoding="utf-8")
+            with self.assertRaises(TelegramError):
+                load_telegram_credentials(path)
+
     def test_split_preserves_document_exactly(self) -> None:
         text = ("frontmatter\n" + ("가" * 1000) + "\n") * 6
         chunks = split_message(text)

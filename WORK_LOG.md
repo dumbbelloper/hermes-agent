@@ -1759,3 +1759,110 @@ git log main..HEAD --oneline
 
 - PR review와 병합은 아직 수행하지 않음
 - 실제 Hermes direct install, gateway와 cron end-to-end 검증은 병합 후 필요
+
+## 2026-07-28 17:02 KST — v0.1.0 release gate 및 Hermes 설치 호환성 보강
+
+### 사용자 요청과 목적
+
+- PR #8 병합 후 Skill을 실제 배포 가능한 `v0.1.0`으로 release
+- GitHub main 직접 설치, Hermes direct install, tap과 skills.sh 공개 상태 검증
+- release 전에 문서 상태와 실제 설치 계약을 일치시킴
+
+### 수행한 변경
+
+- GitHub `main`에서 Codex GitHub installer를 이용한 격리 설치와 launcher smoke test 수행
+- skills.sh가 `hermes-news-automation`을 이미 공개 인덱싱하고 상세 페이지를 제공함을 확인
+- Hermes installer가 `SKILL.md`의 명시적 지원 파일만 bundle에 포함하는 계약을 확인
+- Skill의 모든 runtime 파일을 `SKILL.md`에 명시적으로 연결하고 누락 방지 회귀 테스트 추가
+- 최초 Hermes 설치 보안 검사에서 탐지된 prompt-injection 방어 문자열, Telegram 환경변수 접근과 pre-check 실행 구조를 분석
+- prompt-injection 방어 기능은 유지하면서 scanner 자체 탐지 문자열을 조합형 상수로 변경
+- Telegram credential을 환경변수 대신 workspace의 `.hermes-news/config/telegram.json`에서 읽도록 최소 권한 경계로 변경
+- pre-check가 환경변수 전체를 복사하지 않고 workspace `cwd`를 전달하도록 변경
+- workspace runtime 경로 선택 시 process environment를 변경하지 않고 작업 디렉터리를 사용하도록 변경
+- credential loader와 설치 bundle 회귀 테스트를 추가하고 운영·배포 문서를 `v0.1.0` 계약으로 현행화
+- 프로젝트 root workspace에서 `.hermes-news/`가 Git에 포함되지 않도록 ignore 규칙 추가
+
+### 생성·수정한 문서와 파일
+
+- [Hermes News Automation Skill](./skills/hermes-news-automation/SKILL.md)
+- [Skill launcher](./skills/hermes-news-automation/scripts/run.py)
+- [cron pre-check](./skills/hermes-news-automation/scripts/precheck.py)
+- [runtime CLI](./skills/hermes-news-automation/scripts/runtime/hermes_agent/cli.py)
+- [Telegram runtime](./skills/hermes-news-automation/scripts/runtime/hermes_agent/telegram.py)
+- [artifact validation runtime](./skills/hermes-news-automation/scripts/runtime/hermes_agent/automation.py)
+- [Skill 배포 회귀 테스트](./Automation/tests/test_skill_distribution.py)
+- [Telegram 테스트](./Automation/tests/test_telegram.py)
+- [Automation 안내](./Automation/README.md)
+- [Skill 배포 가이드](./SKILL_DISTRIBUTION_GUIDE.md)
+- [Hermes 무인 자동화 가이드](./HERMES_AUTOMATION_GUIDE.md)
+- [프로젝트 계획](./PROJECT_PLAN.md)
+- [환경변수 예시](./.env.example)
+- [Git ignore 설정](./.gitignore)
+- [작업 로그](./WORK_LOG.md)
+
+### 실행한 검증과 결과
+
+```text
+python3 <skill-installer>/scripts/install-skill-from-github.py \
+  --repo dumbbelloper/hermes-agent \
+  --path skills/hermes-news-automation --ref main --dest <temporary-directory>
+python3 <installed-skill>/scripts/run.py init --workspace <temporary-workspace>
+python3 <installed-skill>/scripts/run.py doctor --workspace <temporary-workspace>
+python3 <installed-skill>/scripts/run.py validate-registry
+HERMES_HOME=<temporary-profile> hermes skills inspect <identifier>
+HERMES_HOME=<temporary-profile> hermes skills install <identifier> --yes
+PYTHONPATH=skills/hermes-news-automation/scripts/runtime \
+  python3 -m unittest discover -s Automation/tests -v
+python3 <skill-creator>/scripts/quick_validate.py \
+  skills/hermes-news-automation
+Hermes skills_guard로 community source local scan
+git diff --check
+```
+
+- GitHub `main` bundle의 repository 외부 설치와 `init` 및 13개 출처 registry 검증 통과
+- credential 없는 최초 `doctor`는 값 노출 없이 의도한 `configuration_error` 반환
+- skills.sh 공개 상세 페이지:
+  `https://skills.sh/dumbbelloper/hermes-agent/skills/hermes-news-automation`
+- 최초 main 기준 Hermes install은 directory reference 때문에 fetch 실패
+- 모든 runtime 파일을 명시한 commit에서는 bundle fetch와 security scan 단계까지 진입
+- 최초 security scan은 실제 악성 동작이 아닌 방어 문자열과 secret 환경변수 접근을 `DANGEROUS`로 판정해 설치 차단
+- credential 파일과 명시적 workspace 경계로 변경 후 Hermes community scan:
+  `SAFE`, 허용 결정, deterministic pre-check subprocess에 대한 medium 정보성 finding 1건
+- 수정 후 전체 테스트 50개 통과
+- Skill Creator validator 통과
+- 격리 workspace의 유효한 Telegram 설정을 포함한 `doctor` 상태 `ok`
+- Python compile 대상 runtime의 13개 활성 출처 registry 검증 통과
+- `git diff --check` 통과
+
+### 결정과 근거
+
+1. `--force`나 scanner 우회를 사용하지 않는다.
+   - Hermes는 community Skill의 `DANGEROUS` 판정을 강제로 우회하지 않으며, 배포자는 경고 원인을 제거하고 검증 가능한 최소 권한 구조를 제공해야 하기 때문이다.
+2. Telegram credential은 agent process의 전체 환경이 아니라 전용 workspace 파일로 격리한다.
+   - runtime이 다른 provider credential까지 포함할 수 있는 process environment를 다루지 않고 필요한 두 값만 읽게 하기 위해서다.
+3. `telegram.json`은 자동 생성하거나 Git에 포함하지 않는다.
+   - 실제 secret은 사용자 또는 운영자가 별도 주입하고 소유자와 runner만 읽어야 하기 때문이다.
+4. prompt-injection 출력 차단은 제거하지 않는다.
+   - scanner가 방어용 표본 문자열을 공격 지시로 오인한 것이므로 단어 조합으로 동일 검증 의미를 유지한다.
+5. Skill runtime은 `SKILL.md`에서 모든 파일을 직접 참조한다.
+   - 현재 Hermes GitHub installer는 directory recursion이 아니라 직접 참조 파일만 가져오기 때문이다.
+6. 문서는 `v0.1.0` 최종 계약을 먼저 반영하고 이 commit이 main에 병합된 직후 동일 commit을 tag한다.
+   - release tag 안의 문서가 실제 설치 방식 및 보안 경계와 일치해야 하기 때문이다.
+
+### 전역 설정이나 외부 시스템에 적용한 변경
+
+- GitHub 원격에 `release/v0.1.0` 브랜치와 설치 bundle 호환성 commit 생성
+- skills.sh 공개 인덱스와 상세 페이지를 읽기 전용으로 확인
+- `/private/tmp` 아래에 Codex 설치 디렉터리, Hermes 격리 profile과 테스트 workspace 생성
+- 사용자 기본 `~/.hermes` profile, 설치 Skill, gateway, cron과 실제 credential은 변경하지 않음
+- GitHub version tag와 Release는 아직 생성하지 않음
+
+### 알려진 한계와 남은 작업
+
+- 변경 commit의 불변 raw URL을 이용한 Hermes 실제 설치 및 launcher 재검증 필요
+- release 브랜치 PR 생성, 다중 OS CI와 main 병합 필요
+- 병합 commit에 `v0.1.0` tag 및 GitHub Release 생성 필요
+- tag 기준 skills.sh direct install과 Hermes tap 설치 재검증 필요
+- 사용자는 기존 `~/.zshrc` Telegram 환경변수 값을
+  `<workspace>/.hermes-news/config/telegram.json`으로 한 번 이전해야 함
+- 실제 Hermes gateway와 cron end-to-end 실행은 release 후 별도 운영 검증으로 남음

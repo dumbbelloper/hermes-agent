@@ -17,6 +17,24 @@ class TelegramError(RuntimeError):
     pass
 
 
+def load_telegram_credentials(path: Path) -> tuple[str, str]:
+    try:
+        document = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as error:
+        raise TelegramError(
+            "cannot read Telegram credential configuration"
+        ) from error
+    if not isinstance(document, dict):
+        raise TelegramError("Telegram credential configuration must be an object")
+    bot_token = document.get("bot_token")
+    chat_id = document.get("chat_id")
+    if not isinstance(bot_token, str) or not bot_token.strip():
+        raise TelegramError("Telegram bot_token is required")
+    if not isinstance(chat_id, str) or not chat_id.strip():
+        raise TelegramError("Telegram chat_id is required")
+    return bot_token.strip(), chat_id.strip()
+
+
 def split_message(
     text: str,
     limit: int = TELEGRAM_MESSAGE_LIMIT,
@@ -50,9 +68,9 @@ class TelegramNotifier:
         transport: Optional[Callable[[str, bytes, float], bytes]] = None,
     ) -> None:
         if not bot_token.strip():
-            raise TelegramError("HERMES_TELEGRAM_BOT_TOKEN is required")
+            raise TelegramError("Telegram bot_token is required")
         if not chat_id.strip():
-            raise TelegramError("HERMES_TELEGRAM_CHAT_ID is required")
+            raise TelegramError("Telegram chat_id is required")
         self._bot_token = bot_token.strip()
         self._chat_id = chat_id.strip()
         self._timeout_seconds = timeout_seconds

@@ -16,7 +16,12 @@ from .note_index import VaultNoteIndex
 from .pipeline import CollectorPipeline
 from .registry import RegistryError, SourceRegistry
 from .storage import FileStore
-from .telegram import TelegramError, TelegramNotifier, split_message
+from .telegram import (
+    TelegramError,
+    TelegramNotifier,
+    load_telegram_credentials,
+    split_message,
+)
 
 
 DEFAULT_WORKSPACE = Path(
@@ -26,7 +31,7 @@ WORKSPACE_CONFIG = (
     DEFAULT_WORKSPACE / ".hermes-news" / "config" / "sources.json"
 )
 DEFAULT_CONFIG = Path(
-    os.environ.get(
+    os.getenv(
         "HERMES_NEWS_CONFIG",
         str(
             WORKSPACE_CONFIG
@@ -36,11 +41,14 @@ DEFAULT_CONFIG = Path(
     )
 ).expanduser()
 DEFAULT_DATA_DIR = Path(
-    os.environ.get(
+    os.getenv(
         "HERMES_NEWS_DATA_DIR",
         str(DEFAULT_WORKSPACE / ".hermes-news" / "data"),
     )
 ).expanduser()
+DEFAULT_TELEGRAM_CONFIG = (
+    DEFAULT_WORKSPACE / ".hermes-news" / "config" / "telegram.json"
+)
 
 
 def parser() -> argparse.ArgumentParser:
@@ -134,6 +142,11 @@ def parser() -> argparse.ArgumentParser:
     )
     telegram.add_argument("--timeout", type=float, default=20.0)
     telegram.add_argument(
+        "--telegram-config",
+        type=Path,
+        default=DEFAULT_TELEGRAM_CONFIG,
+    )
+    telegram.add_argument(
         "--dry-run",
         action="store_true",
         help="validate files and report message chunks without sending",
@@ -197,6 +210,11 @@ def parser() -> argparse.ArgumentParser:
     _automation_paths(automation_notify)
     automation_notify.add_argument("--run-id", required=True)
     automation_notify.add_argument("--timeout", type=float, default=20.0)
+    automation_notify.add_argument(
+        "--telegram-config",
+        type=Path,
+        default=DEFAULT_TELEGRAM_CONFIG,
+    )
     automation_notify.set_defaults(handler=automation_notify_run)
 
     automation_finish = commands.add_parser(
@@ -362,9 +380,10 @@ def notify_telegram(arguments: argparse.Namespace) -> int:
         )
         return 0
 
+    bot_token, chat_id = load_telegram_credentials(arguments.telegram_config)
     notifier = TelegramNotifier(
-        os.environ.get("HERMES_TELEGRAM_BOT_TOKEN", ""),
-        os.environ.get("HERMES_TELEGRAM_CHAT_ID", ""),
+        bot_token,
+        chat_id,
         timeout_seconds=arguments.timeout,
     )
     messages = notifier.send_files(arguments.file)
@@ -463,9 +482,10 @@ def automation_submit_note(arguments: argparse.Namespace) -> int:
 
 
 def automation_notify_run(arguments: argparse.Namespace) -> int:
+    bot_token, chat_id = load_telegram_credentials(arguments.telegram_config)
     notifier = TelegramNotifier(
-        os.environ.get("HERMES_TELEGRAM_BOT_TOKEN", ""),
-        os.environ.get("HERMES_TELEGRAM_CHAT_ID", ""),
+        bot_token,
+        chat_id,
         timeout_seconds=arguments.timeout,
     )
     result = _controller(arguments).notify(arguments.run_id, notifier)

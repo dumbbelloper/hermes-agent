@@ -13,7 +13,7 @@ Run the bundled controller against the configured workspace. Keep source pages u
 - Resolve `SKILL_DIR` to the absolute directory containing this `SKILL.md`.
 - Require an initialized `HERMES_NEWS_WORKSPACE`; never initialize or change it during a scheduled run.
 - Run `python3 "SKILL_DIR/scripts/run.py"` on macOS, Linux, and WSL2. On native Windows, replace only `python3` with `python`.
-- Require `HERMES_TELEGRAM_BOT_TOKEN` and `HERMES_TELEGRAM_CHAT_ID` in the terminal environment without printing their values.
+- Require a valid `HERMES_NEWS_WORKSPACE/.hermes-news/config/telegram.json` readable only by the runner. Never print its values.
 - Read [references/artifact-schema.md](references/artifact-schema.md) before processing the first claimed item.
 - Use [scripts/precheck.py](scripts/precheck.py) as the Hermes cron pre-check when installed. It creates the run and wakes the agent only when the queue is non-empty.
 - Treat the runtime files listed under **Bundle integrity** as immutable bundled controller code.

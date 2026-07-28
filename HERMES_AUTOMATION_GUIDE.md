@@ -2,7 +2,7 @@
 
 > 기준일: 2026-07-28
 >
-> 상태: Release candidate · GitHub main 병합 및 최초 실환경 검증 필요
+> 상태: v0.1.0 배포 완료 · 최초 실환경 cron 검증 필요
 >
 > 대상: macOS, Linux, Windows WSL2, native Windows
 
@@ -134,26 +134,28 @@ Hermes가 사용하는 env 파일 위치를 확인한다.
 hermes config env-path
 ```
 
-다음 이름을 설정하되 실제 값은 Git, Obsidian 문서, 작업 로그, cron prompt와 shell
-history에 기록하지 않는다.
+다음 비밀정보가 아닌 실행 설정만 Hermes env 파일에 둔다.
 
 ```dotenv
-HERMES_TELEGRAM_BOT_TOKEN=<bot-token>
-HERMES_TELEGRAM_CHAT_ID=<chat-id>
 HERMES_NEWS_WORKSPACE=<absolute-workspace-path>
 HERMES_NEWS_SKILL_DIR=<absolute-installed-skill-path>
 HERMES_NEWS_MAX_ITEMS=5
 ```
 
-macOS/Linux/WSL2에서 파일을 직접 관리하면 소유자만 읽게 한다.
+Telegram credential은 scanner가 검증 가능한 최소 권한 경계를 위해 workspace의
+`.hermes-news/config/telegram.json`에 별도로 둔다.
 
-```bash
-chmod 600 "$(hermes config env-path)"
+```json
+{
+  "bot_token": "<bot-token>",
+  "chat_id": "<chat-id>"
+}
 ```
 
-native Windows는 현재 사용자만 Hermes profile에 접근하도록 Windows ACL을 유지한다.
-PowerShell profile의 일시적 환경변수에만 의존하지 않는다. Scheduled Task는 기존
-interactive PowerShell의 process environment를 그대로 상속하지 않기 때문이다.
+실제 값을 Git, Obsidian 문서, 작업 로그, cron prompt와 shell history에 기록하지
+않는다. macOS/Linux/WSL2에서는 Hermes env 파일과 `telegram.json`을 `chmod 600`으로
+제한한다. native Windows는 현재 사용자와 cron runner만 접근하도록 Windows ACL을
+설정한다. PowerShell profile의 일시적 환경변수에만 의존하지 않는다.
 
 `HERMES_NEWS_MAX_ITEMS=5`는 한 번의 agent 실행이 처리하는 최대 문서 수다. 초기에는
 모델 비용과 실행 시간의 상한을 위해 5를 유지한다.
@@ -165,9 +167,9 @@ Agent Skills 공개 표준, GitHub direct install과 tap을 지원한다.
 
 ```bash
 hermes skills inspect \
-  dumbbelloper/hermes-agent/skills/hermes-news-automation
+  skills-sh/dumbbelloper/hermes-agent/skills/hermes-news-automation
 hermes skills install \
-  dumbbelloper/hermes-agent/skills/hermes-news-automation
+  skills-sh/dumbbelloper/hermes-agent/skills/hermes-news-automation
 hermes skills list
 ```
 

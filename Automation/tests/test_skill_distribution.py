@@ -30,8 +30,6 @@ class SkillDistributionTests(unittest.TestCase):
             environment.update(
                 {
                     "HERMES_NEWS_WORKSPACE": str(workspace),
-                    "HERMES_TELEGRAM_BOT_TOKEN": "test-token",
-                    "HERMES_TELEGRAM_CHAT_ID": "test-chat",
                 }
             )
 
@@ -46,6 +44,17 @@ class SkillDistributionTests(unittest.TestCase):
             self.assertTrue((workspace / "Inbox").is_dir())
             self.assertTrue(
                 (workspace / ".hermes-news" / "config" / "sources.json").is_file()
+            )
+            (
+                workspace / ".hermes-news" / "config" / "telegram.json"
+            ).write_text(
+                json.dumps(
+                    {
+                        "bot_token": "test-token",
+                        "chat_id": "test-chat",
+                    }
+                ),
+                encoding="utf-8",
             )
 
             doctor = self._run(
