@@ -1835,6 +1835,8 @@ git diff --check
 - Python compile 대상 runtime의 13개 활성 출처 registry 검증 통과
 - 최종 불변 commit `340efb9` raw URL을 새 격리 Hermes profile에 설치
 - 최종 Hermes scan `SAFE`, `scripts/run.py`와 전체 runtime 파일 설치, `init → doctor → validate-registry` 통과
+- PR #9 최초 CI는 package 설치가 만든 `hermes_news_automation.egg-info`를 runtime source로 오인한 회귀 테스트 때문에 세 OS에서 동일 실패
+- runtime completeness 검사 범위를 실제 `scripts/runtime/hermes_agent/` package로 좁혀 build metadata를 제외
 - `git diff --check` 통과
 
 ### 결정과 근거

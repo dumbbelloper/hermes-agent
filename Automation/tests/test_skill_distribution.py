@@ -87,7 +87,7 @@ class SkillDistributionTests(unittest.TestCase):
     def test_skill_markdown_explicitly_links_every_runtime_file(self) -> None:
         content = (SKILL_SOURCE / "SKILL.md").read_text(encoding="utf-8")
         linked = {match.group(1) for match in MARKDOWN_LINK.finditer(content)}
-        runtime = SKILL_SOURCE / "scripts" / "runtime"
+        runtime = SKILL_SOURCE / "scripts" / "runtime" / "hermes_agent"
         required = {
             path.relative_to(SKILL_SOURCE).as_posix()
             for path in runtime.rglob("*")
