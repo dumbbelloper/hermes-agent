@@ -1870,3 +1870,96 @@ git diff --check
 - 사용자는 기존 `~/.zshrc` Telegram 환경변수 값을
   `<workspace>/.hermes-news/config/telegram.json`으로 한 번 이전해야 함
 - 실제 Hermes gateway와 cron end-to-end 실행은 release 후 별도 운영 검증으로 남음
+
+## 2026-07-28 17:25 KST — Hermes News Automation v0.1.0 공개 배포
+
+### 사용자 요청과 목적
+
+- PR #8 병합 후 release gate를 끝까지 수행
+- 검증된 main commit에 첫 공개 version tag와 GitHub Release 생성
+- skills.sh 공개 설치, Hermes direct install과 tap 동작을 실제 격리 환경에서 확인
+
+### 수행한 변경
+
+- [PR #9](https://github.com/dumbbelloper/hermes-agent/pull/9)를 생성하고 다중 OS CI 실패 1건을 수정
+- CI에서 package 설치가 만든 `egg-info`를 runtime source로 오인한 테스트 범위를 실제 Python package로 제한
+- Ubuntu, macOS와 Windows CI 통과 후 PR #9를 기존 규칙대로 squash merge
+- 병합 commit `437c37a`에 annotated tag `v0.1.0` 생성 및 push
+- 검증한 Python wheel을 포함한
+  [Hermes News Automation v0.1.0 GitHub Release](https://github.com/dumbbelloper/hermes-agent/releases/tag/v0.1.0) 공개
+- 병합된 main의 skills.sh 정규 identifier로 새 Hermes profile에 direct install
+- 별도 Hermes profile에 repository tap을 추가하고 검색 및 설치 경로를 확인
+
+### 생성·수정한 문서와 파일
+
+- [작업 로그](./WORK_LOG.md)
+- GitHub Release asset:
+  `hermes_news_automation-0.1.0-py3-none-any.whl`
+- release source 문서와 코드는 tag `v0.1.0`의 main 상태와 동일
+
+### 실행한 검증과 결과
+
+```text
+gh pr checks 9 --watch --interval 5
+gh pr merge 9 --squash
+git pull --ff-only origin main
+HERMES_HOME=<temporary-profile> hermes skills install \
+  skills-sh/dumbbelloper/hermes-agent/skills/hermes-news-automation --yes
+HERMES_HOME=<temporary-profile> hermes skills tap add \
+  dumbbelloper/hermes-agent
+python3 -m pip wheel --no-deps --no-build-isolation ...
+python3 -m pip install --no-deps --target <temporary-directory> <wheel>
+PYTHONPATH=<temporary-directory> python3 -m hermes_agent validate-registry
+git tag -a v0.1.0 <merge-commit>
+git push origin v0.1.0
+gh release create v0.1.0 <wheel> ...
+gh release view v0.1.0 --json ...
+```
+
+- PR #9 최초 CI 실패 원인은 source 문제가 아니라 build가 만든
+  `hermes_news_automation.egg-info`를 completeness test가 포함한 것
+- 수정 후 Ubuntu, macOS와 Windows GitHub Actions 모두 통과
+- tag `v0.1.0` 대상: `437c37a434f178afa34ef71b7d4c384a9ab28fbf`
+- Release 상태: 공개, draft 아님, prerelease 아님
+- wheel size: 46,929 bytes
+- wheel SHA-256:
+  `e300ed395b8f6ca0e5e7b7f5b396705fe68e4d62bc1fd8f422e0a3f3f3eff124`
+- wheel 격리 설치와 13개 활성 출처 registry 검증 통과
+- skills.sh 정규 identifier 설치 시 scanner `SAFE`, community source 설치 허용
+- 설치 bundle에 `SKILL.md`, artifact schema, pre-check, launcher와 전체 runtime 포함
+- [skills.sh 상세 페이지](https://skills.sh/dumbbelloper/hermes-agent/skills/hermes-news-automation) 공개 확인
+- Hermes tap 등록은 성공하고 `skills/` 경로를 인식
+- Hermes 0.19.0의 tap 추가 직후 `search`는 해당 GitHub 결과를 반환하지 않았으나,
+  문서의 설치 identifier는 skills.sh source로 동일 bundle을 정상 설치
+
+### 결정과 근거
+
+1. `v0.1.0`은 PR #9의 squash merge commit에 직접 tag한다.
+   - 공개 source, release 문서, CI 결과와 설치 검증 대상을 하나의 불변 commit으로 묶기 위해서다.
+2. wheel을 선택 release asset으로 첨부한다.
+   - Hermes 사용자는 필요 없지만 일반 Python 환경과 독립 registry 검증에도 같은 version을 사용할 수 있기 때문이다.
+3. skills.sh를 실제 공개 설치 경로로 안내한다.
+   - 인덱싱, 상세 페이지, source revision, 보안 scan과 bundle 설치가 모두 확인됐기 때문이다.
+4. tap 검색 성공을 과장하지 않는다.
+   - tap 등록은 성공했지만 현재 Hermes 0.19.0의 검색 결과에는 나타나지 않았고 설치는 skills.sh resolver가 처리했기 때문이다.
+5. 실제 credential을 release artifact 또는 검증 profile에 사용하지 않는다.
+   - 설치 및 doctor 검증에는 테스트 전용 placeholder만 사용하고 사용자 secret은 읽거나 기록하지 않았다.
+
+### 전역 설정이나 외부 시스템에 적용한 변경
+
+- GitHub `main`에 PR #9 squash merge
+- GitHub tag `v0.1.0` 생성
+- 공개 [GitHub Release v0.1.0](https://github.com/dumbbelloper/hermes-agent/releases/tag/v0.1.0)과 wheel asset 생성
+- skills.sh는 공개 repository main의 Skill을 인덱싱한 상태
+- `/private/tmp` 격리 Hermes profile 두 곳에 direct install 및 tap 설정 적용
+- 사용자 기본 `~/.hermes`, gateway, cron, Telegram과 실제 credential은 변경하지 않음
+
+### 알려진 한계와 남은 작업
+
+- 사용자는 기존 `~/.zshrc` Telegram 환경변수 값을 workspace의
+  `.hermes-news/config/telegram.json`으로 한 번 이전해야 함
+- 실제 사용자 workspace에서 `doctor`를 실행하고 첫 Hermes cron end-to-end smoke test 필요
+- Hermes 0.19.0에서 custom tap을 추가한 직후 GitHub source 검색 결과가 비어 있는 원인 확인 필요
+- native Windows는 code-level CI만 통과했으며 gateway, Scheduled Task, UTF-8,
+  Telegram end-to-end 검증 전까지 실험 지원
+- 장기 실행을 위한 retry backoff, circuit breaker와 운영 지표는 후속 작업
