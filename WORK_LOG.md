@@ -558,8 +558,18 @@ git diff --check
 
 - 전역 설정 변경 없음
 - 공식 공개 사이트를 읽기 전용으로 조회
-- 로그인, credential, WAF 우회, 외부 시스템 쓰기, Git push와 배포는 수행하지 않음
+- 공식 출처에 대한 로그인, credential 사용, WAF 우회, 외부 시스템 쓰기와 배포는 수행하지 않음
+- GitHub에는 아래 작업 브랜치 push와 Pull Request 생성만 수행
 - 로컬 `Automation/data/`에 수집 원본·정규화 결과·상태 파일 생성. 해당 경로는 Git 추적에서 제외됨
+
+### Git 작업
+
+- 작업 브랜치: `docs/source-catalog-and-initial-notes`
+- 커밋:
+  - `c294b56` — 수집 출처 확정과 초기 문서 작성
+- 작업 브랜치를 `origin/docs/source-catalog-and-initial-notes`로 push
+- 생성한 Pull Request:
+  - [#4 수집 출처 확정과 초기 Obsidian 문서 작성](https://github.com/dumbbelloper/hermes-agent/pull/4)
 
 ### 알려진 한계와 남은 작업
 
