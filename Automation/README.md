@@ -1,6 +1,6 @@
 # Hermes Agent 최소 수집기
 
-> 기준일: 2026-07-24
+> 기준일: 2026-07-28
 > 상태: Alpha — 공식 출처 메타데이터 수집과 보존 계층 구현
 > 라이선스: [Apache License 2.0](../LICENSE)
 
@@ -8,14 +8,16 @@ Hermes Agent의 첫 번째 실행 가능한 수집기다. 공식 공개 출처�
 
 ## 현재 지원 출처
 
-| Source ID | 조직 | 채널 | 방식 |
-| --- | --- | --- | --- |
-| `visa-press` | Visa | Press release | 공식 목록 HTML |
-| `jcb-press` | JCB | Press release | 공식 JSON |
-| `emvco-news` | EMVCo | News | 공식 RSS |
-| `pci-blog` | PCI Security Standards Council | Blog | 공식 RSS |
+| Source ID    | 조직                             | 채널            | 방식         |
+| ------------ | ------------------------------ | ------------- | ---------- |
+| `visa-press` | Visa                           | Press release | 공식 목록 HTML |
+| `jcb-press`  | JCB                            | Press release | 공식 JSON    |
+| `emvco-news` | EMVCo                          | News          | 공식 RSS     |
+| `pci-blog`   | PCI Security Standards Council | Blog          | 공식 RSS     |
 
 출처의 URI, 허용 도메인과 품질 기준은 [config/sources.json](./config/sources.json)에서 관리한다. 배포 패키지에는 같은 내용의 기본 Registry가 포함되며 테스트에서 두 파일의 일치 여부를 검사한다. 별도 Registry는 전역 `--config` 옵션으로 지정할 수 있다.
+
+현재 Registry에 포함할 출처의 판정 기준과 제외 근거는 [SOURCE_CATALOG.md](../SOURCE_CATALOG.md)에서 관리한다. WAF 우회, 브라우저 자동화 또는 검색 인덱스 폴백이 필요한 출처는 운영 Registry에 넣지 않는다.
 
 ## 설계 원칙
 

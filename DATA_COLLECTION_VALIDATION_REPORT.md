@@ -2,9 +2,11 @@
 
 > 기준일: 2026-07-24
 >
-> 상태: 초기 범위 품질 게이트 통과 · 수집기 구현 전
+> 상태: 역사적 검증 기준선 · 수집기 구현 전 시점의 결과
 >
 > 대상: Visa, Mastercard, American Express, UnionPay, JCB, EMVCo, PCI Security Standards Council
+
+현재 운영 출처와 제외 결정은 2026-07-28 기준 [SOURCE_CATALOG.md](./SOURCE_CATALOG.md)를 따른다. 이 보고서의 18개 Source Registry는 운영 확정 목록이 아니라 구현 전 실험 범위다.
 
 ## 1. 문서 목적
 
@@ -401,7 +403,7 @@ freshness_days: 14
 
 ## 12. 이번 검증에서 내린 핵심 결정
 
-1. 초기 Source Registry는 18개 출처로 시작한다.
+1. 구현 전 실험 Source Registry는 18개 출처로 구성했다. 현재 운영 Registry는 별도 판정을 통과한 4개 출처다.
 2. 뉴스와 기술 문서를 같은 어댑터로 처리하지 않는다.
 3. 직접 HTTP, 공식 JSON·RSS, 정적 HTML, 브라우저, 검색 인덱스 폴백을 명시적으로 구분한다.
 4. 데이터 보존과 자동 우선순위 정확도를 서로 다른 품질 지표로 관리한다.

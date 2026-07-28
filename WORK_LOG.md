@@ -354,3 +354,217 @@ git diff --check
 - freshness 기반 요청, scheduler, retry, 알림과 운영 지표는 아직 구현하지 않았다.
 - Hook 구현체의 실패 격리 정책은 후속 설계가 필요하다.
 - `CONTRIBUTING.md`, 행동 강령, 보안 정책과 CI는 아직 없다.
+
+## 2026-07-28 — 구현 진행상황과 문서 동기화 점검
+
+### 요청과 목적
+
+- 현재 저장소의 구현·Git·GitHub 상태를 기준으로 프로젝트 문서의 진행상황 표시가 맞는지 점검
+- 완료·미완료 범위, 과거 검증 결과와 현재 운영 코드의 차이를 구분
+- 문서 갱신이 필요한 항목과 우선순위를 후속 작업자가 확인할 수 있게 기록
+
+### 수행한 점검
+
+- 로컬 브랜치, 작업 트리, 원격 추적 브랜치와 `main` 대비 커밋 상태 확인
+- GitHub Pull Request 1~3의 현재 병합 상태와 status check 유무를 읽기 전용으로 확인
+- `README.md`, 프로젝트 계획, 범위 체크리스트, 수집 검증 보고서, 가드레일, 자동화 문서와 작업 로그 상호 대조
+- Source Registry, adapter, pipeline, 보존 상태, CLI와 테스트 구현을 문서의 완료 주장과 대조
+- 내부 Markdown 링크가 가리키는 프로젝트 파일과 디렉터리의 존재 여부 확인
+
+### 확인한 현재 상태
+
+- 최소 수집기 PR [#3](https://github.com/dumbbelloper/hermes-agent/pull/3)은 2026-07-24에 병합됐다. PR 1~3은 모두 병합 상태다.
+- 로컬은 여전히 `feat/minimum-collector` 브랜치이며 로컬 `origin/main`은 PR #3 병합 전 상태다. 작업 브랜치와 그 원격 추적 브랜치는 같은 커밋이고 작업 트리는 이번 기록 전까지 깨끗했다.
+- 운영 코드의 활성 Source Registry는 Visa, JCB, EMVCo, PCI SSC 네 출처다.
+- 현재 구현은 목록 메타데이터 수집·정규화·보존까지이며 원문 본문 수집, 관련성 분류, 요약, Obsidian Inbox 작성, GitHub Release·YouTube adapter, scheduler·retry·알림은 없다.
+
+### 문서 동기화 점검 결과
+
+1. **높음 — 범위 조사 체크리스트가 검증 보고서와 불일치**
+   - [SOURCE_SCOPE_CHECKLIST.md](./SOURCE_SCOPE_CHECKLIST.md)의 `초기 범위 조사 현황`은 “실제 작업 완료 상태”라고 정의하지만 공통 조사 항목과 대상 7개가 모두 미완료다.
+   - 반면 [DATA_COLLECTION_VALIDATION_REPORT.md](./DATA_COLLECTION_VALIDATION_REPORT.md)와 이 작업 로그는 18개 출처 등록, 15개 활성 검증과 대상별 URI·수집 방식 조사를 완료했다고 기록한다.
+   - 조사 완료, 부분 완료, 구현 완료를 분리해 체크리스트를 갱신해야 한다.
+2. **중간 — 프로젝트 계획의 사전 결정·단계 상태가 일부 과거 상태**
+   - [PROJECT_PLAN.md](./PROJECT_PLAN.md)의 `구현 전에 결정할 사항`에 구현 언어와 런타임이 미결정으로 남아 있지만 Python 3.9 이상으로 이미 결정·구현됐다.
+   - Phase 1 정의에는 GitHub Release와 Inbox 문서 생성까지 포함되지만 현재 “최소 수집기”는 그보다 작은 Alpha 범위다. 구현 현황 체크박스는 정확하므로 Phase 상태를 `부분 완료`로 명시하는 편이 명확하다.
+3. **중간 — 가드레일의 현재 기능 설명이 구현보다 앞섬**
+   - [ENTERPRISE_AI_GUARDRAILS.md](./ENTERPRISE_AI_GUARDRAILS.md)는 현재 기능을 “공개 자료 수집과 Obsidian 문서 작성”으로 표현한다.
+   - 실제 코드는 Obsidian 문서를 작성하지 않으므로 “현재 구현”과 “향후 허용할 기능”을 구분해야 한다.
+4. **중간 — GitHub와 로컬 진행상황 표시가 최신이 아님**
+   - 작업 로그는 PR 생성까지만 기록하고 현재 병합 상태를 별도로 요약하지 않았다.
+   - 로컬 `main`과 `origin/main` 참조도 PR #3 병합 커밋을 반영하지 않아, 로컬 Git 상태만 보면 구현이 아직 `main`에 들어가지 않은 것처럼 보인다.
+5. **낮음 — README의 현재형 설명이 Alpha 범위와 혼동될 수 있음**
+   - [README.md](./README.md)는 수집 자료를 요약·키워드와 함께 문서화한다고 현재형으로 설명하지만 실제 자동화는 아직 메타데이터 수집까지만 지원한다.
+   - 프로젝트 목표와 현재 구현 상태를 짧게 분리하면 [Automation/README.md](./Automation/README.md)와 더 잘 맞는다.
+6. **낮음 — 검증 보고서의 역사적 상태가 현재 상태처럼 보일 수 있음**
+   - 검증 보고서의 `수집기 구현 전` 상태는 2026-07-24 당시에는 정확하지만 현재 문서 체계에서는 역사적 스냅샷임을 더 명확히 표시할 필요가 있다.
+
+### 생성·수정한 문서와 파일
+
+- [WORK_LOG.md](./WORK_LOG.md)에 이번 점검 기록 추가
+- 진단 요청 범위를 유지하기 위해 다른 문서와 구현 코드는 수정하지 않음
+
+### 실행한 검증과 결과
+
+```text
+PYTHONPATH=Automation/src python3 -m unittest discover -s Automation/tests -v
+PYTHONPYCACHEPREFIX=/private/tmp/hermes-agent-pycache \
+  PYTHONPATH=Automation/src python3 -m compileall -q Automation/src Automation/tests
+PYTHONPATH=Automation/src python3 -m hermes_agent validate-registry
+git diff --check
+```
+
+- 단위·통합 테스트 21개 통과
+- Python 전체 compile 검사 통과
+- Registry schema `1.0`, 활성 출처 4개 검증 통과
+- `git diff --check` 통과
+- 기본 compile 실행은 sandbox 밖의 사용자 cache 경로에 쓰려다 권한 오류가 발생했다. bytecode cache를 `/private/tmp`로 지정한 동일 검사에서는 통과했다.
+
+### 결정과 근거
+
+1. 과거 실험의 18개 Source Registry와 현재 운영 코드의 4개 Registry는 서로 다른 단계의 결과이므로 숫자 자체를 오류로 판정하지 않았다.
+2. 기준일이 명시된 과거 보고서는 보존하고, 현재 상태 문서에서 후속 구현으로 연결하는 방식이 이력 추적에 적합하다고 판단했다.
+3. 사용자의 요청은 점검이므로 동기화 수정은 수행하지 않고 불일치와 우선순위만 기록했다.
+
+### 전역 설정이나 외부 시스템에 적용한 변경
+
+- 없음
+- GitHub PR 상태를 읽기 전용으로 조회했으며 Git fetch, push, PR 수정, 배포는 수행하지 않았다.
+
+### 알려진 한계와 남은 작업
+
+- 2026-07-28 현재 공식 출처 4곳의 실시간 수집은 다시 실행하지 않았다. 이번 결과는 코드, 오프라인 회귀 테스트와 기존 검증 기록의 동기화 점검이다.
+- 로컬 원격 참조를 갱신하지 않았으므로 실제 GitHub `main`의 병합 커밋은 GitHub 조회 결과로 확인했다.
+- 위 여섯 문서 불일치는 아직 수정되지 않았으며, 우선 범위 체크리스트와 프로젝트 계획부터 갱신해야 한다.
+
+## 2026-07-28 — 문서 현행화, 운영 출처 확정과 초기 수집 문서 작성
+
+### 요청과 목적
+
+- 최소 수집기 진척도에 맞춰 프로젝트 문서를 최신 상태로 현행화
+- Akamai, Cloudflare 등 WAF 차단이나 브라우저 의존으로 수집이 어려운 사이트를 우회하지 않고 제외
+- 운영 수집 대상, 추가 구현 후보와 수집 불가·제외 출처의 사유를 명시적으로 분류
+- 수집 대상이 확정되면 실제 수집을 시작하고 Obsidian에서 검토할 초기 문서 작성
+
+### 수행한 변경
+
+- 프로젝트 목표와 현재 자동화 범위를 분리하고 2026-07-28 구현 상태를 문서에 반영
+- Phase 0 완료, Phase 1 부분 완료와 결정·미결정 항목을 프로젝트 계획에 표시
+- 초기 조사 체크리스트의 실제 완료 상태를 검증 보고서와 일치시킴
+- 과거 18개 실험 Registry와 현재 4개 운영 Registry를 구분
+- 운영·후보·제외 판정 기준과 출처별 근거를 별도 출처 문서로 확정
+- 가드레일의 현재 기능 설명을 메타데이터 수집과 사람 검토 기반 문서 작성으로 수정
+- 확정된 공식 출처 4곳을 두 번 실제 수집해 결과와 멱등성 확인
+- 최신 수집 자료 중 기술·표준·보안 가치가 높은 자료를 출처별 1건씩 선별
+- Inbox 초안 4건, Concepts 노트 4건, 초기 Digest 1건과 수집 문서 템플릿 작성
+
+### 운영 출처 판정
+
+현재 고정 운영 출처:
+
+| Source ID | 조직·채널 | 방식 |
+| --- | --- | --- |
+| `visa-press` | Visa Press Releases | 정적 HTML |
+| `jcb-press` | JCB Press | 공식 JSON |
+| `emvco-news` | EMVCo News | 공식 RSS |
+| `pci-blog` | PCI SSC Blog | 공식 RSS |
+
+추가 구현 후보는 UnionPay Media Center, Visa Developer Release Notes, American Express Newsroom AEM model, EMVCo Specifications, PCI SSC Document Library와 allowlist 기반 GitHub Release로 분리했다.
+
+운영 제외:
+
+- Mastercard 뉴스룸: 일반 HTTP 수집에서 Akamai `Access Denied` 403
+- Mastercard Developer Products와 American Express Developer Documentation: 본문 항목이 없는 JavaScript 셸
+- UnionPay·JCB의 확인되지 않은 별도 개발자 문서 URI
+- 저신호 JCB YouTube와 결제 네트워크 GitHub 조직 전체
+- 검색 인덱스 또는 브라우저 자동화 기반 폴백
+
+이번 재검증에서 Cloudflare 차단 출처는 별도로 확인되지 않았지만 동일한 제외 원칙을 문서화했다.
+
+### 실제 수집 결과
+
+2026-07-28 첫 실행:
+
+| 출처 | 후보 | 수락 | 격리 | 신규 |
+| --- | ---: | ---: | ---: | ---: |
+| EMVCo News | 2 | 2 | 0 | 2 |
+| JCB Press | 454 | 454 | 0 | 454 |
+| PCI SSC Blog | 50 | 50 | 0 | 50 |
+| Visa Press | 95 | 95 | 0 | 95 |
+| 합계 | 601 | 601 | 0 | 601 |
+
+즉시 반복 실행에서 601건 모두 `unchanged`, 신규·수정·격리 0건이었다. 수집 원본과 상태는 Git에서 제외된 `Automation/data/`에 저장했다.
+
+### 생성·수정한 문서와 파일
+
+현행화:
+
+- [README.md](./README.md)
+- [PROJECT_PLAN.md](./PROJECT_PLAN.md)
+- [SOURCE_SCOPE_CHECKLIST.md](./SOURCE_SCOPE_CHECKLIST.md)
+- [DATA_COLLECTION_VALIDATION_REPORT.md](./DATA_COLLECTION_VALIDATION_REPORT.md)
+- [ENTERPRISE_AI_GUARDRAILS.md](./ENTERPRISE_AI_GUARDRAILS.md)
+- [Automation/README.md](./Automation/README.md)
+
+출처와 템플릿:
+
+- [SOURCE_CATALOG.md](./SOURCE_CATALOG.md)
+- [Templates/Collected Note.md](./Templates/Collected%20Note.md)
+
+초기 수집 문서:
+
+- [Visa Stablecoin Platform](./Inbox/2026-07-16%20Visa%20Introduces%20Platform%20for%20Stablecoin%20Minting%20Movement%20and%20Management.md)
+- [JCB·Circle Stablecoin MOU](./Inbox/2026-07-14%20JCB%20Signs%20MOU%20with%20Circle%20to%20Explore%20Stablecoin%20Collaboration.md)
+- [EMVCo Digital Payment Credential](./Inbox/2026-06-23%20EMVCo%20Requests%20Feedback%20on%20Verifiable%20Digital%20Credentials.md)
+- [PCI DSS와 NIST CSF mapping](./Inbox/2026-07-23%20Mapping%20PCI%20DSS%204.0.1%20to%20NIST%20CSF%202.0.md)
+- [2026-07-28 초기 수집 브리핑](./Digests/2026-07-28%20초기%20수집%20브리핑.md)
+
+개념 노트:
+
+- [Stablecoin](./Concepts/Stablecoin.md)
+- [Digital Payment Credential](./Concepts/Digital%20Payment%20Credential.md)
+- [PCI DSS](./Concepts/PCI%20DSS.md)
+- [NIST Cybersecurity Framework](./Concepts/NIST%20Cybersecurity%20Framework.md)
+
+### 실행한 검증과 결과
+
+```text
+PYTHONPATH=Automation/src python3 -m hermes_agent collect --data-dir Automation/data
+PYTHONPATH=Automation/src python3 -m unittest discover -s Automation/tests -v
+PYTHONPYCACHEPREFIX=/private/tmp/hermes-agent-pycache \
+  PYTHONPATH=Automation/src python3 -m compileall -q Automation/src Automation/tests
+PYTHONPATH=Automation/src python3 -m hermes_agent validate-registry
+git diff --check
+```
+
+- 실제 수집 2회 모두 출처 4/4 성공
+- 첫 실행 601건 수락, 격리 0건
+- 두 번째 실행 601건 모두 변경 없음
+- 오프라인 단위·통합 테스트 21개 통과
+- Python 전체 compile 검사 통과
+- Registry schema `1.0`, 활성 출처 4개 검증 통과
+- `git diff --check` 통과
+- 초기 문서의 Obsidian wiki link가 모두 실제 Inbox·Concepts 문서로 연결됨
+
+### 결정과 근거
+
+1. 운영 범위는 조직 대표성을 맞추기보다 안정적으로 직접 수집 가능한 공식 출처를 우선해 4개로 고정했다.
+2. Mastercard를 억지로 포함하기 위해 검색 인덱스나 브라우저 폴백을 유지하지 않는다.
+3. 일반 HTTP 200만으로 운영 출처에 추가하지 않고 항목 단위 parser, fixture와 반복 수집 검증을 승격 조건으로 삼는다.
+4. 601건을 한꺼번에 문서화하지 않고 출처별 고가치 항목 1건으로 문서 흐름과 품질을 먼저 검증한다.
+5. 발표 사실과 해석을 구분하고 beta, MOU·PoC, draft처럼 성숙도를 문서에 명시한다.
+
+### 전역 설정이나 외부 시스템에 적용한 변경
+
+- 전역 설정 변경 없음
+- 공식 공개 사이트를 읽기 전용으로 조회
+- 로그인, credential, WAF 우회, 외부 시스템 쓰기, Git push와 배포는 수행하지 않음
+- 로컬 `Automation/data/`에 수집 원본·정규화 결과·상태 파일 생성. 해당 경로는 Git 추적에서 제외됨
+
+### 알려진 한계와 남은 작업
+
+- Inbox 문서 작성은 아직 자동화되지 않아 이번 4건은 실제 수집 결과와 공식 원문을 사람이 검토하는 방식으로 작성했다.
+- 전체 601건 중 4건만 선별했다. 중요도 기준과 일간 문서 상한은 이 초안을 검토한 뒤 확정해야 한다.
+- 추가 구현 후보는 Source Registry에 포함하지 않았으며 adapter와 회귀 테스트 전에는 수집하지 않는다.
+- 공식 사이트 구조와 접근 정책은 변경될 수 있으므로 출처 판정 기준일을 유지하고 변경 시 재검증해야 한다.
+- scheduler, retry, 알림, 원문 본문 추출과 Inbox 자동 생성은 아직 구현되지 않았다.
