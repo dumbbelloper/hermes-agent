@@ -995,4 +995,12 @@ git diff --check
 - Telegram 알림은 수동 CLI이며 collector/writer Hook과 scheduler에 아직 연결되지 않았다.
 - Telegram API 전송 실패 시 자동 retry·backoff와 delivery state 저장이 없다.
 - 원문 수정 시 `update_pending` 판정 이후 문서 갱신과 재알림 workflow가 남아 있다.
-- branch commit, push와 Pull Request는 아래 Git 작업 완료 후 기록한다.
+
+### Git 작업
+
+- 작업 브랜치: `feat/us-finance-media-telegram`
+- 커밋:
+  - `cef08b2` — 미국 금융 결제 언론 수집과 Telegram 알림 추가
+- 작업 브랜치를 `origin/feat/us-finance-media-telegram`로 push
+- 생성한 Pull Request:
+  - [#7 미국 금융·결제 언론 수집과 Telegram 알림 추가](https://github.com/dumbbelloper/hermes-agent/pull/7)
