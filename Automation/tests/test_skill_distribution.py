@@ -75,6 +75,17 @@ class SkillDistributionTests(unittest.TestCase):
             )
             self.assertTrue(target.exists(), msg="Missing Skill link: {}".format(target))
 
+    def test_skill_markdown_explicitly_links_every_runtime_file(self) -> None:
+        content = (SKILL_SOURCE / "SKILL.md").read_text(encoding="utf-8")
+        linked = {match.group(1) for match in MARKDOWN_LINK.finditer(content)}
+        runtime = SKILL_SOURCE / "scripts" / "runtime"
+        required = {
+            path.relative_to(SKILL_SOURCE).as_posix()
+            for path in runtime.rglob("*")
+            if path.is_file()
+        }
+        self.assertEqual(set(), required - linked)
+
     def test_skill_bundle_has_no_repository_or_user_path_dependency(self) -> None:
         forbidden = (
             "Automation/run.py",
