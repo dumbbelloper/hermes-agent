@@ -855,7 +855,17 @@ git diff --check
 - credential, token, 로그인, WAF 우회와 브라우저 자동화 사용 없음
 - 공식 공개 HTTPS 출처를 읽기 전용으로 조회
 - 수집 원본과 정규화 결과는 Git에서 제외된 로컬 `Automation/data/`에 저장
-- 아직 commit, push, Pull Request 또는 배포는 수행하지 않음
+- 작업 브랜치를 GitHub 원격 저장소에 push하고 Pull Request를 생성
+- 배포와 전역 설정 변경은 수행하지 않음
+
+### Git 작업
+
+- 작업 브랜치: `feat/expand-collectable-sources`
+- 커밋:
+  - `c1a181c` — RSS API 우선 수집 출처 확장 및 문서 작성
+- 작업 브랜치를 `origin/feat/expand-collectable-sources`로 push
+- 생성한 Pull Request:
+  - [#6 RSS·API 우선 수집 출처 확장 및 신규 문서 작성](https://github.com/dumbbelloper/hermes-agent/pull/6)
 
 ### 알려진 한계와 남은 작업
 
