@@ -34,6 +34,7 @@ class SourceConfig:
     freshness_days: int
     allowed_domains: Tuple[str, ...]
     language: str = "en"
+    official: bool = True
     options: Mapping[str, Any] = field(default_factory=dict)
 
 

@@ -157,6 +157,78 @@
       "options": {
         "max_quarantine_ratio": 0.1
       }
+    },
+    {
+      "id": "payments-dive",
+      "organization": "Payments Dive",
+      "channel": "payments-news",
+      "uri": "https://www.paymentsdive.com/feeds/news/",
+      "adapter": "rss_atom",
+      "enabled": true,
+      "priority": 2,
+      "freshness_days": 7,
+      "allowed_domains": [
+        "www.paymentsdive.com"
+      ],
+      "language": "en",
+      "official": false,
+      "options": {
+        "max_quarantine_ratio": 0.1
+      }
+    },
+    {
+      "id": "banking-dive",
+      "organization": "Banking Dive",
+      "channel": "banking-news",
+      "uri": "https://www.bankingdive.com/feeds/news/",
+      "adapter": "rss_atom",
+      "enabled": true,
+      "priority": 2,
+      "freshness_days": 7,
+      "allowed_domains": [
+        "www.bankingdive.com"
+      ],
+      "language": "en",
+      "official": false,
+      "options": {
+        "max_quarantine_ratio": 0.1
+      }
+    },
+    {
+      "id": "pymnts",
+      "organization": "PYMNTS",
+      "channel": "payments-news",
+      "uri": "https://www.pymnts.com/feed/",
+      "adapter": "rss_atom",
+      "enabled": true,
+      "priority": 2,
+      "freshness_days": 3,
+      "allowed_domains": [
+        "www.pymnts.com"
+      ],
+      "language": "en",
+      "official": false,
+      "options": {
+        "max_quarantine_ratio": 0.1
+      }
+    },
+    {
+      "id": "techcrunch-fintech",
+      "organization": "TechCrunch",
+      "channel": "fintech-news",
+      "uri": "https://techcrunch.com/category/fintech/feed/",
+      "adapter": "rss_atom",
+      "enabled": true,
+      "priority": 2,
+      "freshness_days": 14,
+      "allowed_domains": [
+        "techcrunch.com"
+      ],
+      "language": "en",
+      "official": false,
+      "options": {
+        "max_quarantine_ratio": 0.1
+      }
     }
   ]
 }

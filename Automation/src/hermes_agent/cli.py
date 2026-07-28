@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Optional, Sequence
@@ -14,6 +15,7 @@ from .note_index import VaultNoteIndex
 from .pipeline import CollectorPipeline
 from .registry import RegistryError, SourceRegistry
 from .storage import FileStore
+from .telegram import TelegramError, TelegramNotifier, split_message
 
 
 DEFAULT_CONFIG = Path(__file__).with_name("default_sources.json")
@@ -23,7 +25,7 @@ DEFAULT_DATA_DIR = Path("Automation/data")
 def parser() -> argparse.ArgumentParser:
     root = argparse.ArgumentParser(
         prog="hermes-collector",
-        description="Collect official payment ecosystem source metadata.",
+        description="Collect trusted payment ecosystem source metadata.",
     )
     root.add_argument(
         "--config",
@@ -97,6 +99,25 @@ def parser() -> argparse.ArgumentParser:
     note_status.add_argument("--record-id", required=True)
     note_status.add_argument("--source-fingerprint", required=True)
     note_status.set_defaults(handler=show_note_status)
+
+    telegram = commands.add_parser(
+        "notify-telegram",
+        help="send complete Markdown documents through the Telegram Bot API",
+    )
+    telegram.add_argument(
+        "--file",
+        action="append",
+        type=Path,
+        required=True,
+        help="UTF-8 Markdown file to send; repeat for multiple documents",
+    )
+    telegram.add_argument("--timeout", type=float, default=20.0)
+    telegram.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="validate files and report message chunks without sending",
+    )
+    telegram.set_defaults(handler=notify_telegram)
     return root
 
 
@@ -204,6 +225,53 @@ def show_note_status(arguments: argparse.Namespace) -> int:
     return 0
 
 
+def notify_telegram(arguments: argparse.Namespace) -> int:
+    if arguments.dry_run:
+        documents = []
+        total_chunks = 0
+        for path in arguments.file:
+            try:
+                content = path.read_text(encoding="utf-8")
+            except (OSError, UnicodeError) as error:
+                raise TelegramError(
+                    "cannot read Telegram document: {}".format(path)
+                ) from error
+            chunks = len(split_message(content))
+            documents.append({"path": str(path), "chunks": chunks})
+            total_chunks += chunks
+        print(
+            json.dumps(
+                {
+                    "status": "dry_run",
+                    "documents": documents,
+                    "messages": total_chunks,
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
+        return 0
+
+    notifier = TelegramNotifier(
+        os.environ.get("HERMES_TELEGRAM_BOT_TOKEN", ""),
+        os.environ.get("HERMES_TELEGRAM_CHAT_ID", ""),
+        timeout_seconds=arguments.timeout,
+    )
+    messages = notifier.send_files(arguments.file)
+    print(
+        json.dumps(
+            {
+                "status": "sent",
+                "documents": len(arguments.file),
+                "messages": messages,
+            },
+            ensure_ascii=False,
+            indent=2,
+        )
+    )
+    return 0
+
+
 def main(argv: Optional[Sequence[str]] = None) -> int:
     arguments = parser().parse_args(argv)
     try:
@@ -213,6 +281,18 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             json.dumps(
                 {
                     "status": "configuration_error",
+                    "message": str(error),
+                },
+                ensure_ascii=False,
+            ),
+            file=sys.stderr,
+        )
+        return 2
+    except TelegramError as error:
+        print(
+            json.dumps(
+                {
+                    "status": "telegram_error",
                     "message": str(error),
                 },
                 ensure_ascii=False,

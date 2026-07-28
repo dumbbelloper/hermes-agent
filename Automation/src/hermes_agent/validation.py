@@ -110,8 +110,12 @@ def validate_record(
                 "publication date must be YYYY-MM-DD",
             )
         )
-    if not record.official:
+    if record.official != source.official:
         issues.append(
-            ValidationIssue("official", "not_official", "source must be official")
+            ValidationIssue(
+                "official",
+                "mismatch",
+                "record official flag must match the source classification",
+            )
         )
     return issues

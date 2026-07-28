@@ -2,7 +2,7 @@
 
 > 기준일: 2026-07-28
 >
-> 상태: Phase 0 완료 · Phase 1 운영 출처 9개 확정 · 검토 기반 문서 작성 진행
+> 상태: Phase 0 완료 · Phase 1 운영 출처 13개 확정 · Telegram 알림 검증
 
 ## 1. 목표
 
@@ -232,12 +232,13 @@ Agent는 작업 순서와 상태를 조정하고, skill은 입력과 출력이 �
 - [x] 원본·snapshot·누적 정상 상태·격리·source health 저장
 - [x] 빈 snapshot과 수집 실패 시 마지막 정상 상태 보존
 - [x] CLI와 네트워크 없는 fixture 회귀 테스트
-- [x] 운영 4개, 추가 구현 후보, 수집 제외 출처 분류
+- [x] 공식 9개·편집 언론 4개, 추가 구현 후보와 수집 제외 출처 분류
 - [x] 수집 `record_id`를 이용한 Vault 문서 인덱스와 중복 작성 방지 판정
 - Phase 1 최소 수집기 부분 완료 — 메타데이터 수집 완료, Inbox 자동 작성 미완료
-- [ ] GitHub Release adapter
+- [x] 선별 GitHub Release Atom 수집
 - [ ] 원문 본문 수집과 Obsidian Inbox 문서 생성
-- [ ] scheduler, retry, 알림과 운영 지표
+- [x] 환경변수 기반 Telegram 문서 알림
+- [ ] scheduler, retry와 운영 지표
 
 구현 세부 사항과 실행법은 [Automation/README.md](./Automation/README.md)에서 관리한다.
 
@@ -283,7 +284,7 @@ Agent는 작업 순서와 상태를 조정하고, skill은 입력과 출력이 �
 | --- | --- | --- |
 | 구현 언어와 런타임 | 결정 | Python 3.9 이상, runtime dependency 없음 |
 | 현재 실행 환경 | 결정 | 로컬 수동 실행, `Automation/data/`에 상태 저장 |
-| 운영 출처 | 결정 | 직접 접근 가능한 공식 출처 9개, 세부 기준은 [SOURCE_CATALOG.md](./SOURCE_CATALOG.md) |
+| 운영 출처 | 결정 | 직접 접근 가능한 공식 출처 9개와 편집 언론 4개, 세부 기준은 [SOURCE_CATALOG.md](./SOURCE_CATALOG.md) |
 | 차단 출처 처리 | 결정 | WAF 우회, 검색 인덱스와 브라우저 자동화 폴백 없이 제외 |
 | 문서 식별과 중복 방지 | 결정 | `record_id`, `source_fingerprint`와 실행 시 Vault index 사용. 세부 기준은 [NOTE_IDENTITY_POLICY.md](./NOTE_IDENTITY_POLICY.md) |
 | 문서 승인 | 임시 결정 | `Inbox/` 초안을 사람이 검토한 뒤 `Notes/`로 이동 |
@@ -294,7 +295,7 @@ Agent는 작업 순서와 상태를 조정하고, skill은 입력과 출력이 �
 
 ## 11. 현재 문서 작성 작업
 
-운영 출처 9개의 최신 자료 중 결제 기술·표준·보안 변화와 직접 관련된 항목을 소량 선별해 `Inbox/` 초안을 작성한다. 현재 누적 1,544건에서 8건을 문서화했다.
+운영 출처 13개의 최신 자료 중 결제 기술·표준·보안 변화와 직접 관련된 항목을 소량 선별해 `Inbox/` 초안을 작성한다. 현재 누적 1,594건에서 12건을 문서화했다.
 
 - [x] 안정적인 신규 항목 탐지와 원문 제목·링크 보존 검증
 - [ ] 한국어 요약만으로 핵심 변화를 이해할 수 있는지 검토

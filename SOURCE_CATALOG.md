@@ -4,7 +4,7 @@
 >
 > 상태: 운영 범위 확정
 
-이 문서는 Hermes Agent가 실제로 자동 수집할 공식 출처, 추가 구현 후 검토할 후보와 운영에서 제외할 출처를 관리한다. 조사 범위는 [SOURCE_SCOPE_CHECKLIST.md](./SOURCE_SCOPE_CHECKLIST.md), 과거 품질 실험은 [DATA_COLLECTION_VALIDATION_REPORT.md](./DATA_COLLECTION_VALIDATION_REPORT.md), 실행 설정은 [Automation/config/sources.json](./Automation/config/sources.json)을 따른다.
+이 문서는 Hermes Agent가 실제로 자동 수집할 공식 출처와 선별 편집 언론, 추가 구현 후 검토할 후보 및 운영 제외 출처를 관리한다. 조사 범위는 [SOURCE_SCOPE_CHECKLIST.md](./SOURCE_SCOPE_CHECKLIST.md), 과거 품질 실험은 [DATA_COLLECTION_VALIDATION_REPORT.md](./DATA_COLLECTION_VALIDATION_REPORT.md), 실행 설정은 [Automation/config/sources.json](./Automation/config/sources.json)을 따른다.
 
 ## 1. 판정 기준
 
@@ -12,9 +12,9 @@
 
 다음 조건을 모두 만족해야 한다.
 
-- 로그인, cookie, API key 없이 공식 HTTPS URI에 직접 접근할 수 있다.
-- RSS·Atom, 공식 JSON 또는 서버가 완성한 정적 HTML에서 항목을 재현 가능하게 추출할 수 있다.
-- 제목, 공식 원문 URL과 게시일을 안정적으로 얻을 수 있다.
+- 로그인, cookie, API key 없이 출처의 HTTPS URI에 직접 접근할 수 있다.
+- RSS·Atom, 공개 JSON 또는 서버가 완성한 정적 HTML에서 항목을 재현 가능하게 추출할 수 있다.
+- 제목, 원문 URL과 게시일을 안정적으로 얻을 수 있다.
 - 허용 도메인, 빈 목록, 과도한 격리와 마지막 정상 상태 보존 검사를 통과한다.
 - fixture 회귀 테스트와 실제 반복 수집에서 멱등성을 확인했다.
 
@@ -35,6 +35,10 @@
 
 ## 2. 운영 수집 출처
 
+공식 조직 채널은 priority 1과 `official: true`, 선별 편집 언론은 priority 2와 `official: false`로 구분한다. 언론 기사는 가능한 경우 규제기관·기업의 1차 자료와 교차 확인하며 원문 전체를 복제하지 않는다.
+
+### 2.1 공식 조직 출처
+
 | Source ID | 조직·채널 | 공식 URI | 방식 | 판정 근거 |
 | --- | --- | --- | --- | --- |
 | `visa-press` | Visa Press Releases | [공식 목록](https://usa.visa.com/about-visa/newsroom/press-releases-listing.html) | 정적 HTML | 일반 HTTP 200, 제목·URL·게시일 추출, 실제 반복 수집과 회귀 테스트 통과 |
@@ -47,7 +51,16 @@
 | `emvco-news` | EMVCo News | [공식 RSS](https://www.emvco.com/news/feed/) | RSS | 일반 HTTP 200, 표준 feed, 실제 반복 수집과 RSS·Atom 테스트 통과 |
 | `pci-blog` | PCI SSC Blog | [공식 RSS](https://blog.pcisecuritystandards.org/rss.xml) | RSS | 일반 HTTP 200, 표준 feed, 실제 반복 수집과 RSS 테스트 통과 |
 
-이 9개 출처가 현재 고정된 운영 범위다. 2026-07-28 두 차례 실수집에서 9/9 성공, 누적 1,544건, 격리 0건을 확인했고 두 번째 실행은 전부 `unchanged`였다. Registry 변경은 이 문서의 판정과 코드·fixture 검증을 함께 갱신해야 한다.
+### 2.2 미국 금융·결제 편집 언론
+
+| Source ID | 매체·채널 | RSS URI | 분류 | 판정 근거 |
+| --- | --- | --- | --- | --- |
+| `payments-dive` | Payments Dive / Payments News | [공식 RSS](https://www.paymentsdive.com/feeds/news/) | 편집 언론 | 결제·카드·fraud·규제 집중, 최신 10건 수집과 반복 검증 통과 |
+| `banking-dive` | Banking Dive / Banking News | [공식 RSS](https://www.bankingdive.com/feeds/news/) | 편집 언론 | 은행·fintech·규제 보완, 최신 10건 수집과 반복 검증 통과 |
+| `pymnts` | PYMNTS / Payments News | [공식 RSS](https://www.pymnts.com/feed/) | 편집 언론 | 결제 발행량과 속보성이 높음, 최신 10건 수집 통과. 비결제 일반 기사 필터 필요 |
+| `techcrunch-fintech` | TechCrunch / Fintech | [공식 RSS](https://techcrunch.com/category/fintech/feed/) | 편집 언론 | fintech·agentic payment·투자 동향, 최신 20건 수집 통과. 행사 홍보 필터 필요 |
+
+현재 고정 운영 범위는 공식 출처 9개와 편집 언론 4개, 총 13개다. 2026-07-28 현재 누적 정상 레코드는 1,594건이며 격리는 0건이다. 신규 언론 4곳은 두 차례 실수집에서 4/4 성공했고 두 번째 실행의 50건이 모두 `unchanged`였다. Registry 변경은 이 문서의 판정과 코드·fixture 검증을 함께 갱신해야 한다.
 
 ## 3. 추가 구현 후보
 
@@ -56,6 +69,8 @@
 | EMVCo Specifications | [공식 검색](https://www.emvco.com/specifications/) | 직접 접근 가능, 검색 페이지로 redirect | 규격명·버전·수정일·문서 URL 단위 parser와 파일 변경 검증 |
 | PCI SSC Document Library | [공식 문서함](https://www.pcisecuritystandards.org/document_library/) | 직접 접근 가능 | 문서명·버전·수정일·파일 URL 단위 parser와 파일 변경 검증 |
 | Visa Developer Use Cases | [공식 Use Cases](https://developer.visa.com/use-cases) | 정적 HTML에서 제목·URL 추출 가능하나 게시일 없음 | 공식 게시일 또는 별도 변경일을 재현 가능하게 얻을 수 있을 때 승격 |
+| American Banker Payments | [Payments](https://www.americanbanker.com/payments) | 정적 목록 접근 가능, 전문성 높으나 공개 RSS 미확인·유료벽 존재 | 안정 목록 parser, 메타데이터 정책과 반복 수집 검증 |
+| Bloomberg Markets | [공식 RSS](https://feeds.bloomberg.com/markets/news.rss) | feed는 활성이나 범위가 넓고 결제 신호 밀도가 낮음 | 결제·fintech 관련성 필터와 유료 기사 처리 정책 검증 |
 
 ## 4. 수집 제외 출처
 
@@ -71,6 +86,8 @@
 | 결제 네트워크 GitHub 조직 전체 | Visa·Mastercard·American Express 공식 조직 | 범용·비결제 저장소가 섞여 잡음이 큼. 선별한 Visa 저장소 6개 중 4개 release feed는 비어 있고 1개는 2022년 이후 정체 | 결제 관련 저장소별 활성 release 확인 |
 | 검색 인덱스 기반 공식 페이지 발견 | 해당 없음 | 최신성·완전성과 재현성을 공식 출처가 보장하지 않음 | 사용하지 않음 |
 | 브라우저 자동화 기반 목록 수집 | 해당 없음 | 렌더링·challenge 의존성과 운영 복잡도가 큼 | 사용하지 않음 |
+| WSJ Markets RSS | [기존 RSS](https://feeds.a.dj.com/rss/RSSMarketsMain.xml) | 응답은 200이나 최신 항목이 2025-01에서 멈춤 | 현재 날짜로 지속 갱신되는 공식 feed 확인 |
+| CNBC·Fortune 기존 RSS | 해당 RSS 경로 | 2026-07-28 일반 HTTP 검사에서 403 | 인증 없는 공식 RSS·API 제공 |
 
 2026-07-28 재검증에서 명시적으로 확인된 WAF 차단은 Mastercard 뉴스룸의 Akamai 403이다. Cloudflare 차단 출처는 이번 고정 범위에서 별도로 확인되지 않았지만 같은 원칙을 적용한다.
 

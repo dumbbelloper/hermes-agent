@@ -1,10 +1,10 @@
 # Hermes Agent 최소 수집기
 
 > 기준일: 2026-07-28
-> 상태: Alpha — 공식 출처 메타데이터 수집과 보존 계층 구현
+> 상태: Alpha — 공식·편집 출처 메타데이터 수집과 Telegram 알림 구현
 > 라이선스: [Apache License 2.0](../LICENSE)
 
-Hermes Agent의 첫 번째 실행 가능한 수집기다. 공식 공개 출처에서 제목, 원문 URL, 게시일과 설명을 가져와 공통 레코드로 정규화한다. 현재 단계에서는 원문 본문 복제, LLM 요약, Obsidian 문서 생성, 뉴스레터 발행을 수행하지 않는다.
+Hermes Agent의 첫 번째 실행 가능한 수집기다. 공식 공개 출처와 선별 편집 언론에서 제목, 원문 URL, 게시일과 설명을 가져와 공통 레코드로 정규화한다. 현재 단계에서는 원문 본문 복제, LLM 요약, Obsidian 문서 자동 생성과 뉴스레터 발행을 수행하지 않는다.
 
 ## 현재 지원 출처
 
@@ -19,6 +19,10 @@ Hermes Agent의 첫 번째 실행 가능한 수집기다. 공식 공개 출처�
 | `jcb-press`  | JCB                            | Press release | 공식 JSON    |
 | `emvco-news` | EMVCo                          | News          | 공식 RSS     |
 | `pci-blog`   | PCI Security Standards Council | Blog          | 공식 RSS     |
+| `payments-dive` | Payments Dive | Payments News | 편집 RSS |
+| `banking-dive` | Banking Dive | Banking News | 편집 RSS |
+| `pymnts` | PYMNTS | Payments News | 편집 RSS |
+| `techcrunch-fintech` | TechCrunch | Fintech News | 편집 RSS |
 
 출처의 URI, 허용 도메인과 품질 기준은 [config/sources.json](./config/sources.json)에서 관리한다. 배포 패키지에는 같은 내용의 기본 Registry가 포함되며 테스트에서 두 파일의 일치 여부를 검사한다. 별도 Registry는 전역 `--config` 옵션으로 지정할 수 있다.
 
@@ -26,7 +30,7 @@ Hermes Agent의 첫 번째 실행 가능한 수집기다. 공식 공개 출처�
 
 ## 설계 원칙
 
-- 공식 HTTPS 출처와 명시된 도메인만 허용한다.
+- 등록된 HTTPS 출처와 명시된 도메인만 허용하고 공식 채널과 편집 언론을 구분한다.
 - source별 파싱과 공통 정규화·검증·저장을 분리한다.
 - canonical URL과 source ID로 안정적인 레코드 ID를 만든다.
 - 원본 응답과 SHA-256을 남겨 결과를 재현할 수 있게 한다.
@@ -80,6 +84,18 @@ PYTHONPATH=Automation/src python3 -m hermes_agent note-status \
 ```
 
 결과는 `create`, `skip`, `update_pending` 중 하나다. 같은 `record_id`가 여러 문서에 있거나 ID가 `source_id`·`canonical_url`과 일치하지 않으면 자동 처리를 중단한다. 상세 정책은 [NOTE_IDENTITY_POLICY.md](../NOTE_IDENTITY_POLICY.md)를 따른다.
+
+작성 완료한 Markdown 문서의 전체 내용을 Telegram으로 전송:
+
+```bash
+export HERMES_TELEGRAM_BOT_TOKEN="<bot-token>"
+export HERMES_TELEGRAM_CHAT_ID="<chat-id>"
+
+PYTHONPATH=Automation/src python3 -m hermes_agent notify-telegram \
+  --file "Inbox/example.md"
+```
+
+credential은 CLI 인자로 받지 않고 환경변수만 사용한다. 메시지가 Telegram의 4,096자 제한을 넘으면 원문 문자를 보존해 여러 메시지로 분할한다. 실제 전송 전에는 `--dry-run`으로 파일별 메시지 수를 확인할 수 있다. 변수 이름만 담은 예시는 [`.env.example`](../.env.example)에 있으며 실제 값은 commit하지 않는다.
 
 기본 데이터 위치는 `Automation/data/`이며 Git 추적에서 제외된다. 다른 위치를 사용하려면 `collect`와 `show-state`에 `--data-dir`을 지정한다.
 
@@ -144,6 +160,7 @@ PYTHONPATH=Automation/src python3 -m unittest discover \
 - 네트워크 요청 전 최초 URI·redirect 목적지 차단
 - Vault 필수 identity field, 안정 ID와 canonical URL 일치 검증
 - 중복 `record_id` 탐지와 `create`·`skip`·`update_pending` 판정
+- 공식·편집 출처 분류와 Telegram 원문 보존 분할·전송 오류 처리
 
 ## 확장 경계
 
@@ -156,7 +173,7 @@ PYTHONPATH=Automation/src python3 -m unittest discover \
 3. 원문 본문 추출과 근거 보존
 4. 관련성·중요도 평가와 사람 검토 큐
 5. Obsidian 문서 초안 생성
-6. scheduler, retry, 알림과 운영 지표
+6. scheduler, retry와 운영 지표
 7. API와 frontend app
 8. 검토 완료 데이터를 이용한 newsletter
 
@@ -164,8 +181,8 @@ frontend와 newsletter는 이 수집 데이터의 소비자다. 수집·정규�
 
 ## 현재 한계
 
-- 9개 출처를 운영 코드로 승격했다.
+- 공식 출처 9개와 편집 언론 4개를 운영 코드로 승격했다.
 - 출처별 전체 목록을 수집하며 `freshness_days` 기반 증분 요청은 아직 적용하지 않는다.
 - 본문 추출, 의미 기반 중복, 관련성 분류와 요약은 포함하지 않는다.
-- Hook 실패 격리, scheduler, 재시도와 알림은 포함하지 않는다.
+- Telegram 문서 전송은 수동 CLI이며 Hook 연동, scheduler와 재시도는 포함하지 않는다.
 - 기여 가이드, 행동 강령과 보안 제보 정책은 아직 없다.
