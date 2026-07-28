@@ -1774,6 +1774,7 @@ git log main..HEAD --oneline
 - skills.sh가 `hermes-news-automation`을 이미 공개 인덱싱하고 상세 페이지를 제공함을 확인
 - Hermes installer가 `SKILL.md`의 명시적 지원 파일만 bundle에 포함하는 계약을 확인
 - Skill의 모든 runtime 파일을 `SKILL.md`에 명시적으로 연결하고 누락 방지 회귀 테스트 추가
+- Hermes가 command text가 아닌 Markdown 링크만 bundle dependency로 인식함을 확인하고 `scripts/run.py` launcher도 명시적 링크로 추가
 - 최초 Hermes 설치 보안 검사에서 탐지된 prompt-injection 방어 문자열, Telegram 환경변수 접근과 pre-check 실행 구조를 분석
 - prompt-injection 방어 기능은 유지하면서 scanner 자체 탐지 문자열을 조합형 상수로 변경
 - Telegram credential을 환경변수 대신 workspace의 `.hermes-news/config/telegram.json`에서 읽도록 최소 권한 경계로 변경
@@ -1832,6 +1833,8 @@ git diff --check
 - Skill Creator validator 통과
 - 격리 workspace의 유효한 Telegram 설정을 포함한 `doctor` 상태 `ok`
 - Python compile 대상 runtime의 13개 활성 출처 registry 검증 통과
+- 최종 불변 commit `340efb9` raw URL을 새 격리 Hermes profile에 설치
+- 최종 Hermes scan `SAFE`, `scripts/run.py`와 전체 runtime 파일 설치, `init → doctor → validate-registry` 통과
 - `git diff --check` 통과
 
 ### 결정과 근거
@@ -1859,7 +1862,6 @@ git diff --check
 
 ### 알려진 한계와 남은 작업
 
-- 변경 commit의 불변 raw URL을 이용한 Hermes 실제 설치 및 launcher 재검증 필요
 - release 브랜치 PR 생성, 다중 OS CI와 main 병합 필요
 - 병합 commit에 `v0.1.0` tag 및 GitHub Release 생성 필요
 - tag 기준 skills.sh direct install과 Hermes tap 설치 재검증 필요
