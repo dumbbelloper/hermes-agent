@@ -1652,3 +1652,52 @@ gh pr view 8 --json number,title,url,state,baseRefName,headRefName,isDraft,merge
 - PR review와 `main` 병합은 아직 수행하지 않음
 - 병합 후 `v0.1.0` release와 실제 Hermes direct install 및 cron smoke test가 필요
 - Linux, WSL2와 native Windows Hermes end-to-end 검증은 별도 운영 단계로 남아 있음
+
+## 2026-07-28 16:23 KST — PR Windows CI UTF-8 호환성 수정
+
+### 사용자 요청과 목적
+
+- 생성한 PR을 검증 가능한 상태로 유지하고 다중 OS CI 실패를 해결
+
+### 수행한 변경
+
+- PR 최신 실행에서 Windows job 실패 로그 확인
+- Windows 기본 text encoding인 CP1252로 한국어 Obsidian 문서를 읽던 테스트를 명시적 UTF-8 읽기로 수정
+- 전체 로컬 테스트를 재실행
+
+### 생성·수정한 문서와 파일
+
+- [무인 자동화 테스트](./Automation/tests/test_automation.py)
+- [작업 로그](./WORK_LOG.md)
+
+### 실행한 검증과 결과
+
+```text
+gh pr checks 8 --watch --interval 5
+gh run view 30338177118 --job 90207542169 --log-failed
+PYTHONPATH=skills/hermes-news-automation/scripts/runtime \
+  python3 -m unittest discover -s Automation/tests -v
+git diff --check
+```
+
+- Ubuntu와 macOS GitHub Actions 성공
+- Windows 실패 원인: `Path.read_text()`가 CP1252를 사용해 한국어 문서 decoding 실패
+- `read_text(encoding="utf-8")`로 수정 후 로컬 전체 테스트 47개 통과
+- `git diff --check` 통과
+
+### 결정과 근거
+
+1. CI에서 Windows의 전역 encoding을 강제로 바꾸지 않고 파일 계약을 테스트에 명시한다.
+   - Obsidian Markdown은 UTF-8 문서이며 호출부가 encoding을 명시해야 OS 기본 locale과 무관하게 같은 의미를 보장하기 때문이다.
+2. native Windows 지원을 CI 실패 상태로 남기지 않고 수정 결과를 새 원격 실행으로 확인한다.
+   - 배포 가이드가 Windows를 실험 지원으로 명시하더라도 code-level 호환성 matrix는 통과해야 하기 때문이다.
+
+### 전역 설정이나 외부 시스템에 적용한 변경
+
+- GitHub Actions 실패 로그를 읽기 전용으로 확인
+- OS encoding, Hermes, Telegram과 credential 설정은 변경하지 않음
+
+### 알려진 한계와 남은 작업
+
+- 수정 커밋 push 후 새 Windows GitHub Actions 결과 확인 필요
+- 실제 native Windows Hermes gateway와 cron end-to-end 검증은 여전히 필요

@@ -197,7 +197,10 @@ class UnattendedAutomationTests(unittest.TestCase):
             self.assertEqual("committed", committed["state"])
             note_path = root / committed["note_path"]
             self.assertTrue(note_path.exists())
-            self.assertIn("created_by: \"hermes-agent\"", note_path.read_text())
+            self.assertIn(
+                "created_by: \"hermes-agent\"",
+                note_path.read_text(encoding="utf-8"),
+            )
             artifact_path = (
                 data
                 / "automation"
