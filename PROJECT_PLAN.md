@@ -2,7 +2,7 @@
 
 > 기준일: 2026-07-28
 >
-> 상태: Phase 0 완료 · Phase 1 운영 출처 13개 확정 · Telegram 알림 검증
+> 상태: Phase 0·1 완료 · self-contained Hermes Skill 배포 candidate 구현
 
 ## 1. 목표
 
@@ -12,7 +12,7 @@
 2. 중복과 저가치 자료를 제거하고 중요도를 판정한다.
 3. 원문의 의미를 보존한 한국어 요약과 학습 키워드를 작성한다.
 4. Obsidian에서 검색하고 연결하기 쉬운 Markdown 문서로 저장한다.
-5. 매일 자동 실행하되 실패와 누락을 사람이 확인할 수 있게 한다.
+5. 주기적으로 무인 실행하고 실패와 격리 원인을 감사 가능한 상태로 남긴다.
 
 ## 2. 추적 범위
 
@@ -66,11 +66,13 @@ Source Registry
     → Fetch
     → Normalize
     → Deduplicate
-    → Relevance Filter
-    → Enrich & Summarize
-    → Validate
-    → Write Markdown
-    → Daily Digest
+    → Durable Delta Queue
+    → Curator Agent
+    → Writer Agent
+    → Independent Verifier Agent
+    → Deterministic Validate
+    → Atomic Write
+    → Telegram Delivery Ledger
 ```
 
 ### 단계별 책임
@@ -91,8 +93,8 @@ Source Registry
    - 제목과 원문 링크 존재 여부, 날짜 형식, 요약의 근거성, 중복 여부를 검사한다.
 8. **Write Markdown**
    - 정해진 템플릿으로 원자적 문서를 생성한다.
-9. **Daily Digest**
-   - 당일 신규 문서 중 중요한 변화를 한 문서에서 훑어볼 수 있게 연결한다.
+9. **Delivery**
+   - 검증된 문서만 Telegram에 전송하고 delivery 상태를 기록한다.
 
 ## 5. 문서 규격 초안
 
@@ -187,39 +189,36 @@ status: "reviewed"
 
 Agent와 skill의 권한, 승인, 운영 환경 및 감사 기준은 [ENTERPRISE_AI_GUARDRAILS.md](./ENTERPRISE_AI_GUARDRAILS.md)를 따른다.
 
-### Agent 후보
+### 적용 Agent
 
-- **Collector Agent**: 여러 수집 skill을 실행하고 체크포인트와 실패를 관리한다.
-- **Curator Agent**: 관련성, 중복, 중요도를 판단한다.
-- **Writer Agent**: 요약과 키워드를 작성하고 Markdown 규격을 검증한다.
-- **Digest Agent**: 신규 문서를 묶어 일간·주간 브리핑을 만든다.
+- **Collector**: Python pipeline이 allowlist, 품질 gate, checkpoint와 delta queue를 관리한다.
+- **Curator Agent**: fresh subagent context에서 관련성, 중요도와 `event_key`를 판단한다.
+- **Writer Agent**: 원문 근거 안에서 한국어 요약, 의미와 학습 키워드를 구조화한다.
+- **Verifier Agent**: Writer와 분리된 fresh context에서 모든 사실, 숫자, 날짜, 조직과 과장을 대조한다.
 
-### Skill 후보
+### 적용 Skill
 
-- RSS/Atom 수집
-- sitemap 및 목록 페이지 수집
-- GitHub release 수집
-- YouTube 메타데이터·자막 수집
-- 웹 문서 본문 추출
-- URL 정규화와 중복 탐지
-- 결제 산업 관련성 분류
-- 근거 기반 한국어 요약
-- Obsidian 문서 생성과 링크 연결
-- 실행 결과 및 품질 검증
+- [Hermes News Automation](./skills/hermes-news-automation/SKILL.md)
+  - durable run 생성과 queue 처리
+  - 허용된 원문 추출
+  - Curator·Writer·Verifier 분리
+  - 결정론적 artifact 검사와 Obsidian 원자 저장
+  - Telegram delivery와 run 종료
 
-Agent는 작업 순서와 상태를 조정하고, skill은 입력과 출력이 명확한 단일 기능으로 설계한다.
+Agent는 의미 판단을 담당하고 Python controller는 상태 전이, 임계값, 파일·알림 부작용과 멱등성을 강제한다.
 
 ## 8. 실행 및 검토 정책
 
-- 기본 실행 주기: 매일 1회
+- 기본 실행 주기: Hermes cron에서 3시간마다, 사용자 설정으로 조정
 - 수집 범위: 마지막 성공 시각 이후 발행 또는 수정된 항목
-- 자동 저장 위치: 초기에는 `Inbox/`
-- 사람 검토 후 이동: `Notes/<Organization>/`
+- 자동 저장 위치: 검증을 통과한 문서는 `Inbox/`
+- 정상 문서 승인: Curator·독립 Verifier·결정론적 gate 모두 통과 시 자동
 - 중요 항목: 일간 Digest에 포함
-- 실패 항목: 원인과 재시도 가능 여부를 기록
-- 동일 원문 업데이트: 새 문서를 만들기보다 기존 문서의 변경 이력을 남기는 방식을 우선 검토
+- 실패 항목: `irrelevant`, `quarantined`, `retryable`, `notify_unknown`과 원인을 기록
+- 동일 원문 업데이트: agent 생성 문서만 재검증 후 갱신하고 수동 문서는 격리
+- 불확실한 항목: 사람 승인을 기다리지 않고 fail-closed로 발행하지 않음
 
-완전 자동 발행보다 `수집 → 초안 생성 → 사람 검토` 방식으로 시작하고, 품질이 안정된 출처부터 자동 승격한다.
+정상 경로는 사람 개입 없이 완료한다. Agent나 검증기가 확신하지 못하는 항목은 자동 발행하지 않는 방식으로 정확성을 우선한다.
 
 ## 9. 단계별 구현 계획
 
@@ -234,11 +233,18 @@ Agent는 작업 순서와 상태를 조정하고, skill은 입력과 출력이 �
 - [x] CLI와 네트워크 없는 fixture 회귀 테스트
 - [x] 공식 9개·편집 언론 4개, 추가 구현 후보와 수집 제외 출처 분류
 - [x] 수집 `record_id`를 이용한 Vault 문서 인덱스와 중복 작성 방지 판정
-- Phase 1 최소 수집기 부분 완료 — 메타데이터 수집 완료, Inbox 자동 작성 미완료
+- [x] logical run lock, durable manifest와 delta queue
+- [x] Curator·Writer·독립 Verifier artifact 계약과 결정론적 gate
+- [x] Obsidian Inbox 원자 작성과 agent 문서 자동 갱신
+- [x] Telegram delivery ledger와 불확실 전송 중복 방지
+- [x] Hermes Skill과 token 절약 `wakeAgent` pre-check
+- [x] repository 밖에서 실행 가능한 self-contained Skill runtime
+- [x] GitHub direct install·Hermes tap 배포 구조와 격리 설치 smoke test
+- [x] macOS·Linux·Windows Skill CI matrix
 - [x] 선별 GitHub Release Atom 수집
-- [ ] 원문 본문 수집과 Obsidian Inbox 문서 생성
 - [x] 환경변수 기반 Telegram 문서 알림
-- [ ] scheduler, retry와 운영 지표
+- [x] Hermes gateway·cron 운영 가이드
+- [ ] 출처별 retry backoff, circuit breaker와 장기 운영 지표
 
 구현 세부 사항과 실행법은 [Automation/README.md](./Automation/README.md)에서 관리한다.
 
@@ -256,14 +262,17 @@ Agent는 작업 순서와 상태를 조정하고, skill은 입력과 출력이 �
 - [x] RSS/Atom, 공식 JSON과 정적 HTML 수집 구현
 - [x] 상태 저장, URL 정규화, 중복 제거 구현
 - [x] 선별한 GitHub Release Atom 수집 구현
-- [ ] 원문 링크 중심의 Inbox 문서 생성 자동화
+- [x] 원문 링크 중심의 Inbox 문서 생성 자동화
 
 ### Phase 2 — 요약 및 품질 관리
 
-- 본문 추출과 한국어 요약 추가
-- 기술 키워드 추출 및 Concepts 연결
-- 스키마와 링크 자동 검증
-- 사람이 수정한 문서와 자동 생성 문서의 충돌 방지
+- [x] Hermes web extraction과 한국어 요약 workflow
+- [x] 기술 키워드 추출 및 Concepts 링크 생성
+- [x] identity schema와 링크 자동 검증
+- [x] 수동 문서 격리와 agent 문서 자동 갱신 구분
+- [ ] 실제 정기 실행 표본을 이용한 confidence threshold 보정
+- [x] 같은 `event_key`의 두 번째 문서 발행 차단
+- [ ] 실제 표본을 이용한 event key 생성·대표 자료 선택 품질 보정
 
 ### Phase 3 — 채널 확장
 
@@ -273,34 +282,38 @@ Agent는 작업 순서와 상태를 조정하고, skill은 입력과 출력이 �
 
 ### Phase 4 — 운영 자동화
 
-- 스케줄 실행
-- 실패 알림과 재시도
-- 출처별 성공률, 신규 항목 수, 중복 제거 수 관측
-- 회귀 테스트와 요약 품질 샘플링
+- [x] Hermes Skill 기반 cron 실행 설계와 크로스플랫폼 설정 가이드
+- [x] Skill 내부 runtime 단일 원본과 workspace `init`·`doctor`
+- [x] GitHub direct install·tap·skills.sh 배포 metadata
+- [x] logical lock, stale run 회수와 item retry 상태
+- [x] 신규 항목 수, item 결과와 delivery 상태 원장
+- [ ] 출처별 backoff·circuit breaker
+- [ ] 장기 성공률·비용 dashboard와 정기 품질 샘플링
 
 ## 10. 결정 현황
 
 | 항목 | 상태 | 결정 또는 남은 선택 |
 | --- | --- | --- |
 | 구현 언어와 런타임 | 결정 | Python 3.9 이상, runtime dependency 없음 |
-| 현재 실행 환경 | 결정 | 로컬 수동 실행, `Automation/data/`에 상태 저장 |
+| 현재 실행 환경 | 결정 | macOS·Linux·Windows WSL2를 1차 지원하고 native Windows는 실험 지원. 설치 workspace의 `.hermes-news/data/`에 local 영속 상태 저장 |
+| Skill 배포 | 결정 | `skills/hermes-news-automation/` self-contained bundle, GitHub direct install과 Hermes tap. 세부 기준은 [Skill 배포 가이드](./SKILL_DISTRIBUTION_GUIDE.md) |
 | 운영 출처 | 결정 | 직접 접근 가능한 공식 출처 9개와 편집 언론 4개, 세부 기준은 [SOURCE_CATALOG.md](./SOURCE_CATALOG.md) |
 | 차단 출처 처리 | 결정 | WAF 우회, 검색 인덱스와 브라우저 자동화 폴백 없이 제외 |
 | 문서 식별과 중복 방지 | 결정 | `record_id`, `source_fingerprint`와 실행 시 Vault index 사용. 세부 기준은 [NOTE_IDENTITY_POLICY.md](./NOTE_IDENTITY_POLICY.md) |
-| 문서 승인 | 임시 결정 | `Inbox/` 초안을 사람이 검토한 뒤 `Notes/`로 이동 |
-| LLM 정책 | 미결정 | 사용 위치, 모델, 비용, 근거 보존과 민감정보 기준 필요 |
-| 중요도·일간 상한 | 미결정 | 초기 문서 표본을 검토한 뒤 확정 |
-| 원문 수정·삭제 | 미결정 | 기존 노트 보존과 변경 이력 정책 필요 |
-| 운영 자동화 환경 | 미결정 | 로컬 scheduler, GitHub Actions, 별도 서버 중 선택 |
+| 문서 승인 | 결정 | Curator confidence 0.80, 독립 Verifier 0.85와 결정론적 gate 통과 시 자동 발행 |
+| LLM 정책 | 부분 결정 | Hermes cron의 Writer·Verifier 분리, 모델·provider와 비용 상한은 사용자 환경에서 설정 |
+| 중요도·실행 상한 | 결정 | importance 3단계, 기본 실행당 최대 5건 |
+| 원문 수정·삭제 | 부분 결정 | agent 문서는 재검증 후 갱신, 수동 문서는 격리. 원문 삭제 정책은 후속 |
+| 운영 자동화 환경 | 결정 | laptop은 로그인·전원·네트워크 유지, Linux server는 systemd, Windows는 WSL2 우선. 세부 기준은 [무인 자동화 가이드](./HERMES_AUTOMATION_GUIDE.md) |
 
 ## 11. 현재 문서 작성 작업
 
 운영 출처 13개의 최신 자료 중 결제 기술·표준·보안 변화와 직접 관련된 항목을 소량 선별해 `Inbox/` 초안을 작성한다. 현재 누적 1,594건에서 12건을 문서화했다.
 
 - [x] 안정적인 신규 항목 탐지와 원문 제목·링크 보존 검증
-- [ ] 한국어 요약만으로 핵심 변화를 이해할 수 있는지 검토
-- [ ] 기술 키워드가 실제 학습 노트로 연결되는지 검토
-- [ ] 사람이 검토하기 적절한 문서 수와 중요도 기준 확정
+- [x] agent artifact의 한국어 요약·중요성·근거 필수화
+- [x] 기술 키워드와 Concepts 링크 형식 자동 생성
+- [x] 실행당 기본 상한 5건과 중요도 3단계 확정
 - [ ] 같은 사건의 조직 간 발표를 연결하는 방식 검증
 
-초기 초안 검토 결과를 바탕으로 문서 템플릿과 자동 생성 범위를 확정한다.
+향후 실제 cron 실행 표본으로 confidence threshold, 격리율과 사건 grouping 품질을 보정한다.

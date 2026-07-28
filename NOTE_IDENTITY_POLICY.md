@@ -4,7 +4,7 @@
 >
 > 상태: 적용
 
-이 문서는 Hermes Agent와 향후 Writer Skill이 같은 공식 자료를 하루에 여러 번 처리해도 중복 문서를 만들지 않고, 원문 변경과 사람의 수정을 안전하게 구분하기 위한 기준이다.
+이 문서는 Hermes Agent와 Writer Skill이 같은 자료를 하루에 여러 번 처리해도 중복 문서를 만들지 않고, 원문 변경과 사람의 수정을 안전하게 구분하기 위한 기준이다.
 
 ## 1. 식별자
 
@@ -49,11 +49,11 @@ Writer가 생성하거나 관리하는 Inbox·Notes 문서는 다음 필드를 �
 | --- | --- | --- |
 | Vault에 `record_id` 없음 | `create` | 새 Inbox 문서 생성 |
 | 같은 `record_id`, 같은 fingerprint | `skip` | 파일을 수정하지 않음 |
-| 같은 `record_id`, 다른 fingerprint | `update_pending` | 기존 파일을 덮어쓰지 않고 검토 대기 |
+| 같은 `record_id`, 다른 fingerprint | `update_pending` | 작성 주체에 따라 자동 갱신 또는 격리 |
 | 같은 `record_id`가 여러 문서에 존재 | 오류 | 자동 작성을 중단하고 중복 해소 |
 | `record_id`가 source와 URL에서 계산한 값과 다름 | 오류 | 자동 작성을 중단하고 메타데이터 수정 |
 
-`created_by: manual` 문서는 항상 사람이 소유한 본문으로 취급한다. 향후 자동 생성 문서도 사람이 수정할 수 있으므로 Writer는 기존 본문을 무조건 덮어쓰지 않는다.
+`created_by: manual` 문서는 항상 사람이 소유한 본문으로 취급하고 변경된 fingerprint를 자동 덮어쓰지 않는다. `created_by: hermes-agent` 문서는 새 artifact가 전체 검증을 통과한 경우에만 원자적으로 갱신한다.
 
 ## 4. 인덱스 운영
 
@@ -62,24 +62,24 @@ Vault 인덱스는 `Inbox/`와 `Notes/`의 Frontmatter를 실행 시점에 읽�
 검증:
 
 ```bash
-PYTHONPATH=Automation/src python3 -m hermes_agent validate-notes \
+python3 Automation/run.py validate-notes \
   --vault-dir .
 ```
 
 Writer 판정:
 
 ```bash
-PYTHONPATH=Automation/src python3 -m hermes_agent note-status \
+python3 Automation/run.py note-status \
   --vault-dir . \
   --record-id <record-id> \
   --source-fingerprint <source-fingerprint>
 ```
 
-Writer Skill은 한 실행에서 Vault를 한 번 scan하고 여러 레코드의 판정을 같은 인덱스로 처리한다. 실제 파일 생성은 판정 결과가 `create`인 경우에만 수행한다.
+Writer Skill은 한 실행에서 Vault를 scan하고 queue item을 판정한다. `create`는 새 파일을 만들고 `update_pending`은 기존 문서의 `created_by`를 확인한다. 사람이 만든 문서는 격리하고 agent가 만든 문서만 검증 후 갱신한다.
 
 ## 5. 변경과 충돌 처리
 
-- 원문 메타데이터가 변경되면 기존 문서의 `status`를 `update_pending`으로 바꾸는 기능을 후속 구현한다.
-- 자동 갱신을 도입할 때도 사람이 작성한 요약과 해석은 managed block과 분리하기 전까지 덮어쓰지 않는다.
+- 원문 메타데이터가 변경된 agent 문서는 Curator·Writer·Verifier와 결정론적 검증을 다시 통과해야 갱신한다.
+- 사람이 작성한 요약과 해석은 managed block을 도입하기 전까지 덮어쓰지 않고 자동 격리한다.
 - `source_id` 변경이나 공식 URL 이전으로 `record_id`가 바뀌는 경우 이전 ID를 alias로 보존하는 migration 절차가 필요하다.
 - 동일 사건의 여러 조직 발표를 하나로 묶는 event key는 `record_id`와 분리해 설계한다.

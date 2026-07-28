@@ -1004,3 +1004,758 @@ git diff --check
 - 작업 브랜치를 `origin/feat/us-finance-media-telegram`로 push
 - 생성한 Pull Request:
   - [#7 미국 금융·결제 언론 수집과 Telegram 알림 추가](https://github.com/dumbbelloper/hermes-agent/pull/7)
+
+## 2026-07-28 14:56 KST — Hermes agent 연동 준비도 점검
+
+### 사용자 요청과 목적
+
+- 현재 구현 완성도로 Hermes agent와 연동했을 때 안정적으로 동작할 수 있는지 점검
+- 수집, 중복 판정, Obsidian 작성과 Telegram 알림의 자동화 가능 범위 및 남은 위험 식별
+
+### 수행한 변경
+
+- 코드나 설정은 변경하지 않고 현재 `main`의 연동 준비도를 읽기 전용으로 점검
+- collector의 Hook 경계, 상태 저장, CLI, 문서 식별 정책과 운영 문서의 구현 상태를 대조
+- 현재 단계는 단일 실행 주체가 CLI를 순차 호출하는 반자동 workflow에는 사용 가능하지만, 완전 무인 end-to-end 자동화에는 보완이 필요하다고 판정
+
+### 생성·수정한 문서와 파일
+
+- [작업 로그](./WORK_LOG.md) — 이번 준비도 점검 결과 추가
+
+### 실행한 검증과 결과
+
+```text
+git status --short --branch
+find . -name SKILL.md -not -path './.git/*' -print
+PYTHONPATH=Automation/src python3 -m unittest discover -s Automation/tests -v
+PYTHONPATH=Automation/src python3 -m hermes_agent validate-registry
+PYTHONPATH=Automation/src python3 -m hermes_agent validate-notes --vault-dir .
+```
+
+- 점검 전 `main`은 `origin/main`과 일치하고 변경사항이 없었음
+- 전체 테스트 35개 통과
+- Source Registry schema `1.0`, 활성 출처 13개 검증 통과
+- Vault Inbox 12건 검증: `status: ok`, issue 0건
+- Hermes가 직접 탐색·실행할 프로젝트 `SKILL.md`는 아직 없음
+- 저장 파일은 원자적으로 교체되지만 실행 간 lock은 없어 동시 실행 안전성은 보장되지 않음
+
+### 결정과 근거
+
+1. 현재 구성은 Hermes가 명시된 CLI를 한 번에 하나씩 호출하는 수집 orchestration에는 사용할 수 있다.
+   - 수집 품질 gate, 상태 보존, 안정 식별자와 문서 중복 판정이 구현·검증되어 있기 때문이다.
+2. 완전 자동 문서 작성과 알림 workflow가 완성됐다고 보지는 않는다.
+   - 본문 추출·관련성 판정·Markdown 생성 Writer, 변경 목록 전달, 성공 후 알림 연결이 아직 하나의 실행 계약으로 묶이지 않았기 때문이다.
+3. 하루 여러 번 실행하더라도 동일 머신의 순차 실행만 허용해야 한다.
+   - 파일 단위 원자적 쓰기는 있지만 source 또는 전체 run lock이 없어 겹침 실행 시 read-modify-write 경합과 중복 알림이 가능하기 때문이다.
+4. 자동화 worker는 `Automation/data/`를 영속 보존해야 한다.
+   - 이 디렉터리가 수집 checkpoint를 보관하며 초기화되면 기존 항목을 새 항목처럼 처리할 수 있기 때문이다.
+
+### 전역 설정이나 외부 시스템에 적용한 변경
+
+- 없음
+- 네트워크 수집이나 Telegram 전송을 실행하지 않았고 credential을 읽거나 기록하지 않음
+
+### 알려진 한계와 남은 작업
+
+- 프로젝트용 Hermes Skill과 단일 end-to-end 실행 진입점이 없음
+- 신규·변경 레코드를 Writer에 구조적으로 넘기는 review queue 또는 `list-changes` 기능이 없음
+- 관련성 선별, 본문 추출, 1차 자료 교차검증과 Obsidian Markdown 생성은 아직 사람 또는 agent prompt에 의존
+- `note-status`는 `create`, `skip`, `update_pending` 판정만 하며 문서를 생성·갱신하지 않음
+- collector 성공 후 Telegram 자동 전송, delivery idempotency, retry·backoff와 전송 상태 저장이 없음
+- scheduler, 실행 lock, 운영 지표와 장애 알림이 없음
+- 여러 머신 또는 휘발성 worker에서 공유할 영속 상태 저장소가 정해지지 않음
+
+## 2026-07-28 15:04 KST — 완전 무인 Hermes 운영 계획 수립
+
+### 사용자 요청과 목적
+
+- 사람이 매번 확인하지 않아도 Hermes agent가 주기적으로 수집, 검증, 문서 작성과 알림을 완료하는 운영 방식 설계
+- 구현 전에 agent 검증 방식, 상태 전이, 실패 처리와 단계별 완료 조건을 계획으로 확정
+- 이번 작업에서는 코드 변경 금지
+
+### 수행한 변경
+
+- 코드는 변경하지 않고 현재 collector, 문서 식별 정책, 템플릿, Telegram 전송과 guardrail 문서를 기준으로 무인 workflow를 설계
+- 정상 건은 자동 발행하고 불확실하거나 실패한 건은 사람 승인 대기가 아닌 격리·재시도 상태로 전환하는 원칙 채택
+- 작성 단계와 검증 단계를 분리하고 결정론적 검사와 agent 의미 검증을 모두 통과해야만 문서 저장·알림하도록 계획
+
+### 생성·수정한 문서와 파일
+
+- [작업 로그](./WORK_LOG.md) — 무인 운영 계획과 결정 기록
+- 코드, 설정, Source Registry와 기존 정책 문서는 변경하지 않음
+
+### 실행한 검증과 결과
+
+```text
+PROJECT_PLAN.md의 Agent·Skill 경계, 실행 정책, 구현 현황 확인
+Automation/README.md의 실패 상태와 확장 경계 확인
+NOTE_IDENTITY_POLICY.md의 create·skip·update_pending 정책 확인
+ENTERPRISE_AI_GUARDRAILS.md의 외부 알림 승인 정책 확인
+Templates/Collected Note.md의 문서 schema 확인
+```
+
+- 기존 collector와 `record_id`·`source_fingerprint`는 무인 workflow의 수집·멱등성 기반으로 재사용 가능
+- 현재 `PROJECT_PLAN.md`의 사람 검토 전제와 무인 운영 목표가 일치하지 않음
+- 현재 guardrail의 Telegram G2 건별 승인 원칙은 주기적 무인 알림과 충돌하므로, 고정 chat·고정 용도에 대한 사전 승인 정책이 먼저 필요
+- 작성자와 동일한 단일 agent의 자유형 자기 검토만으로는 품질 gate가 충분하지 않다고 판정
+
+### 결정과 근거
+
+1. 정상 실행은 `collect → delta → enrich → curate → write → verify → commit → notify → complete` 상태 전이를 따른다.
+   - 단계별 artifact와 결과를 남겨 중단 후 재개와 감사가 가능해야 하기 때문이다.
+2. 검증은 결정론적 gate와 독립된 Verifier agent 호출을 함께 사용한다.
+   - schema·URL·ID·인용 같은 기계 검사는 코드가 더 안정적이고, 관련성·왜곡·과장 판단은 agent가 더 적합하기 때문이다.
+3. Writer와 Verifier는 별도 prompt와 context로 실행한다.
+   - 같은 초안 생성 맥락을 그대로 재사용하는 자기 확인 편향을 줄이기 위함이다.
+4. 검증 실패는 자동 발행하지 않고 `quarantined` 또는 `retryable`로 종료한다.
+   - 사람 검토가 없어도 잘못된 문서를 발행하는 대신 해당 건을 안전하게 누락시키는 fail-closed 운영을 하기 위함이다.
+5. 하나의 영속 실행 환경과 전역 run lock을 초기 운영 기준으로 한다.
+   - 현재 파일 기반 checkpoint를 유지하면서 겹침 실행에 따른 중복 작성과 알림을 막는 가장 단순한 방식이기 때문이다.
+6. Telegram은 문서 저장과 사후 검증이 완료된 뒤 delivery ledger를 선점한 건만 전송한다.
+   - 파일 작성 실패, 재실행과 API timeout 상황에서 중복 메시지를 방지하기 위함이다.
+7. 정기 실행에는 사람 승인을 요구하지 않되 대상 chat, 메시지 종류, credential 권한을 고정한 사전 승인 정책을 둔다.
+   - 무인 운영 목표와 외부 메시지 통제를 동시에 만족시키기 위함이다.
+
+### 계획한 구현 단계
+
+1. **운영 계약 현행화**
+   - 사람 검토 전제를 agent 검증·자동 발행 정책으로 변경
+   - 실행 환경, 주기, 비용 상한, 모델, 고정 Telegram 대상과 사전 승인 범위 결정
+2. **Run Controller와 상태 원장**
+   - 전역 lock, `run_id`, 단계별 manifest, 중단 후 재개, 단일 종료 요약 구현
+3. **Delta·작업 큐**
+   - 신규·수정 레코드를 명시적인 작업 항목으로 생성하고 각 항목의 상태와 시도 횟수 저장
+4. **본문 처리와 Curator**
+   - 허용된 원문만 추출하고 결제·금융 관련성, 중요도, 홍보·협찬·행사 잡음을 판정
+   - 원문은 명령이 아닌 비신뢰 데이터로 취급해 prompt injection의 도구·파일 지시를 무시
+5. **Writer와 Verifier**
+   - 근거가 연결된 한국어 문서 생성
+   - 별도 Verifier가 원문 대비 사실, 숫자·날짜·조직, 공식·편집 출처 구분, 과장과 누락을 평가
+   - Frontmatter, 링크, 식별자, 인용과 Markdown schema를 결정론적으로 재검사
+6. **자동 갱신과 사건 중복 처리**
+   - agent 관리 영역만 갱신하고 기존 수동 문서는 덮어쓰지 않는 update schema 확정
+   - 복수 매체의 동일 사건을 묶는 `event_key`와 대표 원문 선택 적용
+7. **Telegram delivery와 복구**
+   - `record_id + source_fingerprint + channel` 기반 전송 키, 선점·성공 기록, 제한 재시도와 dead-letter 처리
+8. **Scheduler와 관측**
+   - 정기 실행, 출처별 circuit breaker, 실행 성공률·신규 문서·격리·재시도·비용 지표와 장애 요약 제공
+9. **Hermes Skill**
+   - 하나의 고정된 workflow를 실행하고 구조화된 결과만 반환하도록 입력, 출력, 권한과 실패 조건 명시
+
+### 완료 조건
+
+- 같은 snapshot을 반복 실행해 새 문서와 Telegram 메시지가 모두 0건
+- 동시에 두 번 실행해 하나만 lock을 획득하고 다른 실행은 안전하게 종료 또는 대기
+- collector, 모델 또는 Telegram 실패 후 재실행해 완료 단계부터 이어지고 중복 부작용이 없음
+- 관련 없는 기사, 협찬, 행사 홍보와 prompt injection fixture가 자동 발행되지 않음
+- 생성 문서의 모든 사실 주장에 원문 근거가 연결되고 숫자·날짜·조직 불일치 시 격리
+- 원문 변경은 새 중복 문서를 만들지 않고 정의된 update 정책대로 처리
+- Vault 전체 identity·schema 검사 통과 후에만 Telegram 전송
+- credential, 원문 내 지시와 내부 prompt가 문서·로그·알림에 노출되지 않음
+- 정상 주기에는 사람 조작 없이 실행되고 실패·격리 건은 상태와 원인을 남김
+
+### 전역 설정이나 외부 시스템에 적용한 변경
+
+- 없음
+- Telegram 전송, 네트워크 수집, scheduler 등록과 환경변수 변경을 수행하지 않음
+
+### 알려진 한계와 남은 작업
+
+- 실행 환경, 실행 주기, agent 모델과 호출 비용 상한은 아직 확정되지 않음
+- 동일 사건 판정 기준과 자동 문서 갱신 schema는 구현 전에 상세 설계가 필요
+- 고정 Telegram chat에 대한 사전 승인 정책은 기존 guardrail 문서와 함께 현행화해야 함
+- agent 의미 검증은 오류 가능성이 0이 아니므로 잘못된 발행보다 격리와 누락을 우선하는 임계값 조정이 필요
+
+## 2026-07-28 15:30 KST — Hermes Skill 기반 완전 무인 workflow 구현
+
+### 사용자 요청과 목적
+
+- 사람이 매번 확인하지 않아도 Hermes Agent가 주기적으로 수집, 검증, Obsidian 문서 작성과 Telegram 알림을 완료하도록 구현
+- 의미 검증도 agent가 수행하되 Writer의 자기 검토가 아닌 독립 Verifier와 결정론적 gate를 함께 적용
+- 프로젝트 Skill 완성 후 Mac이 켜진 동안 Hermes gateway·cron으로 계속 실행하는 설정 가이드 제공
+
+### 수행한 변경
+
+- `feat/hermes-unattended-automation` 작업 브랜치 생성
+- 만료 가능한 logical run lock, run manifest, delta queue와 item 상태 전이 구현
+- 동일 fingerprint의 무관·격리 결정을 반복 처리하지 않는 decision ledger 구현
+- Curator, Writer와 독립 Verifier의 JSON artifact 계약과 confidence threshold 구현
+- 사실·조직·날짜·숫자·출처 구분·과장·prompt injection 검사 결과를 모두 요구
+- 한국어 요약, 중요성, 키워드, evidence와 follow-up을 Obsidian Markdown으로 원자 저장
+- 기존 수동 문서는 자동 덮어쓰지 않고 격리하며 agent 생성 문서만 재검증 후 갱신
+- `event_key` ledger로 동일 사건을 대표하는 두 번째 문서 발행 차단
+- Telegram delivery를 전송 전에 예약하고 `sending`, `sent`, `unknown` 상태로 보존
+- Telegram 결과가 불확실하면 중복 가능성을 피하기 위해 자동 재전송하지 않는 at-most-once 정책 적용
+- 통합 automation CLI 7개 추가
+- Hermes Skill, artifact reference와 `wakeAgent` pre-check script 작성
+- macOS Hermes gateway, Skill external directory, credential passthrough, toolset, cron과 전원 설정 가이드 작성
+- 기존 사람 검토 전제와 guardrail을 agent 자동 검증·고정 Telegram standing authorization 기준으로 현행화
+
+### 생성·수정한 문서와 파일
+
+구현:
+
+- [무인 실행 controller](./Automation/src/hermes_agent/automation.py)
+- [통합 CLI](./Automation/src/hermes_agent/cli.py)
+- [무인 workflow 테스트](./Automation/tests/test_automation.py)
+- [Hermes News Automation Skill](./skills/hermes-news-automation/SKILL.md)
+- [Agent artifact 계약](./skills/hermes-news-automation/references/artifact-schema.md)
+- [Hermes cron pre-check](./skills/hermes-news-automation/scripts/precheck.py)
+- [Skill UI metadata](./skills/hermes-news-automation/agents/openai.yaml)
+
+운영 및 정책 문서:
+
+- [무인 자동화 가이드](./HERMES_AUTOMATION_GUIDE.md)
+- [프로젝트 README](./README.md)
+- [Automation README](./Automation/README.md)
+- [프로젝트 설계](./PROJECT_PLAN.md)
+- [문서 식별 정책](./NOTE_IDENTITY_POLICY.md)
+- [Enterprise AI Guardrails](./ENTERPRISE_AI_GUARDRAILS.md)
+- [환경변수 이름 예시](./.env.example)
+- [작업 로그](./WORK_LOG.md)
+
+### 실행한 검증과 결과
+
+```text
+PYTHONPATH=Automation/src python3 -m unittest discover \
+  -s Automation/tests -v
+PYTHONPYCACHEPREFIX=/private/tmp/hermes-agent-pycache \
+  PYTHONPATH=Automation/src python3 -m compileall -q \
+  Automation/src Automation/tests skills/hermes-news-automation/scripts
+PYTHONPATH=/private/tmp/hermes-skill-validator-pyyaml \
+  python3 <skill-creator>/scripts/quick_validate.py \
+  skills/hermes-news-automation
+PYTHONPATH=Automation/src python3 -m hermes_agent validate-registry
+PYTHONPATH=Automation/src python3 -m hermes_agent validate-notes \
+  --vault-dir .
+python3 -m py_compile \
+  skills/hermes-news-automation/scripts/precheck.py
+HERMES_NEWS_REPO= \
+  python3 skills/hermes-news-automation/scripts/precheck.py
+hermes --version
+hermes cron create --help
+hermes gateway --help
+git diff --check
+```
+
+- 전체 테스트 42개 통과
+- 기존 collector·normalizer·Vault·Telegram 회귀 테스트 통과
+- 겹침 실행 차단 통과
+- 반복 snapshot에서 문서·알림 추가 0건 검증 통과
+- 동일 fingerprint의 irrelevant decision 억제 검증 통과
+- 독립 verification check 누락과 prompt injection 문구 복제 차단 통과
+- 동일 `event_key`의 두 번째 문서 발행 차단 통과
+- agent artifact 보존, Obsidian 원자 작성과 Telegram delivery ledger 통합 검증 통과
+- Python 전체 compile 검사 통과
+- Skill Creator 공식 validator: `Skill is valid`
+- Source Registry schema `1.0`, 활성 출처 13개 검증 통과
+- Vault Inbox 12건: `status: ok`, issue 0건
+- pre-check 필수 환경변수 fail-closed 동작 확인
+- 로컬 Hermes Agent v0.19.0과 `cron create`, `gateway` CLI option 확인
+- `git diff --check` 통과
+
+### 결정과 근거
+
+1. Python controller가 부작용과 상태를 강제하고 Hermes Agent는 의미 판단을 담당한다.
+   - 모델 출력만으로 lock, 멱등성, 원자 저장과 delivery 상태를 안정적으로 보장할 수 없기 때문이다.
+2. Writer와 Verifier를 fresh subagent context로 분리한다.
+   - 작성 과정의 reasoning을 Verifier에게 넘기지 않아 자기 확증 편향을 줄이기 위함이다.
+3. 정상 건만 자동 발행하고 불확실한 건은 `quarantined`로 발행하지 않는다.
+   - 사람 검토 없이 운영하면서 잘못된 발행보다 안전한 누락을 우선하기 위함이다.
+4. curation `0.80`, verification `0.85`를 최소 confidence로 사용한다.
+   - 초기 무인 운영에서 보수적인 품질 gate로 시작하고 실제 표본으로 후속 보정하기 위함이다.
+5. 실행당 기본 최대 5건과 180분 logical lock TTL을 둔다.
+   - 모델 비용·시간 폭주를 제한하고 중단된 run이 영구적으로 다음 실행을 막지 않게 하기 위함이다.
+6. Telegram timeout·네트워크 오류는 `unknown`으로 보존하고 자동 재전송하지 않는다.
+   - Telegram Bot API에 사용자 idempotency key가 없어 응답 유실 시 전송 여부를 증명할 수 없기 때문이다.
+7. `wakeAgent` pre-check가 queue를 먼저 만들고 변경이 있을 때만 agent를 실행한다.
+   - 변경 없는 주기의 모델 호출 비용을 제거하기 위함이다.
+8. Skill은 저장소 `skills/`에서 버전 관리하고 Hermes `external_dirs`로 연결한다.
+   - 코드, artifact schema와 Skill procedure를 같은 Git revision으로 유지하기 위함이다.
+
+### 전역 설정이나 외부 시스템에 적용한 변경
+
+- 전역 Hermes config, gateway, cron job과 macOS 전원 설정은 변경하지 않음
+- Telegram 메시지를 전송하지 않음
+- 실제 네트워크 수집과 실제 Hermes Skill end-to-end 실행을 수행하지 않음
+- 공식 Hermes Agent와 Apple 문서를 읽기 전용으로 확인
+- Skill validator 실행을 위해 PyYAML 6.0.3을 `/private/tmp/hermes-skill-validator-pyyaml`에만 임시 설치
+- 프로젝트 dependency와 Python 전역 환경은 변경하지 않음
+
+### 알려진 한계와 남은 작업
+
+- Skill은 생성·검증됐지만 현재 사용자의 Hermes `skills.external_dirs`에는 아직 연결하지 않았으므로 설정 가이드를 따라야 한다.
+- Hermes gateway 설치, cron 등록, cron platform toolset과 `~/.hermes/.env` 설정은 아직 사용자가 적용하지 않았다.
+- 실제 원문 web extraction, Writer와 Verifier의 정기 운영 품질은 첫 cron 실행 표본으로 추가 확인해야 한다.
+- Agent가 만드는 `event_key`의 의미 품질은 모델에 의존하므로 실제 중복 사건 표본으로 보정해야 한다.
+- Source별 지수 backoff, circuit breaker, 장기 성공률·비용 dashboard와 자동 Digest는 아직 없다.
+- Telegram `unknown`은 중복 방지를 위해 자동 재전송하지 않으므로 메시지가 실제로 전송되지 않았더라도 누락될 수 있다.
+- Mac이 종료되거나 잠자기 상태면 gateway cron이 정상 주기로 실행되지 않는다.
+- 변경사항은 작업 브랜치에 있으며 아직 commit, push 또는 PR을 생성하지 않았다.
+
+## 2026-07-28 15:40 KST — Linux 서버 이식성 점검
+
+### 사용자 요청과 목적
+
+- Linux 서버에 Codex와 Hermes Agent를 설치했을 때 현재 무인 workflow를 그대로 실행할 수 있는지 확인
+- macOS 종속 코드와 Linux에서 변경해야 하는 운영 설정 구분
+
+### 수행한 변경
+
+- 코드와 운영 설정은 변경하지 않고 Python 구현, Skill, pre-check와 공식 설치 문서를 읽기 전용으로 점검
+- 실행 코드는 macOS 전용이 아니라 POSIX 환경인 macOS와 Linux에서 동작한다고 판정
+- macOS 절대 경로, launchd와 전원 설정은 가이드에만 있으며 Linux에서는 repository 경로와 systemd 설정으로 대체해야 함을 확인
+
+### 생성·수정한 문서와 파일
+
+- [작업 로그](./WORK_LOG.md) — Linux 이식성 점검 결과 추가
+- 코드, Skill과 운영 설정은 변경하지 않음
+
+### 실행한 검증과 결과
+
+```text
+rg -n "darwin|macos|launchd|osascript|brew|/Users/|fcntl|systemd|linux|platforms:" \
+  Automation skills pyproject.toml .env.example HERMES_AUTOMATION_GUIDE.md
+```
+
+- 당시 `/Users/...`, launchd와 macOS 전원 설정은 현재 [무인 자동화 가이드](./HERMES_AUTOMATION_GUIDE.md)의 macOS 절에 해당
+- 실행 코드의 OS 관련 기능은 `fcntl.flock`이며 Linux와 macOS에서 모두 지원
+- Skill과 pre-check는 `python3`, repository 상대 경로와 `HERMES_NEWS_REPO`를 사용
+- Python runtime dependency는 표준 라이브러리뿐이며 프로젝트 기준 Python 3.9 이상
+- 공식 Codex CLI는 Linux x86_64와 arm64 설치 artifact를 제공
+- 공식 Hermes Agent는 Linux 설치, systemd user service와 Linux server용 system service를 지원
+
+### 결정과 근거
+
+1. Linux 서버는 현재 workflow의 지원 대상이다.
+   - Python, POSIX file lock, 원자적 file replace와 Hermes cron이 모두 Linux에서 사용 가능하기 때문이다.
+2. Native Windows는 현재 동일 지원 대상으로 보지 않는다.
+   - run mutex가 POSIX `fcntl`에 의존하기 때문이다.
+3. Codex CLI는 정기 실행의 runtime dependency가 아니다.
+   - cron, web extraction, delegation과 Skill 실행은 Hermes Agent가 담당하고 Codex는 개발·점검에만 필요하기 때문이다.
+4. Linux에서는 local persistent filesystem과 단일 Hermes runner를 사용한다.
+   - NFS 등 network filesystem의 advisory lock semantics와 여러 runner의 공유 상태 경합을 피하기 위함이다.
+
+### 전역 설정이나 외부 시스템에 적용한 변경
+
+- 없음
+- Linux 서버, Hermes config, systemd, credential과 cron job을 변경하지 않음
+- OpenAI와 Hermes Agent 공식 문서를 읽기 전용으로 확인
+
+### 알려진 한계와 남은 작업
+
+- 현재 제공 가이드는 macOS용이므로 Linux에서는 `/Users/...`를 실제 `/home/<service-user>/...` 경로로 바꿔야 한다.
+- macOS `launchd` 대신 Linux `systemd` gateway를 설치해야 한다.
+- systemd를 실행하는 동일 service user의 `~/.hermes/.env`, Skill external directory, repository와 `Automation/data/` 소유권을 맞춰야 한다.
+- cron 시간대는 Linux 서버의 systemd/Hermes timezone 설정을 확인해야 한다.
+- Linux 실서버에서 end-to-end smoke test는 아직 수행하지 않았다.
+
+## 2026-07-28 15:52 KST — Agent Skills 글로벌 규격과 크로스플랫폼 가이드 현행화
+
+### 사용자 요청과 목적
+
+- 일반적인 Skill 구성 best practice와 현재 채택도가 높은 공개 Skills 사례를 확인
+- macOS에 종속된 `HERMES_MACOS_AUTOMATION_GUIDE.md` 이름과 내용을 글로벌 운영 기준으로 교체
+- macOS, Linux와 Windows 지원 범위를 실제 Hermes 및 프로젝트 호환성에 맞게 명시
+
+### 수행한 변경
+
+- Agent Skills 공개 specification, Codex `skill-creator`, Hermes Skills 공식 문서와 공개 저장소의 채택 사례 비교
+- 기존 macOS 전용 가이드를 [Hermes Agent 무인 자동화 가이드](./HERMES_AUTOMATION_GUIDE.md)로 교체
+- 공개 사례의 GitHub star는 2026-07-28 채택 신호 스냅샷이며 절대 품질 순위가 아니라고 명시
+- Skill package의 표준 코어, progressive disclosure, host extension, script와 reference 분리 기준 작성
+- 플랫폼 지원을 macOS·Linux·Windows WSL2 1차 지원, native Windows 실험 지원으로 분류
+- OS별 repository, credential, Skill external directory, pre-check, gateway, cron, 검증과 복구 절차 작성
+- inline `PYTHONPATH` 조립을 제거하기 위한 cross-platform Python controller launcher 추가
+- macOS/Linux/WSL2의 `python3`와 native Windows의 `python` interpreter 차이를 Skill에 명시
+- POSIX `fcntl`과 native Windows `msvcrt`를 선택하는 process mutex 구현
+- native Windows lock branch를 가짜 backend로 검증하는 회귀 테스트 추가
+- README, Automation README, 프로젝트 계획과 기존 작업 로그의 가이드 링크 현행화
+
+### 생성·수정한 문서와 파일
+
+- [Hermes Agent 무인 자동화 가이드](./HERMES_AUTOMATION_GUIDE.md)
+- [Hermes News Automation Skill](./skills/hermes-news-automation/SKILL.md)
+- [Cross-platform controller launcher](./Automation/run.py)
+- [무인 실행 controller](./Automation/src/hermes_agent/automation.py)
+- [무인 workflow 테스트](./Automation/tests/test_automation.py)
+- [Automation README](./Automation/README.md)
+- [프로젝트 README](./README.md)
+- [프로젝트 설계](./PROJECT_PLAN.md)
+- [작업 로그](./WORK_LOG.md)
+- 기존 미추적 `HERMES_MACOS_AUTOMATION_GUIDE.md`는 새 글로벌 가이드로 대체
+
+### 실행한 검증과 결과
+
+```text
+python3 Automation/run.py --help
+PYTHONPATH=Automation/src python3 -m unittest discover \
+  -s Automation/tests -v
+PYTHONPYCACHEPREFIX=/private/tmp/hermes-agent-pycache \
+  python3 -m compileall -q \
+  Automation/src Automation/tests Automation/run.py \
+  skills/hermes-news-automation/scripts
+PYTHONPATH=/private/tmp/hermes-skill-validator-pyyaml \
+  python3 <skill-creator>/scripts/quick_validate.py \
+  skills/hermes-news-automation
+python3 Automation/run.py validate-registry
+python3 Automation/run.py validate-notes --vault-dir .
+rg -n "\]\(\./HERMES_MACOS_AUTOMATION_GUIDE|python Automation/run.py" \
+  --glob '*.md' --glob '!WORK_LOG.md' .
+git diff --check
+```
+
+- launcher help 실행 성공
+- 전체 테스트 43개 통과: 기존 42개와 Windows mutex backend 회귀 테스트 1개
+- Python compile 검사 통과
+- Skill Creator validator: `Skill is valid`
+- Source Registry schema `1.0`, 활성 출처 13개 검증 통과
+- Vault Inbox 12건: `status: ok`, issue 0건
+- 삭제된 macOS 가이드 경로와 잘못된 공통 `python` 명령 참조 0건
+- 최초 `python` alias 검증은 현재 macOS에서 명령이 없어 실패했으며, 실제 platform별 interpreter 정책을 문서와 Skill에 반영
+
+### 결정과 근거
+
+1. Agent Skills 공개 규격을 core contract로 사용한다.
+   - 특정 agent host의 metadata나 설치 경로보다 `SKILL.md`, 상대 resource와 progressive disclosure가 이식성의 공통 기반이기 때문이다.
+2. Skill 안에 별도 설치 가이드를 만들지 않고 project root에서 운영 문서를 관리한다.
+   - agent가 실행할 때 필요하지 않은 문서는 Skill context와 bundle을 불필요하게 키우기 때문이다.
+3. macOS와 Linux뿐 아니라 Windows 사용 경로도 문서화한다.
+   - Hermes는 native Windows gateway와 cron을 공식 지원하고 WSL2도 사용할 수 있기 때문이다.
+4. native Windows는 실험 지원으로 유지한다.
+   - code-level mutex와 launcher는 준비했지만 이 작업 환경에서 native Windows end-to-end 실행을 증명할 수 없기 때문이다.
+5. OS별 interpreter 이름을 숨기지 않는다.
+   - 현재 macOS에는 `python` alias가 없고 native Windows에는 보통 `python3` alias가 없으므로 존재하지 않는 단일 명령을 글로벌 표준처럼 쓰면 안 되기 때문이다.
+6. local persistent filesystem과 단일 runner를 기본 운영 경계로 유지한다.
+   - NFS, SMB나 동기화 filesystem에서는 file lock과 atomic replace 의미를 동일하게 보장할 수 없기 때문이다.
+
+### 전역 설정이나 외부 시스템에 적용한 변경
+
+- 없음
+- Hermes config, gateway, cron, OS service, credential과 Telegram을 변경하지 않음
+- 공개 Agent Skills, GitHub와 Hermes 문서를 읽기 전용으로 확인
+- 프로젝트 밖에는 새 파일이나 dependency를 설치하지 않음
+
+### 알려진 한계와 남은 작업
+
+- Linux, Windows WSL2와 native Windows 실환경 end-to-end smoke test는 아직 수행하지 않음
+- native Windows는 동시 실행, UTF-8 한국어 문서, gateway 재시작, stale run과 Telegram timeout 표본을 통과한 뒤 1차 지원으로 승격해야 함
+- macOS에서도 실제 Hermes external Skill 연결, gateway 설치와 첫 cron run은 아직 사용자가 수행하지 않음
+- GitHub star와 host 기능은 변할 수 있으므로 가이드 기준일 이후에는 공식 원문을 다시 확인해야 함
+
+## 2026-07-28 15:58 KST — Skill 공유·배포·설치 구조 점검
+
+### 사용자 요청과 목적
+
+- 주변 동료가 프로젝트 Skill을 사용할 수 있도록 일반적인 공유, 배포와 설치 구조 확인
+- 현재 `hermes-news-automation`을 단독 Skill로 배포할 수 있는지와 적합한 팀 배포 방식 구분
+
+### 수행한 변경
+
+- Agent Skills 공개 규격의 package 경계와 Hermes Skills Hub, GitHub direct install, tap, external directory 및 update lifecycle 확인
+- 현재 Skill이 `Automation/run.py`, Source Registry, Vault와 영속 상태 저장소를 요구하므로 Skill 폴더만으로는 독립 실행할 수 없다고 판정
+- 현 단계에서는 repository clone과 Hermes `external_dirs` 연결을 팀 공유 기준으로, 향후 runtime package와 Skill tap 분리를 원클릭 배포 목표로 정리
+
+### 생성·수정한 문서와 파일
+
+- [작업 로그](./WORK_LOG.md)
+- Skill, runtime, 설정과 운영 문서는 변경하지 않음
+
+### 실행한 검증과 결과
+
+```text
+Agent Skills Specification의 directory와 resource 설치 경계 확인
+Hermes Skills 공식 문서의 direct GitHub install, tap, security scan과 update lifecycle 확인
+skills/hermes-news-automation/SKILL.md의 repository runtime 의존성 확인
+git remote -v
+git status --short --branch
+```
+
+- 공개 원격 저장소는 `https://github.com/dumbbelloper/hermes-agent.git`
+- 현재 작업은 `feat/hermes-unattended-automation` 브랜치에 있으며 아직 미commit 변경 포함
+- Hermes direct install은 Skill과 직접 참조한 Skill 내부 resource를 설치하지만 프로젝트 전체 runtime을 자동 배포하는 계약은 아님
+
+### 결정과 근거
+
+1. 현재 팀 배포 단위는 개별 Skill이 아니라 repository 전체다.
+   - Skill procedure가 repository-local controller와 데이터 구조를 직접 호출하기 때문이다.
+2. 여러 동료가 같은 source를 사용하되 각자 별도 clone과 `Automation/data/`를 가져야 한다.
+   - 하나의 실행 상태를 여러 host가 공유하면 lock, checkpoint와 delivery ledger가 경합할 수 있기 때문이다.
+3. 원클릭 설치는 Skill tap만 추가해서 해결하지 않고 runtime package 또는 container를 별도 배포해야 한다.
+   - Skill은 agent의 절차 계약이고 실행 코드, 상태 저장소와 credential은 별도 runtime 책임이기 때문이다.
+
+### 전역 설정이나 외부 시스템에 적용한 변경
+
+- 없음
+- GitHub repository, Hermes Hub, tap, 전역 Skill과 동료 환경을 변경하지 않음
+
+### 알려진 한계와 남은 작업
+
+- 현재 feature branch가 main에 병합되기 전에는 동료에게 안정 버전으로 안내할 수 없음
+- 팀용 bootstrap, version tag, release note, runtime installer와 CI 배포 검증은 아직 없음
+- private repository로 전환할 경우 동료별 GitHub 권한과 Hermes의 `GITHUB_TOKEN` 정책이 필요
+
+## 2026-07-28 16:16 KST — Hermes News Automation Skill 독립 배포 구조 구현
+
+### 사용자 요청과 목적
+
+- 기존 repository 전체를 복제하지 않고 동료와 외부 사용자가 설치할 수 있는 Skill 배포 구조 구현
+- Agent Skills와 Hermes 설치 관행에 맞춰 공유, 설치, 업데이트와 검증 절차를 문서화
+- macOS와 Linux를 우선 지원하고 Windows WSL2 및 native Windows 사용 경계를 명확히 구분
+
+### 수행한 변경
+
+- controller Python runtime의 단일 원본을 Skill bundle 내부 `scripts/runtime/`으로 이동
+- repository 개발용 [Automation launcher](./Automation/run.py)는 Skill runtime을 호출하는 얇은 wrapper로 변경
+- 독립 launcher에 `init`, `doctor`와 기존 controller command 연결 구현
+- workspace별 `Inbox/`, `.hermes-news/config/`, `.hermes-news/data/`, `.hermes-news/tmp/` 초기화 구현
+- cron pre-check가 repository 경로 대신 설치된 Skill 위치를 찾도록 변경
+- 배포 bundle의 기본 Source Registry와 실행 코드를 자체 포함하고 사용자별 상태는 workspace 밖으로 분리
+- Hermes tap용 root manifest와 Python wheel metadata 추가
+- GitHub Actions에 Ubuntu, macOS, Windows 검증 matrix 추가
+- repository 밖으로 복사한 Skill만으로 초기화, 진단과 registry 검증이 가능한지 확인하는 회귀 테스트 추가
+- 운영 문서의 이전 repository 결합형 경로와 상태 표현을 독립 workspace 기준으로 현행화
+
+### 생성·수정한 문서와 파일
+
+- [Hermes News Automation Skill](./skills/hermes-news-automation/SKILL.md)
+- [독립 실행 launcher](./skills/hermes-news-automation/scripts/run.py)
+- [cron pre-check](./skills/hermes-news-automation/scripts/precheck.py)
+- [bundled runtime](./skills/hermes-news-automation/scripts/runtime/hermes_agent/__init__.py)
+- [Skill 배포 가이드](./SKILL_DISTRIBUTION_GUIDE.md)
+- [Hermes 무인 자동화 가이드](./HERMES_AUTOMATION_GUIDE.md)
+- [Skill 배포 회귀 테스트](./Automation/tests/test_skill_distribution.py)
+- [다중 OS 검증 workflow](./.github/workflows/skill-validation.yml)
+- [Hermes tap manifest](./skills.sh.json)
+- [Python package 설정](./setup.cfg)
+- [프로젝트 개요](./README.md)
+- [Automation 안내](./Automation/README.md)
+- [프로젝트 계획](./PROJECT_PLAN.md)
+- [환경변수 예시](./.env.example)
+- [작업 로그](./WORK_LOG.md)
+
+### 실행한 검증과 결과
+
+```text
+PYTHONPATH=skills/hermes-news-automation/scripts/runtime \
+  python3 -m unittest discover -s Automation/tests -v
+PYTHONPATH=/private/tmp/hermes-skill-validator-pyyaml \
+  python3 <skill-creator>/scripts/quick_validate.py \
+  skills/hermes-news-automation
+PYTHONPYCACHEPREFIX=/private/tmp/hermes-news-pycache \
+  python3 -m compileall -q skills/hermes-news-automation/scripts
+python3 -m json.tool skills.sh.json
+python3 -m build --wheel
+python3 -m pip install --no-deps --target <temporary-directory> <built-wheel>
+PYTHONPATH=<temporary-directory> python3 -m hermes_agent validate-registry
+rg -n "HERMES_NEWS_REPO|Automation/src|/Users/dumbbelloper" \
+  skills/hermes-news-automation SKILL_DISTRIBUTION_GUIDE.md skills.sh.json .github
+git diff --check
+```
+
+- 전체 unit/integration test 47개 통과
+- Skill Creator validator: `Skill is valid!`
+- repository 밖으로 복사한 bundle의 `init → doctor → validate-registry` 통과
+- Skill 내부 Markdown 상대 링크가 bundle 밖을 벗어나지 않고 모두 존재함을 확인
+- `hermes_news_automation-0.1.0-py3-none-any.whl` 생성, 임시 위치 설치와 13개 활성 출처 registry 검증 통과
+- Python compile, `skills.sh.json` JSON parsing과 `git diff --check` 통과
+- Skill bundle과 배포 문서에서 기존 `Automation/src`, `HERMES_NEWS_REPO`, 사용자 절대 경로 참조 0건
+- 최초 compile은 macOS 사용자 cache 경로의 sandbox 권한으로 실패했으며, 임시 cache 경로를 지정한 동일 검사에서는 통과
+
+### 결정과 근거
+
+1. Skill directory 자체를 실행 가능한 배포 단위로 만든다.
+   - GitHub direct install과 Hermes tap이 프로젝트 전체가 아닌 Skill bundle을 설치해도 workflow가 동작해야 하기 때문이다.
+2. bundled runtime은 읽기 전용 코드로, 문서와 실행 상태는 사용자별 workspace로 분리한다.
+   - Skill 업데이트가 사용자 문서, checkpoint, run ledger와 설정을 덮어쓰지 않게 하기 위해서다.
+3. 기본 registry는 bundle에 포함하되 `init`이 만든 workspace registry는 자동 덮어쓰지 않는다.
+   - 설치 즉시 실행 가능하면서 사용자별 source 정책 변경을 보존하기 위해서다.
+4. Python package는 선택적 CLI 배포 수단으로 유지하고 Skill 실행의 필수 조건으로 만들지 않는다.
+   - Hermes 사용자는 별도 pip 설치 없이 설치 bundle의 `scripts/run.py`를 바로 실행할 수 있어야 하기 때문이다.
+5. native Windows는 CI 대상이지만 실험 지원으로 유지한다.
+   - code-level 호환성과 자동 테스트만으로 실제 gateway, Scheduled Task, UTF-8 문서와 Telegram 흐름을 증명할 수 없기 때문이다.
+6. 현재 상태는 공개 완료가 아닌 release candidate다.
+   - main 병합, GitHub Actions 실결과, version tag와 실제 Hermes 설치 smoke test가 남아 있기 때문이다.
+
+### 전역 설정이나 외부 시스템에 적용한 변경
+
+- 없음
+- GitHub push, pull request, release, version tag와 Hermes tap 공개를 수행하지 않음
+- 로컬 또는 전역 Hermes Skill을 설치하거나 업데이트하지 않음
+- Hermes gateway, cron, Telegram, credential과 OS service를 변경하지 않음
+- wheel과 임시 설치 결과는 `/private/tmp` 아래에서만 생성
+
+### 알려진 한계와 남은 작업
+
+- feature branch 변경은 아직 commit, push 또는 pull request되지 않음
+- GitHub Actions의 Ubuntu, macOS, Windows matrix는 workflow 작성만 완료했으며 실제 원격 실행 결과는 없음
+- Linux, Windows WSL2와 native Windows에서 Hermes gateway 및 cron end-to-end smoke test가 필요
+- 공개 배포 전 `v0.1.0` tag, release note, 라이선스 최종 확인과 main 기준 direct install 검증이 필요
+- private repository 배포 시 동료별 GitHub 접근 권한과 Hermes credential 정책을 별도로 마련해야 함
+
+## 2026-07-28 16:22 KST — Skill 배포 준비 변경 commit, push 및 PR 생성
+
+### 사용자 요청과 목적
+
+- 검증을 마친 무인 자동화와 독립 Skill 배포 변경을 별도 브랜치에 commit
+- 원격 저장소에 push하고 `main` 대상 pull request 생성
+
+### 수행한 변경
+
+- 전체 구현과 문서 변경을 `e372d9f` 커밋으로 생성
+- `feat/hermes-unattended-automation` 브랜치를 `origin`에 push하고 upstream 연결
+- GitHub `main` 대상 [PR #8](https://github.com/dumbbelloper/hermes-agent/pull/8) 생성
+- PR 본문에 구현 범위, 47개 테스트와 release 전 실환경 검증 항목 명시
+- 생성 직후 PR base/head, merge 가능 여부와 다중 OS CI 상태 확인
+
+### 생성·수정한 문서와 파일
+
+- [작업 로그](./WORK_LOG.md)
+- 구현 파일은 직전 작업 기록의 목록과 동일하며, 이 단계에서는 원격 반영과 PR 생성만 수행
+
+### 실행한 검증과 결과
+
+```text
+git diff --cached --check
+git commit -m "Hermes 무인 뉴스 자동화 Skill 패키징"
+git push --set-upstream origin feat/hermes-unattended-automation
+gh pr create --base main --head feat/hermes-unattended-automation ...
+gh pr view 8 --json number,title,url,state,baseRefName,headRefName,isDraft,mergeable,statusCheckRollup
+```
+
+- commit: `e372d9f Hermes 무인 뉴스 자동화 Skill 패키징`
+- PR: [#8 Hermes 무인 뉴스 자동화 Skill 패키징](https://github.com/dumbbelloper/hermes-agent/pull/8)
+- PR 상태: `OPEN`, draft 아님, `main` 대상, `MERGEABLE`
+- GitHub Actions 확인 시 Ubuntu와 macOS 검증 성공
+- GitHub Actions 확인 시 Windows 검증은 실행 중
+- credential 검색 결과 실제 token 또는 chat ID 없음; 문서 placeholder만 존재
+
+### 결정과 근거
+
+1. 무인 controller, self-contained Skill, 테스트, CI와 운영 문서를 하나의 feature commit으로 유지한다.
+   - runtime 이동과 문서 경로 변경이 함께 적용돼야 중간 상태의 깨진 실행 경로가 생기지 않기 때문이다.
+2. PR은 draft가 아닌 일반 review 상태로 생성한다.
+   - 로컬 validator와 전체 테스트 및 repository 외부 bundle 검증을 통과해 코드 검토 가능한 상태이기 때문이다.
+3. Windows CI가 실행 중인 사실을 완료로 기록하지 않는다.
+   - 원격 확인 시점의 실제 상태를 보존하고 최종 결과를 추정하지 않기 위해서다.
+
+### 전역 설정이나 외부 시스템에 적용한 변경
+
+- GitHub 원격 저장소에 `feat/hermes-unattended-automation` 브랜치 생성
+- GitHub [PR #8](https://github.com/dumbbelloper/hermes-agent/pull/8) 생성
+- Hermes Skill Hub, tap, release와 version tag는 생성하지 않음
+- Hermes gateway, cron, Telegram과 credential은 변경하지 않음
+
+### 알려진 한계와 남은 작업
+
+- Windows GitHub Actions 검증의 최종 결과 확인 필요
+- PR review와 `main` 병합은 아직 수행하지 않음
+- 병합 후 `v0.1.0` release와 실제 Hermes direct install 및 cron smoke test가 필요
+- Linux, WSL2와 native Windows Hermes end-to-end 검증은 별도 운영 단계로 남아 있음
+
+## 2026-07-28 16:23 KST — PR Windows CI UTF-8 호환성 수정
+
+### 사용자 요청과 목적
+
+- 생성한 PR을 검증 가능한 상태로 유지하고 다중 OS CI 실패를 해결
+
+### 수행한 변경
+
+- PR 최신 실행에서 Windows job 실패 로그 확인
+- Windows 기본 text encoding인 CP1252로 한국어 Obsidian 문서를 읽던 테스트를 명시적 UTF-8 읽기로 수정
+- 전체 로컬 테스트를 재실행
+
+### 생성·수정한 문서와 파일
+
+- [무인 자동화 테스트](./Automation/tests/test_automation.py)
+- [작업 로그](./WORK_LOG.md)
+
+### 실행한 검증과 결과
+
+```text
+gh pr checks 8 --watch --interval 5
+gh run view 30338177118 --job 90207542169 --log-failed
+PYTHONPATH=skills/hermes-news-automation/scripts/runtime \
+  python3 -m unittest discover -s Automation/tests -v
+git diff --check
+```
+
+- Ubuntu와 macOS GitHub Actions 성공
+- Windows 실패 원인: `Path.read_text()`가 CP1252를 사용해 한국어 문서 decoding 실패
+- `read_text(encoding="utf-8")`로 수정 후 로컬 전체 테스트 47개 통과
+- `git diff --check` 통과
+
+### 결정과 근거
+
+1. CI에서 Windows의 전역 encoding을 강제로 바꾸지 않고 파일 계약을 테스트에 명시한다.
+   - Obsidian Markdown은 UTF-8 문서이며 호출부가 encoding을 명시해야 OS 기본 locale과 무관하게 같은 의미를 보장하기 때문이다.
+2. native Windows 지원을 CI 실패 상태로 남기지 않고 수정 결과를 새 원격 실행으로 확인한다.
+   - 배포 가이드가 Windows를 실험 지원으로 명시하더라도 code-level 호환성 matrix는 통과해야 하기 때문이다.
+
+### 전역 설정이나 외부 시스템에 적용한 변경
+
+- GitHub Actions 실패 로그를 읽기 전용으로 확인
+- OS encoding, Hermes, Telegram과 credential 설정은 변경하지 않음
+
+### 알려진 한계와 남은 작업
+
+- 수정 커밋 push 후 새 Windows GitHub Actions 결과 확인 필요
+- 실제 native Windows Hermes gateway와 cron end-to-end 검증은 여전히 필요
+
+## 2026-07-28 16:27 KST — PR과 commit 제목 규칙 통일
+
+### 사용자 요청과 목적
+
+- PR #8의 영어 Conventional Commit 제목이 기존 PR 및 `main` commit 이력과 이질적인 문제 해소
+
+### 수행한 변경
+
+- 기존 병합 PR #1~#7과 `main` commit 제목 규칙 확인
+- PR #8 제목을 `Hermes 무인 뉴스 자동화 Skill 패키징`으로 변경
+- 이번 브랜치의 영어 commit 제목 3개를 접두사 없는 한국어 제목으로 재작성
+- history rewrite로 바뀐 commit hash를 앞선 작업 기록에 현행화
+- `--force-with-lease`로 원격 feature branch를 안전하게 갱신
+
+### 생성·수정한 문서와 파일
+
+- [작업 로그](./WORK_LOG.md)
+- 구현 파일 내용은 변경하지 않음
+
+### 실행한 검증과 결과
+
+```text
+git log main --oneline -15
+gh pr list --state all --limit 15
+gh pr view 7 --json commits,title,mergeCommit
+gh pr view 6 --json commits,title,mergeCommit
+git rebase -i main
+git log main..HEAD --oneline
+```
+
+- 기존 PR #1~#7은 접두사 없는 한국어 제목 사용
+- 기존 PR 내부 commit도 한국어 작업 제목과 별도 작업 로그 commit으로 구성
+- 재작성된 브랜치 commit:
+  - `e372d9f Hermes 무인 뉴스 자동화 Skill 패키징`
+  - `db614f8 작업 로그에 Skill 배포 PR 기록`
+  - `d167fac Windows UTF-8 문서 읽기 호환성 수정`
+- 제목 재작성 후 최신 commit 기준 GitHub Actions는 Ubuntu, macOS와 Windows 모두 통과
+
+### 결정과 근거
+
+1. `feat:` 같은 Conventional Commit 접두사를 이 PR에만 사용하지 않는다.
+   - 현재 프로젝트의 일관된 공개 이력은 한국어 작업 제목이며 squash merge 후 PR 제목이 `main` commit 제목이 되기 때문이다.
+2. PR 제목만 바꾸지 않고 branch commit 제목도 함께 통일한다.
+   - reviewer가 PR commit 목록을 확인할 때도 기존 작업 이력과 같은 형식을 유지하기 위해서다.
+3. 구현 내용은 바꾸지 않고 commit metadata만 재작성한다.
+   - 요청 범위는 제목 일관성이며 이미 통과한 코드와 검증 결과를 변경할 이유가 없기 때문이다.
+
+### 전역 설정이나 외부 시스템에 적용한 변경
+
+- GitHub PR #8 제목 변경
+- 원격 feature branch를 `--force-with-lease`로 안전하게 갱신
+- `main`, 다른 branch, Hermes와 Telegram 설정은 변경하지 않음
+
+### 알려진 한계와 남은 작업
+
+- PR review와 병합은 아직 수행하지 않음
+- 실제 Hermes direct install, gateway와 cron end-to-end 검증은 병합 후 필요
