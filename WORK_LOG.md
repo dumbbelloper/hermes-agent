@@ -645,6 +645,7 @@ git diff --check
 - 새로운 ID 입력: `create`
 - 중복 ID, 파생 ID 불일치, 필수 field 누락과 비정규 URL 회귀 테스트 통과
 - Markdown 상대 링크와 Obsidian wiki link 검증 통과
+- fail-closed 직접 API 검사를 추가한 첫 실행에서 invalid Vault의 신규 ID가 `create`로 먼저 반환되는 테스트 실패를 발견했다. validation issue를 신규 판정보다 먼저 거부하도록 순서를 수정한 후 전체 26개 테스트가 통과했다.
 
 ### 결정과 근거
 
@@ -661,9 +662,19 @@ git diff --check
 
 ### 전역 설정이나 외부 시스템에 적용한 변경
 
-- 없음
+- 전역 설정 변경 없음
 - 본 구현과 검증은 로컬 파일과 기존 수집 데이터만 사용
-- 외부 공식 사이트 조회, credential 사용, 배포는 수행하지 않음
+- 외부 공식 사이트 조회, credential 사용과 배포는 수행하지 않음
+- GitHub에는 아래 작업 브랜치 push와 Pull Request 생성만 수행
+
+### Git 작업
+
+- 작업 브랜치: `feat/note-idempotency`
+- 커밋:
+  - `ef083d2` — Vault 문서 중복 방지 기반 구현
+- 작업 브랜치를 `origin/feat/note-idempotency`로 push
+- 생성한 Pull Request:
+  - [#5 Vault 문서 식별과 중복 작성 방지 구현](https://github.com/dumbbelloper/hermes-agent/pull/5)
 
 ### 알려진 한계와 남은 작업
 
