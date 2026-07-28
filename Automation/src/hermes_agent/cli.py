@@ -10,6 +10,7 @@ from typing import Optional, Sequence
 
 from .adapters.base import built_in_adapters
 from .fetcher import FetchPolicy, HttpFetcher
+from .note_index import VaultNoteIndex
 from .pipeline import CollectorPipeline
 from .registry import RegistryError, SourceRegistry
 from .storage import FileStore
@@ -72,6 +73,30 @@ def parser() -> argparse.ArgumentParser:
     )
     state.add_argument("--source", required=True)
     state.set_defaults(handler=show_state)
+
+    notes = commands.add_parser(
+        "validate-notes",
+        help="validate note identity fields and duplicate record ids",
+    )
+    notes.add_argument(
+        "--vault-dir",
+        type=Path,
+        default=Path("."),
+    )
+    notes.set_defaults(handler=validate_notes)
+
+    note_status = commands.add_parser(
+        "note-status",
+        help="decide whether a writer should create, skip, or queue an update",
+    )
+    note_status.add_argument(
+        "--vault-dir",
+        type=Path,
+        default=Path("."),
+    )
+    note_status.add_argument("--record-id", required=True)
+    note_status.add_argument("--source-fingerprint", required=True)
+    note_status.set_defaults(handler=show_note_status)
     return root
 
 
@@ -141,6 +166,41 @@ def show_state(arguments: argparse.Namespace) -> int:
         )
         return 1
     print(json.dumps(state, ensure_ascii=False, indent=2, sort_keys=True))
+    return 0
+
+
+def validate_notes(arguments: argparse.Namespace) -> int:
+    index = VaultNoteIndex.scan(arguments.vault_dir)
+    print(json.dumps(index.to_dict(), ensure_ascii=False, indent=2))
+    return 1 if index.issues else 0
+
+
+def show_note_status(arguments: argparse.Namespace) -> int:
+    index = VaultNoteIndex.scan(arguments.vault_dir)
+    if index.issues:
+        print(
+            json.dumps(index.to_dict(), ensure_ascii=False, indent=2),
+            file=sys.stderr,
+        )
+        return 2
+    try:
+        decision = index.decision(
+            arguments.record_id,
+            arguments.source_fingerprint,
+        )
+    except ValueError as error:
+        print(
+            json.dumps(
+                {
+                    "status": "invalid_identity",
+                    "message": str(error),
+                },
+                ensure_ascii=False,
+            ),
+            file=sys.stderr,
+        )
+        return 2
+    print(json.dumps(decision.to_dict(), ensure_ascii=False, indent=2))
     return 0
 
 

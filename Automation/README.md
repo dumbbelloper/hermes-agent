@@ -58,6 +58,24 @@ PYTHONPATH=Automation/src python3 -m hermes_agent show-state \
   --source emvco-news
 ```
 
+Vault 문서 식별 필드와 중복 검사:
+
+```bash
+PYTHONPATH=Automation/src python3 -m hermes_agent validate-notes \
+  --vault-dir .
+```
+
+Writer가 특정 레코드를 처리해야 하는지 확인:
+
+```bash
+PYTHONPATH=Automation/src python3 -m hermes_agent note-status \
+  --vault-dir . \
+  --record-id <record-id> \
+  --source-fingerprint <source-fingerprint>
+```
+
+결과는 `create`, `skip`, `update_pending` 중 하나다. 같은 `record_id`가 여러 문서에 있거나 ID가 `source_id`·`canonical_url`과 일치하지 않으면 자동 처리를 중단한다. 상세 정책은 [NOTE_IDENTITY_POLICY.md](../NOTE_IDENTITY_POLICY.md)를 따른다.
+
 기본 데이터 위치는 `Automation/data/`이며 Git 추적에서 제외된다. 다른 위치를 사용하려면 `collect`와 `show-state`에 `--data-dir`을 지정한다.
 
 ## 데이터 구조
@@ -119,6 +137,8 @@ PYTHONPATH=Automation/src python3 -m unittest discover \
 - 수집 실패와 빈 snapshot 발생 시 이전 상태 보존
 - Source Registry 타입과 source 선택 검증
 - 네트워크 요청 전 최초 URI·redirect 목적지 차단
+- Vault 필수 identity field, 안정 ID와 canonical URL 일치 검증
+- 중복 `record_id` 탐지와 `create`·`skip`·`update_pending` 판정
 
 ## 확장 경계
 

@@ -578,3 +578,96 @@ git diff --check
 - 추가 구현 후보는 Source Registry에 포함하지 않았으며 adapter와 회귀 테스트 전에는 수집하지 않는다.
 - 공식 사이트 구조와 접근 정책은 변경될 수 있으므로 출처 판정 기준일을 유지하고 변경 시 재검증해야 한다.
 - scheduler, retry, 알림, 원문 본문 추출과 Inbox 자동 생성은 아직 구현되지 않았다.
+
+## 2026-07-28 — Vault 문서 식별과 중복 작성 방지 구현
+
+### 요청과 목적
+
+- 하루에 여러 번 Collector·Writer Skill 또는 Hermes Agent가 실행돼도 같은 수집 자료의 문서를 중복 생성하지 않게 함
+- 사람이 작성한 기존 문서와 Hermes가 작성할 문서를 식별하고 원문 메타데이터 변경을 구분
+- 기존 Inbox 문서에 실제 수집 레코드의 안정 ID를 연결
+- 별도 작업 브랜치에서 검증, commit, push와 Pull Request 생성
+
+### 수행한 변경
+
+- `source_id`와 `canonical_url`의 SHA-256인 기존 `Record.id`를 문서의 `record_id`로 승격
+- `discovered_at`을 제외한 정규화 레코드 hash를 `source_fingerprint`로 기록
+- `Inbox/`와 `Notes/` Frontmatter를 실행 시 scan하는 `VaultNoteIndex` 구현
+- 동일 자료의 상태를 `create`, `skip`, `update_pending`으로 판정하는 API 구현
+- 필수 identity field, SHA-256 형식, canonical URL, 파생 ID와 중복 ID 검증 구현
+- `validate-notes`와 `note-status` CLI 추가
+- 기존 Inbox 4건에 실제 `record_id`, `source_fingerprint`, `canonical_url`과 작성 주체·검사 시각 추가
+- 수집 문서 템플릿과 프로젝트·자동화 문서에 identity field와 실행법 반영
+- 문서 식별, 멱등성, 충돌과 향후 migration 기준을 별도 정책으로 작성
+
+### 생성·수정한 문서와 파일
+
+구현과 테스트:
+
+- [Automation/src/hermes_agent/note_index.py](./Automation/src/hermes_agent/note_index.py)
+- [Automation/src/hermes_agent/cli.py](./Automation/src/hermes_agent/cli.py)
+- [Automation/src/hermes_agent/__init__.py](./Automation/src/hermes_agent/__init__.py)
+- [Automation/tests/test_note_index.py](./Automation/tests/test_note_index.py)
+
+정책과 사용법:
+
+- [NOTE_IDENTITY_POLICY.md](./NOTE_IDENTITY_POLICY.md)
+- [Templates/Collected Note.md](./Templates/Collected%20Note.md)
+- [Automation/README.md](./Automation/README.md)
+- [PROJECT_PLAN.md](./PROJECT_PLAN.md)
+- [README.md](./README.md)
+
+기존 문서 backfill:
+
+- [Visa Stablecoin Platform](./Inbox/2026-07-16%20Visa%20Introduces%20Platform%20for%20Stablecoin%20Minting%20Movement%20and%20Management.md)
+- [JCB·Circle Stablecoin MOU](./Inbox/2026-07-14%20JCB%20Signs%20MOU%20with%20Circle%20to%20Explore%20Stablecoin%20Collaboration.md)
+- [EMVCo Digital Payment Credential](./Inbox/2026-06-23%20EMVCo%20Requests%20Feedback%20on%20Verifiable%20Digital%20Credentials.md)
+- [PCI DSS와 NIST CSF mapping](./Inbox/2026-07-23%20Mapping%20PCI%20DSS%204.0.1%20to%20NIST%20CSF%202.0.md)
+
+### 실행한 검증과 결과
+
+```text
+PYTHONPATH=Automation/src python3 -m unittest discover -s Automation/tests -v
+PYTHONPYCACHEPREFIX=/private/tmp/hermes-agent-pycache \
+  PYTHONPATH=Automation/src python3 -m compileall -q Automation/src Automation/tests
+PYTHONPATH=Automation/src python3 -m hermes_agent validate-registry
+PYTHONPATH=Automation/src python3 -m hermes_agent validate-notes --vault-dir .
+PYTHONPATH=Automation/src python3 -m hermes_agent note-status ...
+git diff --check
+```
+
+- 전체 단위·통합 테스트 26개 통과
+- Python 전체 compile 검사 통과
+- Source Registry 4개 검증 통과
+- Vault Inbox 4건 검증: `status: ok`, issue 0건
+- 현재 fingerprint 입력: `skip`
+- 같은 ID와 변경된 fingerprint 입력: `update_pending`
+- 새로운 ID 입력: `create`
+- 중복 ID, 파생 ID 불일치, 필수 field 누락과 비정규 URL 회귀 테스트 통과
+- Markdown 상대 링크와 Obsidian wiki link 검증 통과
+
+### 결정과 근거
+
+1. 영구 note index 파일 대신 실행 시 Vault를 scan한다.
+   - 여러 PC·branch·Obsidian 변경 이후 stale cache가 기준 데이터가 되는 것을 피하기 위함이다.
+2. `record_id`와 `source_fingerprint`의 역할을 분리한다.
+   - 같은 자료의 정체성과 같은 자료 내부의 변경을 독립적으로 판정하기 위함이다.
+3. 같은 ID의 원문 변경은 자동 덮어쓰기 대신 `update_pending`으로 보낸다.
+   - 사람이 작성한 요약과 해석을 보존하기 위함이다.
+4. 서로 다른 공식 출처의 같은 사건은 다른 `record_id`로 유지한다.
+   - 출처별 주장과 원문을 보존하고 사건 단위 통합은 별도 event key로 처리하기 위함이다.
+5. 기존 Inbox 4건은 `created_by: manual`로 기록했다.
+   - 실제 작성 주체를 보존하고 향후 Hermes 생성 문서와 구분하기 위함이다.
+
+### 전역 설정이나 외부 시스템에 적용한 변경
+
+- 없음
+- 본 구현과 검증은 로컬 파일과 기존 수집 데이터만 사용
+- 외부 공식 사이트 조회, credential 사용, 배포는 수행하지 않음
+
+### 알려진 한계와 남은 작업
+
+- 현재 기능은 Writer의 판정까지만 제공하며 `create` 문서 생성이나 `update_pending` Frontmatter 갱신은 아직 수행하지 않는다.
+- 자동·수동 본문을 안전하게 부분 갱신하려면 managed block 경계를 추가로 설계해야 한다.
+- Source ID 변경 또는 공식 URL 이전으로 `record_id`가 바뀌는 경우 alias migration 기능이 필요하다.
+- 같은 사건의 여러 공식 발표를 묶는 event key와 의미 기반 중복 판정은 별도 작업이다.

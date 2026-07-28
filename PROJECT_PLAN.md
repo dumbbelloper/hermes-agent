@@ -233,6 +233,7 @@ Agent는 작업 순서와 상태를 조정하고, skill은 입력과 출력이 �
 - [x] 빈 snapshot과 수집 실패 시 마지막 정상 상태 보존
 - [x] CLI와 네트워크 없는 fixture 회귀 테스트
 - [x] 운영 4개, 추가 구현 후보, 수집 제외 출처 분류
+- [x] 수집 `record_id`를 이용한 Vault 문서 인덱스와 중복 작성 방지 판정
 - Phase 1 최소 수집기 부분 완료 — 메타데이터 수집 완료, Inbox 자동 작성 미완료
 - [ ] GitHub Release adapter
 - [ ] 원문 본문 수집과 Obsidian Inbox 문서 생성
@@ -284,6 +285,7 @@ Agent는 작업 순서와 상태를 조정하고, skill은 입력과 출력이 �
 | 현재 실행 환경 | 결정 | 로컬 수동 실행, `Automation/data/`에 상태 저장 |
 | 운영 출처 | 결정 | 직접 접근 가능한 공식 출처 4개, 세부 기준은 [SOURCE_CATALOG.md](./SOURCE_CATALOG.md) |
 | 차단 출처 처리 | 결정 | WAF 우회, 검색 인덱스와 브라우저 자동화 폴백 없이 제외 |
+| 문서 식별과 중복 방지 | 결정 | `record_id`, `source_fingerprint`와 실행 시 Vault index 사용. 세부 기준은 [NOTE_IDENTITY_POLICY.md](./NOTE_IDENTITY_POLICY.md) |
 | 문서 승인 | 임시 결정 | `Inbox/` 초안을 사람이 검토한 뒤 `Notes/`로 이동 |
 | LLM 정책 | 미결정 | 사용 위치, 모델, 비용, 근거 보존과 민감정보 기준 필요 |
 | 중요도·일간 상한 | 미결정 | 초기 문서 표본을 검토한 뒤 확정 |
