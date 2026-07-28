@@ -23,10 +23,6 @@ def _workspace(value: Optional[str] = None) -> Path:
     return Path(configured or ".").expanduser().resolve()
 
 
-def _set_workspace(path: Path) -> None:
-    os.environ["HERMES_NEWS_WORKSPACE"] = str(path)
-
-
 def _initialize(arguments: Sequence[str]) -> int:
     parser = argparse.ArgumentParser(prog="run.py init")
     parser.add_argument("--workspace", required=True)
@@ -34,6 +30,7 @@ def _initialize(arguments: Sequence[str]) -> int:
     workspace = _workspace(options.workspace)
     state_root = workspace / ".hermes-news"
     config = state_root / "config" / "sources.json"
+    telegram_config = state_root / "config" / "telegram.json"
     for path in (
         workspace / "Inbox",
         state_root / "data",
@@ -51,6 +48,7 @@ def _initialize(arguments: Sequence[str]) -> int:
                 "workspace": str(workspace),
                 "config": str(config),
                 "config_created": created_config,
+                "telegram_config": str(telegram_config),
             },
             ensure_ascii=False,
             indent=2,
@@ -65,18 +63,28 @@ def _doctor(arguments: Sequence[str]) -> int:
     options = parser.parse_args(arguments)
     workspace = _workspace(options.workspace)
     config = workspace / ".hermes-news" / "config" / "sources.json"
+    telegram_config = workspace / ".hermes-news" / "config" / "telegram.json"
+    telegram_config_valid = False
+    if telegram_config.is_file():
+        try:
+            document = json.loads(telegram_config.read_text(encoding="utf-8"))
+            telegram_config_valid = bool(
+                isinstance(document, dict)
+                and isinstance(document.get("bot_token"), str)
+                and document["bot_token"].strip()
+                and isinstance(document.get("chat_id"), str)
+                and document["chat_id"].strip()
+            )
+        except (OSError, UnicodeError, json.JSONDecodeError):
+            pass
     checks = {
         "python_3_9_or_newer": sys.version_info >= (3, 9),
         "runtime_present": (PACKAGE_DIR / "cli.py").is_file(),
         "workspace_exists": workspace.is_dir(),
         "inbox_exists": (workspace / "Inbox").is_dir(),
         "config_exists": config.is_file(),
-        "telegram_bot_token_set": bool(
-            os.environ.get("HERMES_TELEGRAM_BOT_TOKEN", "").strip()
-        ),
-        "telegram_chat_id_set": bool(
-            os.environ.get("HERMES_TELEGRAM_CHAT_ID", "").strip()
-        ),
+        "telegram_config_exists": telegram_config.is_file(),
+        "telegram_config_valid": telegram_config_valid,
     }
     status = "ok" if all(checks.values()) else "configuration_error"
     print(
@@ -101,7 +109,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         return _doctor(arguments[1:])
 
     workspace = _workspace()
-    _set_workspace(workspace)
+    os.chdir(workspace)
     sys.path.insert(0, str(RUNTIME_DIR))
     from hermes_agent.cli import main as runtime_main
 

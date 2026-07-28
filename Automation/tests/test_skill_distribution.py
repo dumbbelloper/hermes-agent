@@ -30,8 +30,6 @@ class SkillDistributionTests(unittest.TestCase):
             environment.update(
                 {
                     "HERMES_NEWS_WORKSPACE": str(workspace),
-                    "HERMES_TELEGRAM_BOT_TOKEN": "test-token",
-                    "HERMES_TELEGRAM_CHAT_ID": "test-chat",
                 }
             )
 
@@ -46,6 +44,17 @@ class SkillDistributionTests(unittest.TestCase):
             self.assertTrue((workspace / "Inbox").is_dir())
             self.assertTrue(
                 (workspace / ".hermes-news" / "config" / "sources.json").is_file()
+            )
+            (
+                workspace / ".hermes-news" / "config" / "telegram.json"
+            ).write_text(
+                json.dumps(
+                    {
+                        "bot_token": "test-token",
+                        "chat_id": "test-chat",
+                    }
+                ),
+                encoding="utf-8",
             )
 
             doctor = self._run(
@@ -74,6 +83,24 @@ class SkillDistributionTests(unittest.TestCase):
                 msg="Skill link escapes bundle: {}".format(match.group(1)),
             )
             self.assertTrue(target.exists(), msg="Missing Skill link: {}".format(target))
+
+    def test_skill_markdown_explicitly_links_every_runtime_file(self) -> None:
+        content = (SKILL_SOURCE / "SKILL.md").read_text(encoding="utf-8")
+        linked = {match.group(1) for match in MARKDOWN_LINK.finditer(content)}
+        runtime = SKILL_SOURCE / "scripts" / "runtime" / "hermes_agent"
+        required = {
+            path.relative_to(SKILL_SOURCE).as_posix()
+            for path in runtime.rglob("*")
+            if path.is_file()
+        }
+        self.assertEqual(set(), required - linked)
+        self.assertTrue(
+            {
+                "scripts/run.py",
+                "scripts/precheck.py",
+                "references/artifact-schema.md",
+            }.issubset(linked)
+        )
 
     def test_skill_bundle_has_no_repository_or_user_path_dependency(self) -> None:
         forbidden = (

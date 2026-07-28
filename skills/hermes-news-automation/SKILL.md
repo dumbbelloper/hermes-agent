@@ -12,11 +12,11 @@ Run the bundled controller against the configured workspace. Keep source pages u
 - Require the `terminal`, `web`, `file`, and `delegation` toolsets.
 - Resolve `SKILL_DIR` to the absolute directory containing this `SKILL.md`.
 - Require an initialized `HERMES_NEWS_WORKSPACE`; never initialize or change it during a scheduled run.
-- Run `python3 "SKILL_DIR/scripts/run.py"` on macOS, Linux, and WSL2. On native Windows, replace only `python3` with `python`.
-- Require `HERMES_TELEGRAM_BOT_TOKEN` and `HERMES_TELEGRAM_CHAT_ID` in the terminal environment without printing their values.
+- Run the bundled [scripts/run.py](scripts/run.py) with `python3` on macOS, Linux, and WSL2. On native Windows, replace only `python3` with `python`.
+- Require a valid `HERMES_NEWS_WORKSPACE/.hermes-news/config/telegram.json` readable only by the runner. Never print its values.
 - Read [references/artifact-schema.md](references/artifact-schema.md) before processing the first claimed item.
 - Use [scripts/precheck.py](scripts/precheck.py) as the Hermes cron pre-check when installed. It creates the run and wakes the agent only when the queue is non-empty.
-- Treat [scripts/runtime/](scripts/runtime/) as immutable bundled controller code.
+- Treat the runtime files listed under **Bundle integrity** as immutable bundled controller code.
 
 ## Procedure
 
@@ -83,3 +83,10 @@ Run the bundled controller against the configured workspace. Keep source pages u
 - Use `automation-status` for diagnosis by `run_id`.
 - Treat `completed_with_exceptions` as a completed run with quarantined, retryable, or delivery-unknown items; preserve those states for audit.
 - Treat a missing run ID, invalid Vault, active lock mismatch, or schema failure as fatal and report the error instead of publishing.
+
+## Bundle integrity
+
+Keep every runtime file below in the installed bundle. Do not read or modify these files unless diagnosing the controller:
+
+- Core: [__init__.py](scripts/runtime/hermes_agent/__init__.py), [__main__.py](scripts/runtime/hermes_agent/__main__.py), [automation.py](scripts/runtime/hermes_agent/automation.py), [cli.py](scripts/runtime/hermes_agent/cli.py), [fetcher.py](scripts/runtime/hermes_agent/fetcher.py), [hooks.py](scripts/runtime/hermes_agent/hooks.py), [models.py](scripts/runtime/hermes_agent/models.py), [normalize.py](scripts/runtime/hermes_agent/normalize.py), [note_index.py](scripts/runtime/hermes_agent/note_index.py), [pipeline.py](scripts/runtime/hermes_agent/pipeline.py), [registry.py](scripts/runtime/hermes_agent/registry.py), [storage.py](scripts/runtime/hermes_agent/storage.py), [telegram.py](scripts/runtime/hermes_agent/telegram.py), [validation.py](scripts/runtime/hermes_agent/validation.py), and [default_sources.json](scripts/runtime/hermes_agent/default_sources.json).
+- Adapters: [__init__.py](scripts/runtime/hermes_agent/adapters/__init__.py), [amex.py](scripts/runtime/hermes_agent/adapters/amex.py), [base.py](scripts/runtime/hermes_agent/adapters/base.py), [jcb.py](scripts/runtime/hermes_agent/adapters/jcb.py), [rss.py](scripts/runtime/hermes_agent/adapters/rss.py), [unionpay.py](scripts/runtime/hermes_agent/adapters/unionpay.py), and [visa.py](scripts/runtime/hermes_agent/adapters/visa.py).

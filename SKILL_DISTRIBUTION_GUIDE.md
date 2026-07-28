@@ -2,7 +2,7 @@
 
 > 기준일: 2026-07-28
 >
-> 상태: Release candidate · GitHub main 병합 및 version tag 전
+> 상태: v0.1.0 공개 배포 · skills.sh 인덱싱 및 Hermes 설치 검증 완료
 >
 > 배포 단위: `skills/hermes-news-automation/`
 
@@ -53,18 +53,20 @@ Release tag가 만들어진 뒤 설치 전 내용을 확인한다.
 
 ```bash
 hermes skills inspect \
-  dumbbelloper/hermes-agent/skills/hermes-news-automation
+  skills-sh/dumbbelloper/hermes-agent/skills/hermes-news-automation
 ```
 
 설치:
 
 ```bash
 hermes skills install \
-  dumbbelloper/hermes-agent/skills/hermes-news-automation
+  skills-sh/dumbbelloper/hermes-agent/skills/hermes-news-automation
 ```
 
 Hermes는 설치 source와 bundle hash를 기록하고 community Skill 보안 검사를
 수행한다. 경고를 검토하지 않고 `--force`를 사용하지 않는다.
+[skills.sh 공개 상세 페이지](https://skills.sh/dumbbelloper/hermes-agent/skills/hermes-news-automation)에서
+현재 인덱싱 상태를 확인할 수 있다.
 
 ## 4. Hermes Tap으로 구독
 
@@ -112,7 +114,9 @@ python "$env:HERMES_NEWS_SKILL_DIR\scripts\run.py" init `
 <workspace>/
 ├── Inbox/
 └── .hermes-news/
-    ├── config/sources.json
+    ├── config/
+    │   ├── sources.json
+    │   └── telegram.json  # 사용자가 별도 생성
     ├── data/
     └── tmp/
 ```
@@ -120,7 +124,7 @@ python "$env:HERMES_NEWS_SKILL_DIR\scripts\run.py" init `
 기존 `sources.json`은 덮어쓰지 않는다. 각 사용자와 runner는 별도 workspace를
 사용한다.
 
-## 6. 환경변수
+## 6. 환경변수와 Telegram credential
 
 Hermes의 `hermes config env-path`가 가리키는 env 파일에 설정한다.
 
@@ -128,9 +132,22 @@ Hermes의 `hermes config env-path`가 가리키는 env 파일에 설정한다.
 HERMES_NEWS_WORKSPACE=<absolute-workspace-path>
 HERMES_NEWS_SKILL_DIR=<absolute-installed-skill-path>
 HERMES_NEWS_MAX_ITEMS=5
-HERMES_TELEGRAM_BOT_TOKEN=<secret>
-HERMES_TELEGRAM_CHAT_ID=<fixed-recipient>
 ```
+
+Telegram Bot credential은
+`<workspace>/.hermes-news/config/telegram.json`에 다음 JSON object로 저장한다.
+
+```json
+{
+  "bot_token": "<secret>",
+  "chat_id": "<fixed-recipient>"
+}
+```
+
+이 파일을 Git에 추가하지 않는다. macOS/Linux/WSL2에서는 `chmod 600`으로
+소유자만 읽게 하고 native Windows에서는 현재 사용자와 cron runner만 읽도록 ACL을
+제한한다. 기존 `HERMES_TELEGRAM_BOT_TOKEN`, `HERMES_TELEGRAM_CHAT_ID` 환경변수는
+`v0.1.0`부터 runtime이 읽지 않는다.
 
 설정 진단:
 

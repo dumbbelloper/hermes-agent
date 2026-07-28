@@ -88,14 +88,15 @@ python3 Automation/run.py note-status \
 작성 완료한 Markdown 문서의 전체 내용을 Telegram으로 전송:
 
 ```bash
-export HERMES_TELEGRAM_BOT_TOKEN="<bot-token>"
-export HERMES_TELEGRAM_CHAT_ID="<chat-id>"
-
 python3 Automation/run.py notify-telegram \
   --file "Inbox/example.md"
 ```
 
-credential은 CLI 인자로 받지 않고 환경변수만 사용한다. 메시지가 Telegram의 4,096자 제한을 넘으면 원문 문자를 보존해 여러 메시지로 분할한다. 실제 전송 전에는 `--dry-run`으로 파일별 메시지 수를 확인할 수 있다. 변수 이름만 담은 예시는 [`.env.example`](../.env.example)에 있으며 실제 값은 commit하지 않는다.
+Telegram credential은 `.hermes-news/config/telegram.json`의 `bot_token`,
+`chat_id`에서 읽으며 CLI 인자나 출력으로 노출하지 않는다. 이 파일은 Git 추적에서
+제외하고 소유자만 읽도록 설정한다. 메시지가 Telegram의 4,096자 제한을 넘으면 원문
+문자를 보존해 여러 메시지로 분할한다. 실제 전송 전에는 `--dry-run`으로 파일별
+메시지 수를 확인할 수 있다.
 
 기본 데이터 위치는 `Automation/data/`이며 Git 추적에서 제외된다. 다른 위치를 사용하려면 `collect`와 `show-state`에 `--data-dir`을 지정한다.
 
