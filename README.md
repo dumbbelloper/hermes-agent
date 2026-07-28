@@ -16,6 +16,8 @@
 
 운영 수집 대상, 추가 구현 후보와 수집 제외 출처 및 판정 근거는 [SOURCE_CATALOG.md](./SOURCE_CATALOG.md)에서 관리합니다.
 
+반복 실행 시 기존 문서를 판별하는 `record_id`, 원문 변경 감지와 Writer 멱등성 기준은 [NOTE_IDENTITY_POLICY.md](./NOTE_IDENTITY_POLICY.md)에서 관리합니다.
+
 AI agent를 회사와 팀 업무에 안전하게 적용하기 위한 조직 수준의 통제 기준은 [ENTERPRISE_AI_GUARDRAILS.md](./ENTERPRISE_AI_GUARDRAILS.md)에서 관리합니다.
 
 프로젝트에서 수행한 작업과 검증 결과는 [WORK_LOG.md](./WORK_LOG.md)에서 확인할 수 있습니다.

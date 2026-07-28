@@ -1,13 +1,22 @@
 ---
+note_schema_version: "1.0"
+record_id: "3fe964e5269ce278870c6d27ac5db85772e37b9bf9ae7d7d6a5735ceac697f47"
+source_fingerprint: "3a7fcfd221222430a7aa46567f90331f4c5f75c7566eb4a280a0811449dae140"
 source: "EMVCo"
 source_id: "emvco-news"
 source_type: "official-news"
+canonical_url: "https://www.emvco.com/news/emvco-requests-feedback-on-verifiable-digital-credentials-for-card-based-payment-authentication"
 original_url: "https://www.emvco.com/news/emvco-requests-feedback-on-verifiable-digital-credentials-for-card-based-payment-authentication/"
 published_at: "2026-06-23"
 collected_at: "2026-07-28T10:30:24+09:00"
+first_collected_at: "2026-07-28T10:30:24+09:00"
+last_checked_at: "2026-07-28T10:49:47+09:00"
 language: "en"
 discovery_method: "official-rss"
 verification_status: "official-page-verified"
+created_by: "manual"
+generator: "manual-review"
+generator_version: "1.0"
 topics:
   - digital-payment-credential
   - payment-authentication

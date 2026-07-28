@@ -1,13 +1,22 @@
 ---
+note_schema_version: "1.0"
+record_id: "b9257f229c981f14cd09b5565fd7d20ae33fc3bab412490687a63c69f27e5374"
+source_fingerprint: "362946997f5c52b752834e94d2dcbd2a06d8529bd329af28610f2f6d5ce9696a"
 source: "Visa"
 source_id: "visa-press"
 source_type: "official-press-release"
+canonical_url: "https://usa.visa.com/about-visa/newsroom/press-releases.releaseId.22591.html"
 original_url: "https://usa.visa.com/about-visa/newsroom/press-releases.releaseId.22591.html"
 published_at: "2026-07-16"
 collected_at: "2026-07-28T10:30:24+09:00"
+first_collected_at: "2026-07-28T10:30:24+09:00"
+last_checked_at: "2026-07-28T10:49:47+09:00"
 language: "en"
 discovery_method: "official-static-listing"
 verification_status: "official-page-verified"
+created_by: "manual"
+generator: "manual-review"
+generator_version: "1.0"
 topics:
   - stablecoin
   - wallet-infrastructure

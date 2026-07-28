@@ -1,13 +1,22 @@
 ---
+note_schema_version: "1.0"
+record_id: "671ea463c768d7a7331967f64a694be2d64b336aa95ad969aa3ed881afcd162a"
+source_fingerprint: "921627773d4cc37d7fcbfc6e3ea2b2562171e6207db1e29e1c78607aaf74d796"
 source: "JCB"
 source_id: "jcb-press"
 source_type: "official-press-release"
+canonical_url: "https://www.global.jcb/en/press/2026/202607141000_products.html"
 original_url: "https://www.global.jcb/en/press/2026/202607141000_products.html"
 published_at: "2026-07-14"
 collected_at: "2026-07-28T10:30:24+09:00"
+first_collected_at: "2026-07-28T10:30:24+09:00"
+last_checked_at: "2026-07-28T10:49:47+09:00"
 language: "en"
 discovery_method: "official-json-listing"
 verification_status: "official-page-verified"
+created_by: "manual"
+generator: "manual-review"
+generator_version: "1.0"
 topics:
   - stablecoin
   - cross-border-payments

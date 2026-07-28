@@ -1,13 +1,22 @@
 ---
+note_schema_version: "1.0"
+record_id: "4d7a9cbea31884cf6fb3c2058fcb01369f075223a3bb40817f44e7547d26d925"
+source_fingerprint: "e09076c08c1ff2b46ac47d79013c829a1eaaa1c7e94ea560beb8baeb5840180d"
 source: "PCI Security Standards Council"
 source_id: "pci-blog"
 source_type: "official-blog"
+canonical_url: "https://blog.pcisecuritystandards.org/mapping-pci-dss-v4.0.1-to-the-nist-cybersecurity-framework-2.0"
 original_url: "https://blog.pcisecuritystandards.org/mapping-pci-dss-v4.0.1-to-the-nist-cybersecurity-framework-2.0"
 published_at: "2026-07-23"
 collected_at: "2026-07-28T10:30:24+09:00"
+first_collected_at: "2026-07-28T10:30:24+09:00"
+last_checked_at: "2026-07-28T10:49:47+09:00"
 language: "en"
 discovery_method: "official-rss"
 verification_status: "official-page-verified"
+created_by: "manual"
+generator: "manual-review"
+generator_version: "1.0"
 topics:
   - pci-dss
   - nist-csf
