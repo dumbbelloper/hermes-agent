@@ -1592,3 +1592,63 @@ git diff --check
 - Linux, Windows WSL2와 native Windows에서 Hermes gateway 및 cron end-to-end smoke test가 필요
 - 공개 배포 전 `v0.1.0` tag, release note, 라이선스 최종 확인과 main 기준 direct install 검증이 필요
 - private repository 배포 시 동료별 GitHub 접근 권한과 Hermes credential 정책을 별도로 마련해야 함
+
+## 2026-07-28 16:22 KST — Skill 배포 준비 변경 commit, push 및 PR 생성
+
+### 사용자 요청과 목적
+
+- 검증을 마친 무인 자동화와 독립 Skill 배포 변경을 별도 브랜치에 commit
+- 원격 저장소에 push하고 `main` 대상 pull request 생성
+
+### 수행한 변경
+
+- 전체 구현과 문서 변경을 `e42e5dc` 커밋으로 생성
+- `feat/hermes-unattended-automation` 브랜치를 `origin`에 push하고 upstream 연결
+- GitHub `main` 대상 [PR #8](https://github.com/dumbbelloper/hermes-agent/pull/8) 생성
+- PR 본문에 구현 범위, 47개 테스트와 release 전 실환경 검증 항목 명시
+- 생성 직후 PR base/head, merge 가능 여부와 다중 OS CI 상태 확인
+
+### 생성·수정한 문서와 파일
+
+- [작업 로그](./WORK_LOG.md)
+- 구현 파일은 직전 작업 기록의 목록과 동일하며, 이 단계에서는 원격 반영과 PR 생성만 수행
+
+### 실행한 검증과 결과
+
+```text
+git diff --cached --check
+git commit -m "feat: package unattended news automation skill"
+git push --set-upstream origin feat/hermes-unattended-automation
+gh pr create --base main --head feat/hermes-unattended-automation ...
+gh pr view 8 --json number,title,url,state,baseRefName,headRefName,isDraft,mergeable,statusCheckRollup
+```
+
+- commit: `e42e5dc feat: package unattended news automation skill`
+- PR: [#8 feat: package unattended news automation skill](https://github.com/dumbbelloper/hermes-agent/pull/8)
+- PR 상태: `OPEN`, draft 아님, `main` 대상, `MERGEABLE`
+- GitHub Actions 확인 시 Ubuntu와 macOS 검증 성공
+- GitHub Actions 확인 시 Windows 검증은 실행 중
+- credential 검색 결과 실제 token 또는 chat ID 없음; 문서 placeholder만 존재
+
+### 결정과 근거
+
+1. 무인 controller, self-contained Skill, 테스트, CI와 운영 문서를 하나의 feature commit으로 유지한다.
+   - runtime 이동과 문서 경로 변경이 함께 적용돼야 중간 상태의 깨진 실행 경로가 생기지 않기 때문이다.
+2. PR은 draft가 아닌 일반 review 상태로 생성한다.
+   - 로컬 validator와 전체 테스트 및 repository 외부 bundle 검증을 통과해 코드 검토 가능한 상태이기 때문이다.
+3. Windows CI가 실행 중인 사실을 완료로 기록하지 않는다.
+   - 원격 확인 시점의 실제 상태를 보존하고 최종 결과를 추정하지 않기 위해서다.
+
+### 전역 설정이나 외부 시스템에 적용한 변경
+
+- GitHub 원격 저장소에 `feat/hermes-unattended-automation` 브랜치 생성
+- GitHub [PR #8](https://github.com/dumbbelloper/hermes-agent/pull/8) 생성
+- Hermes Skill Hub, tap, release와 version tag는 생성하지 않음
+- Hermes gateway, cron, Telegram과 credential은 변경하지 않음
+
+### 알려진 한계와 남은 작업
+
+- Windows GitHub Actions 검증의 최종 결과 확인 필요
+- PR review와 `main` 병합은 아직 수행하지 않음
+- 병합 후 `v0.1.0` release와 실제 Hermes direct install 및 cron smoke test가 필요
+- Linux, WSL2와 native Windows Hermes end-to-end 검증은 별도 운영 단계로 남아 있음
