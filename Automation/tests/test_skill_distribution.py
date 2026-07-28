@@ -94,6 +94,13 @@ class SkillDistributionTests(unittest.TestCase):
             if path.is_file()
         }
         self.assertEqual(set(), required - linked)
+        self.assertTrue(
+            {
+                "scripts/run.py",
+                "scripts/precheck.py",
+                "references/artifact-schema.md",
+            }.issubset(linked)
+        )
 
     def test_skill_bundle_has_no_repository_or_user_path_dependency(self) -> None:
         forbidden = (
