@@ -1,0 +1,4 @@
+interface:
+  display_name: "Hermes News Automation"
+  short_description: "독립 설치형 결제·금융 뉴스 검증·문서화 자동화"
+  default_prompt: "Use $hermes-news-automation to initialize or run a payment and finance news workspace with independent verification."

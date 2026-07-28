@@ -8,7 +8,9 @@
 
 추적 범위는 글로벌 결제 네트워크를 시작점으로 하며, 향후 Ethereum, Solana 등의 블록체인 생태계, 스테이블코인, Samsung Pay, Apple Pay와 같은 디지털 월렛, HCE를 비롯한 결제 기술로 확장할 수 있습니다. 또한 국내 카드사와 관련 사업자의 서비스, 기술, 정책 및 시장 트렌드도 수집 대상에 포함할 수 있습니다.
 
-현재 수집은 자동화됐지만 원문 본문 추출, 관련성 판정과 Obsidian 문서 작성은 아직 사람 검토가 필요한 초기 단계입니다. `record_id`와 `source_fingerprint`로 반복 실행의 중복과 원문 변경을 판정하며, 향후 작성 과정을 agent 및 skill 단위로 자동화합니다.
+현재 수집, 신규·변경 queue, agent 관련성 판정, 독립 검증, Obsidian 문서 작성과 Telegram 알림을 하나의 무인 workflow로 연결했습니다. `record_id`와 `source_fingerprint`로 반복 실행의 중복과 원문 변경을 판정하며, 검증을 통과하지 못한 자료는 발행하지 않고 격리합니다. 실제 의미 검증은 [Hermes News Automation Skill](./skills/hermes-news-automation/SKILL.md)을 실행하는 Hermes Agent가 담당합니다.
+
+Skill은 controller runtime을 자체 포함하므로 repository 전체를 복제하지 않고 GitHub direct install 또는 Hermes tap으로 배포할 수 있습니다. 설치, workspace 초기화, 업데이트와 release 기준은 [Skill 배포 가이드](./SKILL_DISTRIBUTION_GUIDE.md)에서 관리합니다.
 
 구체적인 수집·선별·문서화 설계는 [PROJECT_PLAN.md](./PROJECT_PLAN.md)에서 관리합니다.
 
@@ -25,6 +27,8 @@ AI agent를 회사와 팀 업무에 안전하게 적용하기 위한 조직 수�
 초기 공식 출처 18개를 대상으로 2026-07-24에 수행한 수집 방식, 메타데이터·원문 품질, 관련성 분류, 중복 및 장애 복구 검증 결과는 역사적 기준선인 [DATA_COLLECTION_VALIDATION_REPORT.md](./DATA_COLLECTION_VALIDATION_REPORT.md)에서 확인할 수 있습니다.
 
 검증 결과를 코드로 승격한 최소 수집기의 실행법, 데이터 구조와 확장 경계는 [Automation/README.md](./Automation/README.md)에서 확인할 수 있습니다.
+
+macOS, Linux와 Windows에서 Hermes gateway와 cron으로 Skill을 계속 실행하는 방법과 플랫폼별 지원 등급은 [Hermes Agent 무인 자동화 가이드](./HERMES_AUTOMATION_GUIDE.md)에서 확인할 수 있습니다.
 
 운영 출처의 첫 실제 수집에서 선별한 문서는 [2026-07-28 초기 수집 브리핑](./Digests/2026-07-28%20초기%20수집%20브리핑.md)에서 확인할 수 있습니다.
 

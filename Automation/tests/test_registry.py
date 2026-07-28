@@ -15,8 +15,11 @@ CONFIG = Path(__file__).parents[1] / "config" / "sources.json"
 class RegistryTests(unittest.TestCase):
     def test_packaged_registry_matches_project_registry(self) -> None:
         packaged = (
-            Path(__file__).parents[1]
-            / "src"
+            Path(__file__).parents[2]
+            / "skills"
+            / "hermes-news-automation"
+            / "scripts"
+            / "runtime"
             / "hermes_agent"
             / "default_sources.json"
         )
