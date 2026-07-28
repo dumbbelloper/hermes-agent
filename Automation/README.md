@@ -11,6 +11,11 @@ Hermes Agent의 첫 번째 실행 가능한 수집기다. 공식 공개 출처�
 | Source ID    | 조직                             | 채널            | 방식         |
 | ------------ | ------------------------------ | ------------- | ---------- |
 | `visa-press` | Visa                           | Press release | 공식 목록 HTML |
+| `visa-developer-release-notes` | Visa | Developer release notes | 공식 정적 HTML |
+| `visa-acceptance-devices-ios-releases` | Visa | iOS SDK releases | 공식 Atom |
+| `amex-newsroom` | American Express | Newsroom | 공식 AEM JSON |
+| `unionpay-company-news` | UnionPay International | Company News | 공식 JSON |
+| `unionpay-market-news` | UnionPay International | Market News | 공식 JSON |
 | `jcb-press`  | JCB                            | Press release | 공식 JSON    |
 | `emvco-news` | EMVCo                          | News          | 공식 RSS     |
 | `pci-blog`   | PCI Security Standards Council | Blog          | 공식 RSS     |
@@ -129,7 +134,7 @@ PYTHONPATH=Automation/src python3 -m unittest discover \
 
 현재 테스트 범위:
 
-- JCB JSON, RSS, Atom, Visa HTML 파싱
+- American Express AEM JSON, UnionPay JSON, JCB JSON, RSS·Atom, Visa Press·Release Notes HTML 파싱
 - 날짜와 URL 정규화
 - 공식 도메인 검증
 - 안정적인 ID와 멱등성
@@ -146,8 +151,8 @@ PYTHONPATH=Automation/src python3 -m unittest discover \
 
 다음 단계 후보는 다음과 같다.
 
-1. GitHub Release와 YouTube용 공식 API·feed adapter
-2. Mastercard 등 직접 접근이 제한된 출처의 통제된 fallback
+1. EMVCo 규격과 PCI SSC 문서함의 항목 단위 변경 감지
+2. Mastercard 등 직접 접근이 제한된 출처의 공식 RSS·API 재확인
 3. 원문 본문 추출과 근거 보존
 4. 관련성·중요도 평가와 사람 검토 큐
 5. Obsidian 문서 초안 생성
@@ -159,7 +164,7 @@ frontend와 newsletter는 이 수집 데이터의 소비자다. 수집·정규�
 
 ## 현재 한계
 
-- 네 개 출처만 운영 코드로 승격했다.
+- 9개 출처를 운영 코드로 승격했다.
 - 출처별 전체 목록을 수집하며 `freshness_days` 기반 증분 요청은 아직 적용하지 않는다.
 - 본문 추출, 의미 기반 중복, 관련성 분류와 요약은 포함하지 않는다.
 - Hook 실패 격리, scheduler, 재시도와 알림은 포함하지 않는다.
