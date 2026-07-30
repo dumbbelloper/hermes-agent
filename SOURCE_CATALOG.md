@@ -44,10 +44,10 @@
 | `visa-press` | Visa Press Releases | [공식 목록](https://usa.visa.com/about-visa/newsroom/press-releases-listing.html) | 정적 HTML | 일반 HTTP 200, 제목·URL·게시일 추출, 실제 반복 수집과 회귀 테스트 통과 |
 | `visa-developer-release-notes` | Visa Developer Release Notes | [공식 Release Notes](https://developer.visa.com/site/release_notes) | 정적 HTML | 월별 제품·API 변경과 날짜 추출, 의미 query로 안정 ID 분리, 반복 수집 통과 |
 | `visa-acceptance-devices-ios-releases` | Visa Acceptance Devices iOS SDK | [GitHub Releases Atom](https://github.com/visa/acceptance-devices-ios-sdk/releases.atom) | Atom | 결제 SDK allowlist 저장소, 2026년 활성 release와 상세 변경 내역, 반복 수집 통과 |
-| `amex-newsroom` | American Express Newsroom | [공식 AEM model JSON](https://www.americanexpress.com/en-us/newsroom/index.model.json) | 공식 JSON | 홈페이지가 사용하는 공개 구조화 모델, 제목·URL·최초 게시일·카테고리 제공, 반복 수집 통과 |
+| `amex-newsroom` | American Express Newsroom | [공식 AEM model JSON](https://www.americanexpress.com/en-us/newsroom/index.model.json) | 공식 JSON | 홈페이지가 사용하는 공개 구조화 목록과 기사별 `.model.json` 원문 fallback, 제목·canonical URL·게시일 검증, 반복 수집 통과 |
 | `unionpay-company-news` | UnionPay Company News | [공식 JSON](https://www.unionpayintl.com/wap/newsList/en_companyNews.json) | 공식 JSON | Media Center가 사용하는 공개 JSON, 2026년까지 갱신, 779건 반복 수집 통과 |
 | `unionpay-market-news` | UnionPay Market News | [공식 JSON](https://www.unionpayintl.com/wap/newsList/en_marketUpdate.json) | 공식 JSON | Media Center가 사용하는 공개 JSON, 2026년까지 갱신, 140건 반복 수집 통과 |
-| `jcb-press` | JCB Press | [공식 JSON](https://www.global.jcb/en/press/news_file.json) | 공식 JSON | 일반 HTTP 200, 구조화 필드 제공, 실제 반복 수집과 회귀 테스트 통과 |
+| `jcb-press` | JCB Press | [공식 JSON](https://www.global.jcb/en/press/news_file.json) | 공식 JSON | 일반 HTTP 200, 구조화 목록과 allowlist 기반 canonical HTML 원문 fallback, 실제 반복 수집과 회귀 테스트 통과 |
 | `emvco-news` | EMVCo News | [공식 RSS](https://www.emvco.com/news/feed/) | RSS | 일반 HTTP 200, 표준 feed, 실제 반복 수집과 RSS·Atom 테스트 통과 |
 | `pci-blog` | PCI SSC Blog | [공식 RSS](https://blog.pcisecuritystandards.org/rss.xml) | RSS | 일반 HTTP 200, 표준 feed, 실제 반복 수집과 RSS 테스트 통과 |
 

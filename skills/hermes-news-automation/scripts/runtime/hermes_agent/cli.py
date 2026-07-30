@@ -11,10 +11,12 @@ from typing import Optional, Sequence
 
 from .adapters.base import built_in_adapters
 from .automation import AutomationError, UnattendedController
-from .fetcher import FetchPolicy, HttpFetcher
+from .fetcher import FetchError, FetchPolicy, HttpFetcher
+from .models import Record
 from .note_index import VaultNoteIndex
 from .pipeline import CollectorPipeline
 from .registry import RegistryError, SourceRegistry
+from .source_extractor import OfficialSourceExtractor, SourceExtractionError
 from .storage import FileStore
 from .telegram import (
     TelegramError,
@@ -192,6 +194,17 @@ def parser() -> argparse.ArgumentParser:
     )
     automation_reject.add_argument("--reason", required=True)
     automation_reject.set_defaults(handler=automation_reject_item)
+
+    automation_extract = commands.add_parser(
+        "automation-extract",
+        help="extract a processing item through its configured official fallback",
+    )
+    _automation_paths(automation_extract)
+    automation_extract.add_argument("--run-id", required=True)
+    automation_extract.add_argument("--record-id", required=True)
+    automation_extract.add_argument("--timeout", type=float, default=20.0)
+    automation_extract.add_argument("--max-response-mib", type=int, default=2)
+    automation_extract.set_defaults(handler=automation_extract_item)
 
     automation_submit = commands.add_parser(
         "automation-submit",
@@ -462,6 +475,54 @@ def automation_reject_item(arguments: argparse.Namespace) -> int:
         arguments.reason,
     )
     print(json.dumps({"status": "recorded", "item": item}, ensure_ascii=False, indent=2))
+    return 0
+
+
+def automation_extract_item(arguments: argparse.Namespace) -> int:
+    _, registry = load_registry(arguments.config)
+    item = _controller(arguments).processing_item(
+        arguments.run_id,
+        arguments.record_id,
+    )
+    record = Record.from_dict(item["record"])
+    source = registry.select([record.source_id])[0]
+    extractor = OfficialSourceExtractor(
+        HttpFetcher(
+            FetchPolicy(
+                timeout_seconds=arguments.timeout,
+                max_response_bytes=(
+                    arguments.max_response_mib * 1024 * 1024
+                ),
+            )
+        )
+    )
+    try:
+        document = extractor.extract(source, record)
+    except (FetchError, SourceExtractionError) as error:
+        print(
+            json.dumps(
+                {
+                    "status": "failed",
+                    "record_id": record.id,
+                    "source_id": record.source_id,
+                    "error_kind": getattr(
+                        error, "kind", "source_extraction_failed"
+                    ),
+                    "retryable": getattr(error, "retryable", True),
+                    "message": str(error),
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
+        return 1
+    print(
+        json.dumps(
+            {"status": "extracted", "document": document.to_dict()},
+            ensure_ascii=False,
+            indent=2,
+        )
+    )
     return 0
 
 

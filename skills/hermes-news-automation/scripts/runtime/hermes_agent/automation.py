@@ -861,6 +861,15 @@ class UnattendedController:
 
         return self.state.mutate_queue(run_id, mutate)
 
+    def processing_item(
+        self,
+        run_id: str,
+        record_id: str,
+    ) -> Mapping[str, Any]:
+        self.state.assert_owner(run_id)
+        queue = self.state.load_queue(run_id)
+        return dict(self._processing_item(queue, record_id))
+
     def reject(
         self,
         run_id: str,

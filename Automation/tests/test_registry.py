@@ -106,6 +106,20 @@ class RegistryTests(unittest.TestCase):
             ):
                 SourceRegistry.load(path, built_in_adapters())
 
+    def test_article_extractor_must_be_supported(self) -> None:
+        document = json.loads(CONFIG.read_text(encoding="utf-8"))
+        document["sources"][0].setdefault("options", {})[
+            "article_extractor"
+        ] = "browser_automation"
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "sources.json"
+            path.write_text(json.dumps(document), encoding="utf-8")
+            with self.assertRaisesRegex(
+                RegistryError,
+                "options.article_extractor:unsupported",
+            ):
+                SourceRegistry.load(path, built_in_adapters())
+
 
 if __name__ == "__main__":
     unittest.main()
