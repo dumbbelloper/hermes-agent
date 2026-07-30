@@ -1,8 +1,8 @@
 # Hermes News Automation Skill 배포 가이드
 
-> 기준일: 2026-07-28
+> 기준일: 2026-07-29
 >
-> 상태: v0.1.0 공개 배포 · skills.sh 인덱싱 및 Hermes 설치 검증 완료
+> 상태: v0.1.0 공개 배포 · skills.sh 인덱싱·설치 검증 완료 · Hermes 0.19.0 custom tap 검색 제약 확인
 >
 > 배포 단위: `skills/hermes-news-automation/`
 
@@ -47,7 +47,7 @@ runtime dependency가 아니다.
 Python 3.9 이상, Hermes의 `terminal`, `web`, `file`, `delegation` toolset과 local
 persistent filesystem이 필요하다.
 
-## 3. GitHub에서 직접 설치
+## 3. skills.sh identifier로 설치
 
 Release tag가 만들어진 뒤 설치 전 내용을 확인한다.
 
@@ -79,6 +79,11 @@ hermes skills search hermes-news
 hermes skills install \
   dumbbelloper/hermes-agent/hermes-news-automation
 ```
+
+Hermes 0.19.0에서는 tap 등록과 `skills/` 경로 인식은 확인했지만, 등록 직후
+`hermes skills search`가 이 repository의 결과를 반환하지 않았다. 공개 설치는
+3절의 검증된 skills.sh identifier를 우선 사용하고, custom tap 검색·설치는
+Hermes version별로 재검증한 뒤 사용한다.
 
 조직 내부 private repository라면 사용자의 Hermes profile에 GitHub 접근 권한을
 제공하되 token을 Skill이나 repository에 저장하지 않는다.

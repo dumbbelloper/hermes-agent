@@ -10,7 +10,7 @@
 
 현재 수집, 신규·변경 queue, agent 관련성 판정, 독립 검증, Obsidian 문서 작성과 Telegram 알림을 하나의 무인 workflow로 연결했습니다. `record_id`와 `source_fingerprint`로 반복 실행의 중복과 원문 변경을 판정하며, 검증을 통과하지 못한 자료는 발행하지 않고 격리합니다. 실제 의미 검증은 [Hermes News Automation Skill](./skills/hermes-news-automation/SKILL.md)을 실행하는 Hermes Agent가 담당합니다.
 
-Skill은 controller runtime을 자체 포함하므로 repository 전체를 복제하지 않고 GitHub direct install 또는 Hermes tap으로 배포할 수 있습니다. 설치, workspace 초기화, 업데이트와 release 기준은 [Skill 배포 가이드](./SKILL_DISTRIBUTION_GUIDE.md)에서 관리합니다.
+Skill은 controller runtime을 자체 포함하므로 repository 전체를 복제하지 않고 설치할 수 있습니다. 공개 설치는 검증된 skills.sh identifier를 우선 사용하며 Hermes tap은 version별 검색 동작을 확인한 뒤 구독 경로로 사용할 수 있습니다. 설치, workspace 초기화, 업데이트와 release 기준은 [Skill 배포 가이드](./SKILL_DISTRIBUTION_GUIDE.md)에서 관리합니다.
 
 구체적인 수집·선별·문서화 설계는 [PROJECT_PLAN.md](./PROJECT_PLAN.md)에서 관리합니다.
 
@@ -35,5 +35,7 @@ macOS, Linux와 Windows에서 Hermes gateway와 cron으로 Skill을 계속 실�
 RSS·API 우선 기준으로 운영 출처를 9개로 확장하고 신규 채널에서 작성한 문서는 [2026-07-28 수집 출처 확장 브리핑](./Digests/2026-07-28%20수집%20출처%20확장%20브리핑.md)에서 확인할 수 있습니다.
 
 미국 금융·결제 언론 4곳의 RSS 수집 결과와 신규 문서는 [2026-07-28 미국 금융 결제 언론 브리핑](./Digests/2026-07-28%20미국%20금융%20결제%20언론%20브리핑.md)에서 확인할 수 있습니다.
+
+Skill의 첫 macOS 수동 end-to-end 실행에서 작성하고 Telegram 전송까지 검증한 문서는 [Visa FIFA World Cup 2026 결제 데이터](./Inbox/2026-07-22%20New%20Visa%20Data%20Reveals%20How%20the%20FIFA%20World%20Cup%202026%E2%84%A2%20Created%20Pop-Up%20Economies%20Across%20Canada%2C%20Mexico%20and%20the%20United%20States.md)에서 확인할 수 있습니다.
 
 이 프로젝트는 [Apache License 2.0](./LICENSE)으로 공개됩니다.

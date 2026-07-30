@@ -1,7 +1,7 @@
 # Hermes Agent 최소 수집기
 
-> 기준일: 2026-07-28
-> 상태: Alpha — 수집·agent 검증·Obsidian 작성·Telegram 무인 workflow 구현
+> 기준일: 2026-07-29
+> 상태: v0.1.0 공개 — 수집·agent 검증·Obsidian 작성·Telegram workflow 구현, 최초 실환경 cron 검증 필요
 > 라이선스: [Apache License 2.0](../LICENSE)
 
 Hermes Agent의 실행 가능한 수집·문서화 기반이다. 공식 공개 출처와 선별 편집 언론에서 제목, 원문 URL, 게시일과 설명을 가져와 공통 레코드로 정규화한다. 무인 controller는 신규·변경 queue, logical lock, agent artifact 검증, Obsidian 원자 저장과 Telegram delivery ledger를 관리한다. Python runtime의 단일 원본은 배포 가능한 [Hermes News Automation Skill](../skills/hermes-news-automation/SKILL.md)의 `scripts/runtime/`에 있으며, `Automation/run.py`는 repository 개발용 launcher다.
