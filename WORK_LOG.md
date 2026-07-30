@@ -2343,6 +2343,8 @@ git check-ignore .hermes-news/config/telegram.json .hermes-news/data
 - 첫 commit: `3a2429d` (`문서 동기화와 뉴스 lifecycle 검증`)
 - 원격 branch push 성공
 - GitHub [PR #11 — 문서 동기화와 뉴스 자동화 lifecycle 검증](https://github.com/dumbbelloper/hermes-agent/pull/11) 생성
+- PR은 main 대상 open 상태이며 draft가 아님
+- GitHub Actions `validate`가 Ubuntu, macOS와 Windows에서 모두 통과
 
 ### 결정과 근거
 
@@ -2361,6 +2363,4 @@ git check-ignore .hermes-news/config/telegram.json .hermes-news/data
 
 ### 알려진 한계와 남은 작업
 
-- 이 기록을 추가한 후 두 번째 commit과 push 필요
-- PR CI 상태 최종 확인 필요
 - PR merge는 사용자 요청 범위에 포함하지 않음
