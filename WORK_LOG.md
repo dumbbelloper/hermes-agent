@@ -2607,3 +2607,74 @@ git diff --check
   noscript·SVG·template은 제외되고 제목·본문 길이 검증을 통과해야 함
 - 이번 재처리는 수동 실환경 run이며 다음 cron 실행에서 설치된 Skill 경로의
   지속 동작을 확인할 필요가 있음
+
+## 2026-07-30 17:11 KST — 원문 fallback 변경 commit·push 및 PR 생성
+
+### 사용자 요청과 목적
+
+- 원문 fallback 구현과 재처리 결과의 문서 sync를 최종 확인
+- 검증된 변경을 전용 branch에 commit하고 원격 push한 뒤 `main` 대상 PR 생성
+
+### 수행한 변경
+
+- 프로젝트 문서의 출처·Inbox·Registry 수치와 로컬 Markdown link 재검증
+- 전체 단위·통합·Skill 배포 테스트와 Vault identity 검증 재실행
+- 전용 branch 생성, 원문 fallback·테스트·JCB 문서·작업 로그를 commit
+- 원격 branch push 및 GitHub PR 생성
+
+### 생성·수정한 문서와 파일
+
+- [작업 로그](./WORK_LOG.md)
+- 첫 commit에 포함된 파일은 직전 “공식 원문 fallback 구현 및 재처리” 기록의
+  목록과 동일
+
+### 실행한 검증과 결과
+
+```text
+PYTHONPATH=skills/hermes-news-automation/scripts/runtime \
+  python3 -m unittest discover -s Automation/tests -v
+python3 Automation/run.py validate-registry
+python3 Automation/run.py validate-notes --vault-dir .
+PYTHONPYCACHEPREFIX=/tmp/hermes-agent-pycache \
+  python3 -m compileall -q skills/hermes-news-automation/scripts/runtime/hermes_agent
+git diff --check
+git check-ignore .hermes-news/config/telegram.json \
+  .hermes-news/data .hermes-news/config/sources.json
+```
+
+- 전체 테스트 59개 통과
+- 활성 출처 13개, Inbox 14개, Vault validation issue 0건
+- Python bytecode compile, 문서 sync, 로컬 Markdown link와
+  `git diff --check` 통과
+- credential·runtime state·workspace Registry가 Git 제외 상태임을 확인
+- branch: `codex/source-extraction-fallback-20260730`
+- 첫 commit: `c841fee` (`공식 원문 fallback과 뉴스 재처리 추가`)
+- 원격 branch push 성공
+- GitHub [PR #12 — 공식 원문 fallback과 뉴스 재처리](https://github.com/dumbbelloper/hermes-agent/pull/12)
+  생성
+- PR은 `main` 대상 open 상태이며 draft가 아님
+- PR 생성 직후 GitHub Actions `validate`는 Ubuntu·macOS 실행 중, Windows
+  대기 상태
+
+### 결정과 근거
+
+1. `main`에 직접 commit하지 않고 전용 branch와 PR을 사용한다.
+   - 플랫폼별 CI 결과와 보안 경계를 검토 가능한 단위로 유지하기 위해서다.
+2. `.hermes-news/`의 credential, workspace Registry와 실행 원장은 commit하지
+   않는다.
+   - 공개 코드·기본 Registry와 로컬 운영 상태를 분리하기 위해서다.
+3. PR 본문에 코드 변경뿐 아니라 실환경 재처리 결과와 제외 판정도 함께 기록한다.
+   - fallback의 기능 검증과 실제 발행 결과를 한 번에 검토할 수 있게 하기
+     위해서다.
+
+### 전역 설정이나 외부 시스템에 적용한 변경
+
+- GitHub 원격 branch `codex/source-extraction-fallback-20260730` 생성
+- GitHub PR #12 생성
+- credential, Telegram, cron, gateway와 shell 설정은 추가 변경하지 않음
+
+### 알려진 한계와 남은 작업
+
+- 기록 시점에 GitHub Actions 3개 job이 아직 최종 상태가 아니므로 완료 후 결과
+  확인 필요
+- PR merge는 사용자 요청 범위에 포함하지 않음
