@@ -357,9 +357,10 @@ python3 "$HERMES_NEWS_SKILL_DIR/scripts/run.py" validate-notes
 - OS 재시작 또는 gateway 재시작 후 다음 cron이 정상 수행됨
 
 지원 표의 “1차 지원”은 설치만 된다는 뜻이 아니다. 해당 환경에서 위 smoke test를
-최소 한 번 통과한 뒤 실제 운영으로 승격한다. 아직 이 프로젝트에서는 macOS의
-단위·통합 검증만 수행했으며 Linux, WSL2, native Windows 실환경 smoke test는 남아
-있다.
+최소 한 번 통과한 뒤 실제 운영으로 승격한다. 이 프로젝트는 2026-07-29 macOS에서
+13개 출처 수집, agent 분리 검증, Obsidian 작성과 Telegram 전송까지 수동
+end-to-end를 통과했다. gateway cron 등록, OS·gateway 재시작 후 실행 검증과
+Linux, WSL2, native Windows 실환경 smoke test는 남아 있다.
 
 ## 12. 중지와 복구
 

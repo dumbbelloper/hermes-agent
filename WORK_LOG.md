@@ -276,7 +276,7 @@ docs/enterprise-ai-guardrails
 - [pyproject.toml](./pyproject.toml)
 - [Automation/README.md](./Automation/README.md)
 - [Automation/config/sources.json](./Automation/config/sources.json)
-- [Automation/src/hermes_agent](./Automation/src/hermes_agent)
+- [Hermes Agent runtime](./skills/hermes-news-automation/scripts/runtime/hermes_agent)
 - [Automation/tests](./Automation/tests)
 - [README.md](./README.md)
 - [PROJECT_PLAN.md](./PROJECT_PLAN.md)
@@ -604,9 +604,9 @@ git diff --check
 
 구현과 테스트:
 
-- [Automation/src/hermes_agent/note_index.py](./Automation/src/hermes_agent/note_index.py)
-- [Automation/src/hermes_agent/cli.py](./Automation/src/hermes_agent/cli.py)
-- [Automation/src/hermes_agent/__init__.py](./Automation/src/hermes_agent/__init__.py)
+- [Note index](./skills/hermes-news-automation/scripts/runtime/hermes_agent/note_index.py)
+- [CLI](./skills/hermes-news-automation/scripts/runtime/hermes_agent/cli.py)
+- [Package init](./skills/hermes-news-automation/scripts/runtime/hermes_agent/__init__.py)
 - [Automation/tests/test_note_index.py](./Automation/tests/test_note_index.py)
 
 정책과 사용법:
@@ -782,12 +782,12 @@ curl -L -sS --max-time 25 <후보·제외 공식 URI>
 
 구현과 설정:
 
-- [American Express adapter](./Automation/src/hermes_agent/adapters/amex.py)
-- [UnionPay adapter](./Automation/src/hermes_agent/adapters/unionpay.py)
-- [Visa adapters](./Automation/src/hermes_agent/adapters/visa.py)
-- [Adapter registry](./Automation/src/hermes_agent/adapters/base.py)
+- [American Express adapter](./skills/hermes-news-automation/scripts/runtime/hermes_agent/adapters/amex.py)
+- [UnionPay adapter](./skills/hermes-news-automation/scripts/runtime/hermes_agent/adapters/unionpay.py)
+- [Visa adapters](./skills/hermes-news-automation/scripts/runtime/hermes_agent/adapters/visa.py)
+- [Adapter registry](./skills/hermes-news-automation/scripts/runtime/hermes_agent/adapters/base.py)
 - [운영 Source Registry](./Automation/config/sources.json)
-- [패키지 기본 Source Registry](./Automation/src/hermes_agent/default_sources.json)
+- [패키지 기본 Source Registry](./skills/hermes-news-automation/scripts/runtime/hermes_agent/default_sources.json)
 - [Adapter tests](./Automation/tests/test_adapters.py)
 - [Registry tests](./Automation/tests/test_registry.py)
 - [American Express fixture](./Automation/tests/fixtures/amex.json)
@@ -903,14 +903,14 @@ git diff --check
 
 구현과 설정:
 
-- [Telegram notifier](./Automation/src/hermes_agent/telegram.py)
-- [CLI](./Automation/src/hermes_agent/cli.py)
-- [Source models](./Automation/src/hermes_agent/models.py)
-- [Source Registry loader](./Automation/src/hermes_agent/registry.py)
-- [Record normalization](./Automation/src/hermes_agent/normalize.py)
-- [Record validation](./Automation/src/hermes_agent/validation.py)
+- [Telegram notifier](./skills/hermes-news-automation/scripts/runtime/hermes_agent/telegram.py)
+- [CLI](./skills/hermes-news-automation/scripts/runtime/hermes_agent/cli.py)
+- [Source models](./skills/hermes-news-automation/scripts/runtime/hermes_agent/models.py)
+- [Source Registry loader](./skills/hermes-news-automation/scripts/runtime/hermes_agent/registry.py)
+- [Record normalization](./skills/hermes-news-automation/scripts/runtime/hermes_agent/normalize.py)
+- [Record validation](./skills/hermes-news-automation/scripts/runtime/hermes_agent/validation.py)
 - [운영 Source Registry](./Automation/config/sources.json)
-- [패키지 기본 Source Registry](./Automation/src/hermes_agent/default_sources.json)
+- [패키지 기본 Source Registry](./skills/hermes-news-automation/scripts/runtime/hermes_agent/default_sources.json)
 - [Telegram tests](./Automation/tests/test_telegram.py)
 - [Normalization tests](./Automation/tests/test_normalize.py)
 - [Registry tests](./Automation/tests/test_registry.py)
@@ -1195,8 +1195,8 @@ Templates/Collected Note.md의 문서 schema 확인
 
 구현:
 
-- [무인 실행 controller](./Automation/src/hermes_agent/automation.py)
-- [통합 CLI](./Automation/src/hermes_agent/cli.py)
+- [무인 실행 controller](./skills/hermes-news-automation/scripts/runtime/hermes_agent/automation.py)
+- [통합 CLI](./skills/hermes-news-automation/scripts/runtime/hermes_agent/cli.py)
 - [무인 workflow 테스트](./Automation/tests/test_automation.py)
 - [Hermes News Automation Skill](./skills/hermes-news-automation/SKILL.md)
 - [Agent artifact 계약](./skills/hermes-news-automation/references/artifact-schema.md)
@@ -1377,7 +1377,7 @@ rg -n "darwin|macos|launchd|osascript|brew|/Users/|fcntl|systemd|linux|platforms
 - [Hermes Agent 무인 자동화 가이드](./HERMES_AUTOMATION_GUIDE.md)
 - [Hermes News Automation Skill](./skills/hermes-news-automation/SKILL.md)
 - [Cross-platform controller launcher](./Automation/run.py)
-- [무인 실행 controller](./Automation/src/hermes_agent/automation.py)
+- [무인 실행 controller](./skills/hermes-news-automation/scripts/runtime/hermes_agent/automation.py)
 - [무인 workflow 테스트](./Automation/tests/test_automation.py)
 - [Automation README](./Automation/README.md)
 - [프로젝트 README](./README.md)
@@ -1963,3 +1963,342 @@ gh release view v0.1.0 --json ...
 - native Windows는 code-level CI만 통과했으며 gateway, Scheduled Task, UTF-8,
   Telegram end-to-end 검증 전까지 실험 지원
 - 장기 실행을 위한 retry backoff, circuit breaker와 운영 지표는 후속 작업
+
+## 2026-07-28 17:48 KST — 진척도·문서 동기화 및 로컬 Hermes 실행 상태 점검
+
+### 사용자 요청과 목적
+
+- 현재 구현·배포 진척도와 프로젝트 문서의 상태가 일치하는지 점검
+- 매번 수동 지시하지 않아도 commit마다 문서 동기화를 확인할 수 있는지 검토
+- 현재 macOS에서 Hermes Agent가 `hermes-news-automation` Skill을 주기 실행 중인지 확인
+
+### 수행한 변경
+
+- main과 origin/main의 동기화, release, source registry, 수집 데이터,
+  Obsidian 산출물 및 Skill runtime 상태를 상호 대조
+- 저장소 Git hook, GitHub Actions trigger와 문서 검증 범위를 확인
+- 사용자 Hermes home의 cron 저장소, gateway 상태와 프로젝트 실행 workspace를
+  credential 내용에 접근하지 않고 파일 존재 여부만으로 확인
+- 점검 결과만 기록했으며 정책·계획·가이드 본문과 전역 Hermes 설정은 변경하지 않음
+
+### 생성·수정한 문서와 파일
+
+- [작업 로그](./WORK_LOG.md)
+
+### 실행한 검증과 결과
+
+```text
+git status --short --branch
+git config --get core.hooksPath
+python3 Automation/run.py validate-registry
+python3 Automation/run.py validate-notes --vault-dir .
+python3 -m unittest discover -s Automation/tests
+cmp Automation/config/source_registry.json \
+  skills/hermes-news-automation/references/default_sources.json
+hermes gateway status
+```
+
+- main은 origin/main과 동기화되어 있었고 점검 시작 시 working tree는 clean
+- 공개 release와 package version은 `v0.1.0`, 활성 출처는 13개
+- 현재 source JSONL은 13개 파일, 총 1,594건이며
+  [출처 카탈로그](./SOURCE_CATALOG.md)의 수치와 일치
+- Inbox 문서 12개와 Digest 3개를 확인했고 note validation은 issue 없이 통과
+- offline test 50개와 Skill validator 통과
+- 프로젝트 registry와 Skill bundle registry가 byte 단위로 동일
+- 활성 프로젝트 문서의 로컬 Markdown link는 모두 유효하나,
+  이 작업 로그의 과거 기록에는 source 이동 전 경로를 가리키는 link 19개가 남아 있음
+- 별도 Git hook과 `core.hooksPath` 설정이 없고, 현재 CI는 Skill·test·package 변경만
+  검증하여 계획·카탈로그·작업 로그 동기화를 차단하지 않음
+- Hermes gateway는 실행 중이 아님
+- 기본 Hermes cron directory는 있으나 `jobs.json`과 output directory가 없어
+  등록된 기본 profile cron job 및 실행 산출물을 확인할 수 없음
+- 프로젝트 `.hermes-news`에는 Telegram config, state와 automation run 기록이 없음
+- sandbox가 Hermes cron 조회 과정의 output directory 생성을 허용하지 않아
+  `hermes cron list/status` 자체는 완료하지 못했으나, canonical `jobs.json` 부재와
+  gateway 중지 상태는 별도 read-only 검사로 확인
+
+### 결정과 근거
+
+1. 문서 동기화는 `문서 상태 생성기 + local pre-commit 검사 + CI required check`로 구성한다.
+   - Git hook만 사용하면 설치하지 않은 clone, `--no-verify`와 agent의 별도 실행 환경을
+     통제할 수 없으므로 CI가 최종 병합 gate가 되어야 한다.
+2. hook에서는 자유 서술 문서를 자동 추측해 수정하지 않고 deterministic 상태만 생성한다.
+   - 출처 수, record 수, note 수, version과 registry hash는 안전하게 자동 생성할 수 있지만
+     phase 의미와 남은 작업은 사람 또는 agent의 판단이 필요하기 때문이다.
+3. 현재 로컬 Hermes 자동화는 미구성으로 판정한다.
+   - gateway가 중지되어 있고 cron `jobs.json`, 프로젝트 config·state·run 기록이 모두
+     없으므로 설치 가능한 Skill과 실제 예약 실행 상태를 구분해야 한다.
+4. 이번 요청은 점검이므로 발견된 문서 불일치는 후속 변경 대상으로 남긴다.
+   - 사용자 승인 없이 계획 상태와 배포 가이드의 의미를 바꾸지 않기 위해서다.
+
+### 전역 설정이나 외부 시스템에 적용한 변경
+
+- 없음
+- Git hook, GitHub Actions, Hermes gateway, cron과 Telegram 설정을 변경하지 않음
+- credential 또는 token의 값은 읽거나 기록하지 않음
+
+### 알려진 한계와 남은 작업
+
+- [프로젝트 계획](./PROJECT_PLAN.md)의 상단 상태가 Phase 2·4의 부분 구현을 반영하지 않음
+- [프로젝트 계획](./PROJECT_PLAN.md)의 Phase 3에서 이미 추가된 4개 전문 매체와
+  초기 Digest 3개가 완료 또는 부분 완료로 표시되지 않음
+- [Skill 배포 가이드](./SKILL_DISTRIBUTION_GUIDE.md)는 Hermes 0.19.0의 custom tap
+  검색 제약과 실제로 검증된 skills.sh 설치 경로의 우선순위를 명확히 반영해야 함
+- [자동화 README](./Automation/README.md)의 Alpha 상태는 공개 Skill `v0.1.0` 및
+  실환경 cron 미검증 상태를 함께 표현하도록 구체화할 필요가 있음
+- 과거 [작업 로그](./WORK_LOG.md)의 이동 전 runtime source link 19개 정리 필요
+- commit 문서 sync용 상태 생성기·hook bootstrap·CI required check는 아직 구현되지 않음
+- 실제 주기 실행을 위해 workspace 초기화, Telegram config 이전, `doctor`,
+  gateway service 설치, cron 등록과 첫 end-to-end smoke test가 필요
+
+## 2026-07-29 15:00 KST — 현재 프로젝트 진척도 재검증
+
+### 사용자 요청과 목적
+
+- 중단했던 현재 프로젝트 진척도 보고를 재개
+- 구현·데이터·문서·로컬 운영 상태를 최신 workspace 기준으로 재검증
+
+### 수행한 변경
+
+- 코드, Registry, 수집 데이터, Obsidian 산출물과 계획 문서의 상태를 대조
+- offline test, Skill runtime 컴파일, Registry와 Vault 문서 검증을 재실행
+- Hermes gateway, 기본 cron 등록 파일, 프로젝트 Telegram 설정과 실행 이력의
+  존재 여부를 credential 내용에 접근하지 않고 확인
+- 상태 점검과 기록만 수행했으며 코드, 정책 문서와 운영 설정은 변경하지 않음
+
+### 생성·수정한 문서와 파일
+
+- [작업 로그](./WORK_LOG.md)
+
+### 실행한 검증과 결과
+
+```text
+PYTHONPATH=skills/hermes-news-automation/scripts/runtime \
+  python3 -m unittest discover -s Automation/tests -v
+cmp Automation/config/sources.json \
+  skills/hermes-news-automation/scripts/runtime/hermes_agent/default_sources.json
+PYTHONPYCACHEPREFIX=/private/tmp/hermes-pycache \
+  python3 -m compileall -q skills/hermes-news-automation/scripts
+python3 Automation/run.py validate-registry
+python3 Automation/run.py validate-notes --vault-dir .
+hermes gateway status
+```
+
+- offline test 50개 전부 통과
+- 프로젝트 Registry와 배포 Skill 기본 Registry가 byte 단위로 동일
+- Skill runtime 전체 컴파일 통과
+- 활성 출처 13개 Registry 검증 통과
+- Inbox 문서 12개, issue 0건으로 Vault 문서 검증 통과
+- current source JSONL 13개, 총 1,594건과 Digest 3개 유지
+- `main`은 로컬 tracking 정보상 `origin/main`과 같은 commit이며,
+  작업 트리 변경은 이 작업 로그뿐
+- Hermes gateway는 실행 중이 아니며 기본 cron `jobs.json`이 없음
+- 프로젝트 Telegram 설정과 automation run 이력이 없음
+
+### 결정과 근거
+
+1. 구현·패키징 진척도는 공개 `v0.1.0` 기준으로 완료 상태로 본다.
+   - 수집, agent 검증, Obsidian 작성, Telegram ledger, self-contained Skill,
+     크로스플랫폼 CI와 배포 산출물이 구현되어 있고 현재 회귀 검증도 통과했다.
+2. 실제 운영 진척도는 활성화 전 상태로 본다.
+   - gateway, cron job, workspace credential 설정과 첫 실환경 실행 이력이 없기 때문이다.
+3. 전체 진척도를 단일 백분율로 표시하지 않는다.
+   - 구현 완료와 운영 미구성의 성격이 달라 하나의 수치가 실제 상태를 왜곡하기 때문이다.
+
+### 전역 설정이나 외부 시스템에 적용한 변경
+
+- 없음
+- Hermes gateway, cron, Telegram, Git hook과 GitHub 설정을 변경하지 않음
+- credential 또는 token의 값은 읽거나 기록하지 않음
+
+### 알려진 한계와 남은 작업
+
+- [프로젝트 계획](./PROJECT_PLAN.md) 상단과 Phase 3 표기가 실제 구현 상태보다 뒤처짐
+- [자동화 README](./Automation/README.md)의 Alpha 표현과
+  [Skill 배포 가이드](./SKILL_DISTRIBUTION_GUIDE.md)의 설치 경로 설명 현행화 필요
+- 문서 상태 생성기, local pre-commit 검사와 CI 문서 동기화 gate 미구현
+- workspace 초기화, Telegram 설정 이전, `doctor`, gateway service 설치,
+  cron 등록과 첫 end-to-end smoke test 필요
+- 출처별 retry backoff, circuit breaker, 장기 성공률·비용 dashboard와
+  실제 표본 기반 confidence/event-key 품질 보정 필요
+- native Windows 실환경 end-to-end 검증 필요
+
+## 2026-07-29 15:12 KST — 진척도와 프로젝트 문서 동기화 감사
+
+### 사용자 요청과 목적
+
+- 현재 구현·배포·운영 진척도가 프로젝트 문서에 정확히 반영되어 있는지 확인
+
+### 수행한 변경
+
+- 코드와 데이터에서 결정적으로 확인 가능한 version, 출처 수, record 수,
+  Vault 문서 수와 Digest 수를 주요 프로젝트 문서와 대조
+- 프로젝트 계획의 Phase 표시, 자동화·배포·운영 가이드 상태 문구를 실제 검증
+  결과 및 로컬 운영 상태와 비교
+- 전체 Markdown의 로컬 링크와 GitHub Actions path filter, Git hook 설치 여부 확인
+- 감사 결과만 기록하고 프로젝트 계획·가이드·CI·hook은 변경하지 않음
+
+### 생성·수정한 문서와 파일
+
+- [작업 로그](./WORK_LOG.md)
+
+### 실행한 검증과 결과
+
+```text
+python3 Automation/run.py validate-registry
+python3 Automation/run.py validate-notes --vault-dir .
+PYTHONPATH=skills/hermes-news-automation/scripts/runtime \
+  python3 -m unittest discover -s Automation/tests
+git config --get core.hooksPath
+```
+
+- package와 문서의 공개 version `0.1.0`/`v0.1.0` 일치
+- 운영 출처 13개, current record 1,594건, Inbox 12개와 Digest 3개가
+  Registry·데이터·README·카탈로그·프로젝트 계획 사이에서 일치
+- offline test 50개, Registry와 Vault 문서 검증 통과
+- [무인 자동화 가이드](./HERMES_AUTOMATION_GUIDE.md)의
+  “최초 실환경 cron 검증 필요” 상태는 gateway·cron·실행 이력이 없는 현재 상태와 일치
+- [프로젝트 계획](./PROJECT_PLAN.md) 상단은 Phase 0·1 완료만 표시하여
+  Phase 2와 Phase 4의 부분 완료를 반영하지 않음
+- 프로젝트 계획의 Phase 3은 편집 언론 4개 추가와 Digest 3개 생성을
+  완료 또는 부분 완료로 표시하지 않음
+- [자동화 README](./Automation/README.md)는 구현 완료를 설명하지만
+  공개 `v0.1.0`과 실환경 cron 미검증 상태를 헤더에서 구분하지 않음
+- [Skill 배포 가이드](./SKILL_DISTRIBUTION_GUIDE.md)와 root README는
+  skills.sh 설치와 Hermes tap 경로를 함께 안내하지만, 실제 검증에서 확인된
+  Hermes 0.19.0 custom tap 검색 제약과 skills.sh 우선 경로를 명확히 구분하지 않음
+- 활성 문서의 로컬 링크는 유효하지만 과거 작업 로그에는 이동 전 runtime 경로
+  19개와 잘못된 `Source Catalog.md` 경로 1개, 총 20개 깨진 링크가 남아 있음
+- CI path filter는 Skill·test·package 변경만 감시하고 Registry 단독 변경,
+  계획·카탈로그·README·작업 로그 변경은 검사하지 않음
+- local pre-commit hook과 별도 `core.hooksPath`가 없어 commit 시 문서
+  동기화를 자동 차단하지 않음
+
+### 결정과 근거
+
+1. 현재 동기화 상태를 “부분 동기화”로 판정한다.
+   - 핵심 수치와 운영 상태는 일치하지만 단계 상태와 배포 제약이 문서에 완전히
+     반영되지 않았고 자동 회귀 방지 장치도 없기 때문이다.
+2. 정책·설계 문서의 기준일 자체는 오류로 보지 않는다.
+   - 기준일 이후 핵심 데이터가 변경되지 않았지만, 상태 문구를 수정할 때는
+     기준일도 함께 갱신해야 한다.
+3. 이번 요청은 확인 작업이므로 불일치를 자동 수정하지 않는다.
+   - 계획 의미와 설치 경로 우선순위 변경은 별도 문서 수정 작업으로 처리한다.
+
+### 전역 설정이나 외부 시스템에 적용한 변경
+
+- 없음
+- Git hook, GitHub Actions, Hermes, cron과 Telegram 설정을 변경하지 않음
+
+### 알려진 한계와 남은 작업
+
+- 프로젝트 계획 Phase 2·3·4와 상단 상태 현행화 필요
+- 자동화 README와 Skill 배포 가이드의 상태·설치 경로 설명 현행화 필요
+- 작업 로그의 깨진 로컬 링크 20개 정리 필요
+- deterministic 문서 상태 생성기, hook bootstrap과 CI 문서 sync check 구현 필요
+- GitHub branch protection의 required check 설정 여부는 이번 로컬 감사 범위에서
+  실시간 조회하지 않음
+
+## 2026-07-29 15:20 KST — 문서 동기화와 Skill 전체 lifecycle 실행
+
+### 사용자 요청과 목적
+
+- 진척도와 문서 사이에서 확정 가능한 불일치를 수정
+- `hermes-news-automation` Skill로 실제 데이터 수집, agent 선별·독립 검증,
+  Obsidian 작성과 Telegram 알림까지 전체 lifecycle 실행
+
+### 수행한 변경
+
+- 프로젝트 계획 상단과 Phase 3을 실제 Phase 2·3·4 부분 완료 상태로 현행화
+- 자동화 README에 `v0.1.0` 공개와 최초 실환경 cron 미검증 상태를 구분
+- skills.sh 우선 설치 경로와 Hermes 0.19.0 custom tap 검색 제약을
+  README와 Skill 배포 가이드에 반영
+- 작업 로그의 이동 전 runtime link 19개와 잘못된 출처 카탈로그 link 1개 수정
+- CI가 모든 Markdown, Registry와 skills.sh metadata 변경에서도 실행되도록
+  path filter 확장
+- version, 출처·Inbox·Digest 수와 전체 로컬 Markdown link를 검증하는
+  문서 sync 회귀 테스트 4개 추가
+- repository root를 Skill workspace로 초기화하고 기존 Telegram 환경 설정을
+  `.hermes-news/config/telegram.json`으로 값 노출 없이 이전
+- 13개 출처를 두 차례 정상 수집하고 Curator/Writer와 별도 Verifier를 이용해
+  최신 항목을 fail-closed 방식으로 처리
+- 검증을 통과한 Visa 결제 데이터 문서 1건을 Obsidian Inbox에 원자 작성하고
+  Telegram으로 1회 전송
+- 최신 Skill workspace 기준 누적 record 1,595건, Inbox 13건과 macOS 수동
+  end-to-end 성공 상태를 프로젝트 계획·출처 카탈로그·README·운영 가이드에 반영
+
+### 생성·수정한 문서와 파일
+
+- [프로젝트 계획](./PROJECT_PLAN.md)
+- [프로젝트 README](./README.md)
+- [자동화 README](./Automation/README.md)
+- [출처 카탈로그](./SOURCE_CATALOG.md)
+- [Skill 배포 가이드](./SKILL_DISTRIBUTION_GUIDE.md)
+- [무인 자동화 가이드](./HERMES_AUTOMATION_GUIDE.md)
+- [문서 sync 테스트](./Automation/tests/test_document_sync.py)
+- [Skill validation workflow](./.github/workflows/skill-validation.yml)
+- [Visa FIFA World Cup 2026 결제 데이터](./Inbox/2026-07-22%20New%20Visa%20Data%20Reveals%20How%20the%20FIFA%20World%20Cup%202026%E2%84%A2%20Created%20Pop-Up%20Economies%20Across%20Canada%2C%20Mexico%20and%20the%20United%20States.md)
+- [작업 로그](./WORK_LOG.md)
+- Git에서 제외되는 `.hermes-news/` workspace config, 수집 state, run manifest,
+  decision·artifact·delivery ledger
+
+### 실행한 검증과 결과
+
+```text
+python3 skills/hermes-news-automation/scripts/run.py init --workspace ...
+python3 skills/hermes-news-automation/scripts/run.py doctor --workspace ...
+python3 skills/hermes-news-automation/scripts/run.py automation-start --max-items 5
+python3 skills/hermes-news-automation/scripts/run.py automation-next ...
+python3 skills/hermes-news-automation/scripts/run.py automation-submit ...
+python3 skills/hermes-news-automation/scripts/run.py automation-notify ...
+python3 skills/hermes-news-automation/scripts/run.py automation-finish ...
+PYTHONPATH=skills/hermes-news-automation/scripts/runtime \
+  python3 -m unittest discover -s Automation/tests -v
+```
+
+- 초기 sandbox 수집은 DNS 제한으로 13개 출처가 모두 실패하여 실제 사유로
+  `automation-abort`하고 logical lock 해제
+- 네트워크 허용 재실행에서 13개 출처 모두 성공, source failure 0건
+- 최신 Skill workspace current record 1,595건
+- 첫 처리 실행은 이벤트 홍보 1건과 실적 발표 1건 제외, 원문 추출 불완전 2건
+  재시도, Writer 과장을 독립 Verifier가 발견한 1건 격리
+- 다음 처리 실행에서 Visa World Cup 결제 데이터 1건이 Curator confidence 0.93,
+  Verifier confidence 0.97과 모든 결정론적 검사를 통과
+- Obsidian Inbox 문서 1건 작성, Telegram 전송 1건 성공,
+  unknown delivery 0건
+- 최종 run 상태 `completed_with_exceptions`: `notified` 1건, `retryable` 4건,
+  source failure 0건
+- Vault 문서 13개, validation issue 0건
+- offline 단위·통합·문서 sync test 54개 전부 통과
+- 전체 로컬 Markdown link 유효, `git diff --check` 통과
+
+### 결정과 근거
+
+1. canonical 원문을 web tool로 추출하지 못한 항목은 제3자 사본으로 대체 발행하지
+   않고 `retryable`로 보존한다.
+   - Skill의 원문 한정과 fail-closed 규칙을 지키기 위해서다.
+2. 독립 Verifier가 시제 과장과 원문에 없는 조건을 발견한 PCI SSC AI 문서는
+   초안을 임의 수정해 통과시키지 않고 격리한다.
+   - Writer와 Verifier의 독립성과 검증 threshold를 유지하기 위해서다.
+3. Visa 문서에는 VisaNet 범위, 비교 기간과 Visa 거래만 반영한다는 한계를 명시한다.
+   - 행사 효과를 전체 소비시장이나 인과관계로 과도하게 일반화하지 않기 위해서다.
+4. 문서 sync는 CI 회귀 테스트로 강제하되 자유 서술의 의미 판단은 자동 생성하지 않는다.
+   - version, count와 link는 결정적으로 검사할 수 있지만 Phase 의미는 검토가 필요하다.
+
+### 전역 설정이나 외부 시스템에 적용한 변경
+
+- 설정된 Telegram 수신자에게 검증 완료 Obsidian 문서 1건 전송
+- repository 내부 Git 제외 경로에 Telegram config와 Skill 실행 state 생성
+- Telegram config 권한을 소유자 읽기·쓰기만 가능한 `600`으로 설정
+- 사용자 shell profile, credential 값, Hermes gateway, cron과 Git hook은 변경하지 않음
+
+### 알려진 한계와 남은 작업
+
+- Amex canonical 문서 3건은 web extraction이 JavaScript shell만 반환하고,
+  JCB canonical 문서 1건은 web tool이 직접 추출하지 못해 `retryable`
+- 격리된 PCI SSC AI 문서는 시제와 데이터 익명화 조건을 원문대로 새로 작성하고
+  독립 검증을 다시 받아야 함
+- 이번 검증은 macOS 수동 실행이며 gateway cron 등록, 예약 실행,
+  OS·gateway 재시작 후 복구 검증은 아직 남음
+- Linux, WSL2와 native Windows 실환경 end-to-end 검증 필요
+- local pre-commit hook bootstrap과 GitHub branch protection required check 설정은 미구현

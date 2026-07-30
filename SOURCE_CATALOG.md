@@ -1,6 +1,6 @@
 # 수집 출처 운영 분류
 
-> 기준일: 2026-07-28
+> 기준일: 2026-07-29
 >
 > 상태: 운영 범위 확정
 
@@ -60,7 +60,7 @@
 | `pymnts` | PYMNTS / Payments News | [공식 RSS](https://www.pymnts.com/feed/) | 편집 언론 | 결제 발행량과 속보성이 높음, 최신 10건 수집 통과. 비결제 일반 기사 필터 필요 |
 | `techcrunch-fintech` | TechCrunch / Fintech | [공식 RSS](https://techcrunch.com/category/fintech/feed/) | 편집 언론 | fintech·agentic payment·투자 동향, 최신 20건 수집 통과. 행사 홍보 필터 필요 |
 
-현재 고정 운영 범위는 공식 출처 9개와 편집 언론 4개, 총 13개다. 2026-07-28 현재 누적 정상 레코드는 1,594건이며 격리는 0건이다. 신규 언론 4곳은 두 차례 실수집에서 4/4 성공했고 두 번째 실행의 50건이 모두 `unchanged`였다. Registry 변경은 이 문서의 판정과 코드·fixture 검증을 함께 갱신해야 한다.
+현재 고정 운영 범위는 공식 출처 9개와 편집 언론 4개, 총 13개다. 2026-07-29 Skill workspace의 최신 수집 기준 누적 정상 레코드는 1,595건이며 격리는 0건이다. 신규 언론 4곳은 반복 수집에서 4/4 성공했고 최신 실행에서도 모든 항목이 `unchanged`였다. Registry 변경은 이 문서의 판정과 코드·fixture 검증을 함께 갱신해야 한다.
 
 ## 3. 추가 구현 후보
 
