@@ -2302,3 +2302,65 @@ PYTHONPATH=skills/hermes-news-automation/scripts/runtime \
   OS·gateway 재시작 후 복구 검증은 아직 남음
 - Linux, WSL2와 native Windows 실환경 end-to-end 검증 필요
 - local pre-commit hook bootstrap과 GitHub branch protection required check 설정은 미구현
+
+## 2026-07-30 10:46 KST — 문서 sync 변경 commit·push 및 PR 생성
+
+### 사용자 요청과 목적
+
+- 문서 sync가 맞는지 최종 확인
+- 검증된 변경을 commit하고 원격 branch에 push한 뒤 main 대상 PR 생성
+
+### 수행한 변경
+
+- 최신 Skill workspace와 추적 문서의 출처·record·Inbox·Digest 수치 재검증
+- version, 로컬 Markdown link, Registry, Vault와 Git 제외 상태 재검증
+- 전용 branch를 생성해 문서 sync, CI 검사, lifecycle 산출물을 commit
+- 원격 branch에 push하고 main 대상 GitHub PR 생성
+
+### 생성·수정한 문서와 파일
+
+- [작업 로그](./WORK_LOG.md)
+- 이 기록 전 첫 commit에 포함된 파일은 직전
+  “문서 동기화와 Skill 전체 lifecycle 실행” 기록의 목록과 동일
+
+### 실행한 검증과 결과
+
+```text
+git diff --check
+PYTHONPATH=skills/hermes-news-automation/scripts/runtime \
+  python3 -m unittest discover -s Automation/tests
+python3 skills/hermes-news-automation/scripts/run.py validate-registry
+python3 skills/hermes-news-automation/scripts/run.py validate-notes --vault-dir .
+git check-ignore .hermes-news/config/telegram.json .hermes-news/data
+```
+
+- offline 단위·통합·문서 sync test 54개 통과
+- 활성 출처 13개, Skill workspace record 1,595건
+- Inbox 13개, Digest 3개, Vault validation issue 0건
+- Telegram credential과 runtime state는 Git 제외 상태
+- `git diff --check` 통과
+- branch: `codex/document-sync-lifecycle-20260730`
+- 첫 commit: `3a2429d` (`문서 동기화와 뉴스 lifecycle 검증`)
+- 원격 branch push 성공
+- GitHub [PR #11 — 문서 동기화와 뉴스 자동화 lifecycle 검증](https://github.com/dumbbelloper/hermes-agent/pull/11) 생성
+
+### 결정과 근거
+
+1. main에 직접 commit하지 않고 전용 branch와 PR을 사용한다.
+   - CI 결과와 문서·코드 변경을 검토 가능한 단위로 유지하기 위해서다.
+2. `.hermes-news/` credential·수집 state·delivery ledger는 commit하지 않는다.
+   - 운영 비밀정보와 로컬 영속 상태를 공개 source 변경에서 분리하기 위해서다.
+3. PR 본문에 성공 결과뿐 아니라 retryable 4건과 cron 미검증 상태도 명시한다.
+   - lifecycle 성공 범위와 남은 운영 한계를 함께 검토할 수 있게 하기 위해서다.
+
+### 전역 설정이나 외부 시스템에 적용한 변경
+
+- GitHub 원격 branch `codex/document-sync-lifecycle-20260730` 생성
+- GitHub PR #11 생성
+- credential, Hermes gateway, cron과 Telegram 설정은 추가 변경하지 않음
+
+### 알려진 한계와 남은 작업
+
+- 이 기록을 추가한 후 두 번째 commit과 push 필요
+- PR CI 상태 최종 확인 필요
+- PR merge는 사용자 요청 범위에 포함하지 않음
