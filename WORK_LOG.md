@@ -2653,8 +2653,8 @@ git check-ignore .hermes-news/config/telegram.json \
 - GitHub [PR #12 — 공식 원문 fallback과 뉴스 재처리](https://github.com/dumbbelloper/hermes-agent/pull/12)
   생성
 - PR은 `main` 대상 open 상태이며 draft가 아님
-- PR 생성 직후 GitHub Actions `validate`는 Ubuntu·macOS 실행 중, Windows
-  대기 상태
+- 후속 작업 로그 commit `00c12de` push 후 GitHub Actions `validate`가
+  Ubuntu·macOS·Windows에서 모두 통과
 
 ### 결정과 근거
 
@@ -2675,6 +2675,4 @@ git check-ignore .hermes-news/config/telegram.json \
 
 ### 알려진 한계와 남은 작업
 
-- 기록 시점에 GitHub Actions 3개 job이 아직 최종 상태가 아니므로 완료 후 결과
-  확인 필요
 - PR merge는 사용자 요청 범위에 포함하지 않음
