@@ -61,6 +61,18 @@ def validate_source(source: SourceConfig) -> List[ValidationIssue]:
                 "freshness_days must be positive",
             )
         )
+    article_extractor = source.options.get("article_extractor")
+    if article_extractor is not None and article_extractor not in {
+        "amex_aem_json",
+        "official_html",
+    }:
+        issues.append(
+            ValidationIssue(
+                "options.article_extractor",
+                "unsupported",
+                "article extractor must be a supported official fallback",
+            )
+        )
     return issues
 
 

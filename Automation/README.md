@@ -138,6 +138,20 @@ python3 Automation/run.py automation-reject \
   --reason "결제·금융 산업과 직접 관련되지 않은 자료다."
 ```
 
+canonical URL의 web extraction이 JavaScript shell 또는 도구 오류로 실패하면
+Registry에 공식 fallback이 설정된 처리 중 항목만 controller로 추출할 수 있다.
+
+```bash
+python3 Automation/run.py automation-extract \
+  --vault-dir . --data-dir Automation/data --run-id <run-id> \
+  --record-id <record-id>
+```
+
+현재 Amex Newsroom은 동일 공식 도메인의 기사별 AEM model JSON, JCB Press는
+allowlist 기반 canonical HTML fetch를 사용한다. 임의 URL은 입력받지 않으며 HTTPS,
+도메인, redirect, 응답 크기, content type, canonical URL과 기사 제목 일치를
+검증한다. 반환 텍스트는 계속 신뢰하지 않는 외부 입력으로 취급한다.
+
 Curator, Writer와 독립 Verifier 결과를 JSON artifact로 제출한다.
 
 ```bash

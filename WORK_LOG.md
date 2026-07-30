@@ -2364,3 +2364,246 @@ git check-ignore .hermes-news/config/telegram.json .hermes-news/data
 ### 알려진 한계와 남은 작업
 
 - PR merge는 사용자 요청 범위에 포함하지 않음
+
+## 2026-07-30 16:34 KST — 현시점 뉴스 수집 및 Obsidian 발행 판정
+
+### 사용자 요청과 목적
+
+- `hermes-news-automation` Skill을 사용해 현시점 데이터를 수집하고, 신규 게시글만
+  검증하여 Obsidian 문서로 작성
+- 신규 게시글이 없거나 발행 기준을 충족하지 못하면 불필요한 문서를 만들지 않음
+
+### 수행한 변경
+
+- 초기화된 `.hermes-news/` workspace에서 활성 출처 13개를 최신 상태로 수집
+- controller가 선택한 신규 queue 5건의 canonical 원문을 추출하고 발행 적합성 판정
+- PCI SSC 행사 홍보 1건을 `irrelevant`로 기록
+- 본문을 충분히 추출할 수 없었던 Amex 3건과 JCB 1건을 `retryable`로 기록
+- 검증을 통과한 항목이 없어 Inbox 문서와 Telegram 발행을 생성하지 않음
+- run `20260730T073214185857Z-8f7c9111`을
+  `completed_with_exceptions`로 정상 종료
+
+### 생성·수정한 문서와 파일
+
+- [작업 로그](./WORK_LOG.md)
+- Git에서 제외되는 `.hermes-news/data/` 아래 수집 원본, 정규화 snapshot, source
+  state, automation run·decision ledger
+- 새 [Inbox](./Inbox/) 문서는 생성하지 않음
+
+### 실행한 검증과 결과
+
+```text
+python3 skills/hermes-news-automation/scripts/run.py automation-start --max-items 5
+python3 skills/hermes-news-automation/scripts/run.py automation-next ...
+python3 skills/hermes-news-automation/scripts/run.py automation-reject ...
+python3 skills/hermes-news-automation/scripts/run.py automation-notify ...
+python3 skills/hermes-news-automation/scripts/run.py automation-finish ...
+python3 skills/hermes-news-automation/scripts/run.py automation-status ...
+python3 Automation/run.py validate-notes --vault-dir .
+```
+
+- sandbox 첫 수집은 DNS 제한으로 전 출처가 실패하여 실제 사유와 함께
+  `automation-abort`하고 lock을 해제
+- 네트워크 허용 재실행에서 활성 출처 13개 모두 성공, source failure 0건
+- source snapshot 기준 신규 감지: PCI Blog 1건, Visa Press 2건, Banking Dive
+  5건, Payments Dive 2건, PYMNTS 10건
+- queue는 최대 5건으로 제한되었고 기존 decision ledger가 3건을 억제
+- queue 결과: `irrelevant` 1건, `retryable` 4건, committed·notified 0건
+- `automation-notify`: 전송 문서 0건, unknown delivery 0건
+- 최종 상태 `completed_with_exceptions`
+- Vault 문서 13개, validation issue 0건
+
+### 결정과 근거
+
+1. PCI SSC 팟캐스트는 행사 기조연설자와 등록을 홍보하는 콘텐츠이므로 발행하지
+   않는다.
+   - Skill 계약이 행사 홍보를 명시적으로 제외하며, 결제 표준·기술·규제의 구체적
+     변경이 없기 때문이다.
+2. JavaScript 안내만 반환한 Amex 원문 3건과 추출 도구가 거부한 JCB 원문 1건은
+   제목이나 수집 description만으로 문서화하지 않는다.
+   - 원문 기반 사실 검증이 불가능할 때 발행을 막는 fail-closed 원칙을 지키기
+     위해서다.
+3. 검증 통과 항목이 0건이므로 Obsidian 뉴스 문서와 Telegram 메시지를 만들지
+   않는다.
+   - 신규 감지와 발행 가능 신규 문서를 구분하고 불필요한 문서 생성을 피하기
+     위해서다.
+
+### 전역 설정이나 외부 시스템에 적용한 변경
+
+- 공개 뉴스 출처 13개에 읽기 요청을 수행
+- Telegram 전송 0건
+- credential, shell profile, Hermes gateway, cron, Git 설정은 변경하지 않음
+
+### 알려진 한계와 남은 작업
+
+- Amex canonical 원문 3건은 web extraction이 JavaScript shell만 반환하고 JCB
+  canonical 원문 1건은 추출 도구가 URL을 거부하여 다음 실행에서 재시도 필요
+- `--max-items 5` 제한과 기존 decision ledger에 따라 이번 run이 모든 source-level
+  신규 감지 항목을 문서 후보로 처리한 것은 아님
+
+## 2026-07-30 16:41 KST — Amex·JCB 원문 추출 대안 진단
+
+### 사용자 요청과 목적
+
+- 원문 추출이 불가능한 datasource를 유지할 필요가 있는지 판단하고 정상 수집을
+  위한 대안을 확인
+
+### 수행한 변경
+
+- Amex와 JCB의 source state, raw 수집 이력, automation queue 이력을 비교
+- 목록 datasource와 개별 canonical 원문 추출 단계를 분리해 장애 범위를 확인
+- Amex 기사별 공식 AEM model JSON과 JCB canonical HTML의 실제 HTTP 응답 및
+  기사 내용 포함 여부를 읽기 전용으로 점검
+- 코드·Registry·Skill 동작은 변경하지 않음
+
+### 생성·수정한 문서와 파일
+
+- [작업 로그](./WORK_LOG.md)
+
+### 실행한 검증과 결과
+
+- Amex 목록은 2026-07-29 두 번과 2026-07-30 한 번 HTTP 200, 현재 `healthy`,
+  14건
+- JCB 목록은 같은 기간 세 번 HTTP 200, 현재 `healthy`, 455건
+- 동일 원문 4건의 실패는 2026-07-29부터 재현되어 2026-07-30에도 지속
+- Amex 기사 canonical URL에서 파생한 공식 `.model.json`은 HTTP 200
+  `application/json`, 기사 제목과 내용 신호 포함
+- JCB 문제 canonical URL은 직접 HTTP 요청에서 200 `text/html`, 기사 제목과
+  본문 신호 포함
+- 실패 원인은 datasource 부재가 아니라 현재 web extraction 도구와 원문 제공
+  방식의 불일치로 판정
+- `git diff --check`는 최종 로그 기록 후 별도 확인
+
+### 결정과 근거
+
+1. Amex와 JCB datasource는 즉시 제거하지 않는다.
+   - 발견 목록과 공식 원문 모두 실제로 응답하며, 동일 도메인의 결정적 대체 추출
+     경로를 확인했기 때문이다.
+2. Amex는 공식 기사별 AEM model JSON, JCB는 allowlist 기반 직접 HTML fetch와
+   안전한 텍스트 정규화를 우선 대안으로 본다.
+   - 브라우저 자동화나 제3자 사본 없이 공식 원문만 사용할 수 있다.
+3. 대체 추출기를 구현한 뒤에도 연속 신규 항목의 본문 검증 성공률이 기준을
+   충족하지 못할 때 datasource 비활성화를 검토한다.
+   - 목록 수집 성공만으로 운영 가치를 판단하지 않고 end-to-end 발행 가능성을
+     기준으로 삼기 위해서다.
+
+### 전역 설정이나 외부 시스템에 적용한 변경
+
+- Amex와 JCB 공식 공개 URL에 읽기 전용 HTTP 요청 수행
+- credential, Telegram, cron, gateway와 전역 설정은 변경하지 않음
+
+### 알려진 한계와 남은 작업
+
+- 현재 Skill은 `record.canonical_url`을 web extraction 도구로만 추출하도록
+  규정하므로 공식 구조화 원문 fallback을 사용하려면 Skill·runtime·검증 테스트
+  변경이 필요
+- 대체 추출기는 아직 구현하지 않았으며 기존 4건은 계속 `retryable`
+
+## 2026-07-30 17:05 KST — 공식 원문 fallback 구현 및 재처리
+
+### 사용자 요청과 목적
+
+- Amex·JCB 원문 추출기를 보완하고 기존 `retryable` 항목을 다시 처리
+- 공식 원문을 검증할 수 있는 항목만 Obsidian 문서로 작성하고 Telegram으로 전달
+
+### 수행한 변경
+
+- 처리 중 queue 항목만 조회할 수 있는 controller API 추가
+- 임의 URL을 받지 않고 Registry와 claimed record에서 공식 원문 URI를 결정하는
+  `automation-extract` 명령 추가
+- Amex Newsroom canonical `.html`에서 동일 공식 도메인의 기사별
+  `.model.json`을 파생해 본문을 추출하는 fallback 구현
+- JCB canonical HTML을 기존 HTTPS·도메인·redirect·응답 크기 제한 아래 직접
+  가져와 script·style 등 실행성 콘텐츠를 제외하고 가시 텍스트를 추출하는
+  fallback 구현
+- content type, 최종 URL, canonical URL, 기사 제목, Amex 게시일과 최소 본문
+  길이를 fail-closed 방식으로 검증
+- Source Registry에 Amex `amex_aem_json`, JCB `official_html` extractor를 설정하고
+  지원하지 않는 extractor 설정을 거부하도록 validation 강화
+- Skill 절차에 web extraction 실패 시 공식 fallback을 사용하는 단계를 추가
+- 기존 retryable 항목을 포함한 최신 run을 실행해 5건 처리
+- JCB–Fiuu 직접 매입 파트너십 1건을 작성·독립 검증·저장·Telegram 전달
+- Amex 보조금·실적·회원 경험 3건과 PCI SSC 행사 1건을 `irrelevant`로 기록
+
+### 생성·수정한 문서와 파일
+
+- [공식 원문 fallback 구현](./skills/hermes-news-automation/scripts/runtime/hermes_agent/source_extractor.py)
+- [자동화 controller](./skills/hermes-news-automation/scripts/runtime/hermes_agent/automation.py)
+- [자동화 CLI](./skills/hermes-news-automation/scripts/runtime/hermes_agent/cli.py)
+- [Registry validation](./skills/hermes-news-automation/scripts/runtime/hermes_agent/validation.py)
+- [Skill 절차](./skills/hermes-news-automation/SKILL.md)
+- [프로젝트 Source Registry](./Automation/config/sources.json)
+- [Skill 기본 Source Registry](./skills/hermes-news-automation/scripts/runtime/hermes_agent/default_sources.json)
+- [원문 fallback 테스트](./Automation/tests/test_source_extractor.py)
+- [Registry 테스트](./Automation/tests/test_registry.py)
+- [자동화 README](./Automation/README.md)
+- [출처 카탈로그](./SOURCE_CATALOG.md)
+- [프로젝트 계획](./PROJECT_PLAN.md)
+- [JCB–Fiuu 직접 매입 파트너십 문서](./Inbox/2026-07-23%20JCB%20and%20Fiuu%20Collaborate%20to%20Expand%20JCB%20Acceptance%20Across%20Southeast%20Asia.md)
+- [작업 로그](./WORK_LOG.md)
+- Git에서 제외되는 `.hermes-news/config/sources.json`과 수집·run·decision·artifact·
+  delivery ledger
+
+### 실행한 검증과 결과
+
+```text
+PYTHONPATH=skills/hermes-news-automation/scripts/runtime \
+  python3 -m unittest discover -s Automation/tests -v
+python3 Automation/run.py validate-registry
+python3 Automation/run.py validate-notes --vault-dir .
+python3 skills/hermes-news-automation/scripts/run.py automation-start --max-items 5
+python3 skills/hermes-news-automation/scripts/run.py automation-extract ...
+python3 skills/hermes-news-automation/scripts/run.py automation-submit ...
+python3 skills/hermes-news-automation/scripts/run.py automation-notify ...
+python3 skills/hermes-news-automation/scripts/run.py automation-finish ...
+git diff --check
+```
+
+- 구현 직후 전체 단위·통합·배포 검증 59개 통과
+- 활성 Registry 13개 검증 통과, 프로젝트·Skill 기본 Registry 일치
+- 실환경 최신 수집은 13개 출처 모두 성공, source failure 0건
+- Amex 공식 AEM JSON fallback 3/3건 성공
+- JCB 공식 HTML fallback 1/1건 성공
+- run `20260730T074844198182Z-7f8f807e` 최종 상태 `completed`
+- queue 결과: `irrelevant` 4건, `notified` 1건, retryable·quarantined 0건
+- JCB 문서 Curator confidence 0.97, 독립 Verifier confidence 0.98,
+  verification check 전부 통과
+- Telegram 문서 1건 전송 성공, unknown delivery 0건
+- Vault 문서 14개, validation issue 0건
+- 로그·문서 동기화 후 최종 전체 테스트 59개 재통과, Registry·Vault 검증과
+  `git diff --check` 통과
+- 기본 Python bytecode cache가 workspace 밖이라 첫 `compileall`은 권한 오류가
+  났고, `PYTHONPYCACHEPREFIX=/tmp/hermes-agent-pycache`로 재실행해 통과
+
+### 결정과 근거
+
+1. fallback 명령은 URL 인자를 받지 않고 현재 run에서 `processing` 상태인
+   record ID만 받는다.
+   - source allowlist를 우회한 임의 외부 콘텐츠 반입을 막기 위해서다.
+2. Amex는 canonical 링크를 문서 identity와 evidence로 유지하면서 동일 공식
+   도메인의 AEM model JSON만 추출에 사용한다.
+   - 사용자용 canonical URL과 기계 판독 가능한 공식 원문을 분리하되 출처
+     정체성을 유지하기 위해서다.
+3. JCB는 web 도구의 URL 판정 실패를 제3자 사본이나 검색 인덱스로 대체하지 않고
+   기존 bounded fetcher로 공식 canonical HTML을 직접 확인한다.
+   - 공식 원문, allowlist와 응답 제한을 동시에 유지하기 위해서다.
+4. 원문 확보 성공이 곧 발행을 의미하지 않도록 기존 관련성·독립 검증 게이트를
+   그대로 유지한다.
+   - 보조금·실적·라이프스타일·행사 홍보를 결제 기술 뉴스로 오인하지 않기
+     위해서다.
+
+### 전역 설정이나 외부 시스템에 적용한 변경
+
+- 로컬 Skill workspace의 `.hermes-news/config/sources.json`에 Amex·JCB 공식
+  extractor 설정 추가
+- 설정된 Telegram 수신자에게 검증 완료 JCB 문서 1건 전송
+- 사용자 shell profile, credential 값, Hermes gateway, cron과 Git 설정은
+  변경하지 않음
+
+### 알려진 한계와 남은 작업
+
+- 공식 fallback은 현재 Amex Newsroom과 JCB Press에만 구성됨
+- JCB HTML 가시 텍스트에는 사이트 navigation이 포함되지만 script·style·
+  noscript·SVG·template은 제외되고 제목·본문 길이 검증을 통과해야 함
+- 이번 재처리는 수동 실환경 run이며 다음 cron 실행에서 설치된 Skill 경로의
+  지속 동작을 확인할 필요가 있음

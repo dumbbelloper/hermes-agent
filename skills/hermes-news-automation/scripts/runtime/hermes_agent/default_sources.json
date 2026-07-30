@@ -67,6 +67,7 @@
       "language": "en",
       "options": {
         "article_base_uri": "https://www.americanexpress.com/",
+        "article_extractor": "amex_aem_json",
         "max_quarantine_ratio": 0.1
       }
     },
@@ -121,6 +122,7 @@
       "language": "en",
       "options": {
         "article_base_uri": "https://www.global.jcb/en/press/",
+        "article_extractor": "official_html",
         "max_quarantine_ratio": 0.1
       }
     },
