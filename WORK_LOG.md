@@ -3084,3 +3084,61 @@ git diff --check
 
 - 신규 MDES 문서를 Telegram으로 보내려면 별도의 G2 전송 승인이 필요
 - PR merge는 PR 게시와 CI 결과 확인 뒤 사용자의 후속 지시 범위에서 수행
+
+## 2026-08-11 11:06 KST — 오전 수집·MDES 문서 commit, push와 PR 생성
+
+### 사용자 요청과 목적
+
+- 오늘 오전 `git status`에 표시된 전체 변경을 하나의 작업 범위로 commit
+- 원격 feature branch에 push하고 `main` 대상 Pull Request 생성
+- merge 전 PR과 CI 검토가 가능한 상태로 준비
+
+### 수행한 변경
+
+- 수정 3개와 미추적 문서 4개를 모두 stage하고 단일 작업 commit 생성
+- `docs/mastercard-mdes` branch를 `origin`에 push하고 upstream 연결
+- GitHub `main` 대상 PR #13 생성
+- PR 본문에 Amex 문서 2건, MDES 개념·변경 문서, 동기화 범위와 검증 결과 기록
+
+### 생성·수정한 문서와 파일
+
+- commit 대상은 직전 작업 기록의 문서 7개와 동일
+- [PR #13 오전 수집 결과와 Mastercard MDES 공식 문서 정리](https://github.com/dumbbelloper/hermes-agent/pull/13)
+- [작업 로그](./WORK_LOG.md) — 실제 GitHub 반영 결과 추가
+
+### 실행한 검증과 결과
+
+```text
+git add --all
+git diff --cached --check
+git commit -m "오전 수집 결과와 Mastercard MDES 공식 문서 정리"
+git push --set-upstream origin docs/mastercard-mdes
+gh pr create --base main --head docs/mastercard-mdes ...
+gh pr view --json ...
+```
+
+- 작업 commit: `e8993f0 오전 수집 결과와 Mastercard MDES 공식 문서 정리`
+- push 성공, local·remote feature branch upstream 연결
+- PR #13: `OPEN`, draft 아님, base `main`, head `docs/mastercard-mdes`
+- 생성 직후 mergeability는 GitHub 계산 전 `UNKNOWN`, status check는 아직 등록되지 않음
+
+### 결정과 근거
+
+1. 사용자가 명시한 현재 `git status` 전체를 한 commit으로 포함한다.
+   - Amex 수집 문서와 MDES 문서가 동일한 오전 작업 로그·문서 수 동기화에 함께 연결되어 있기 때문이다.
+2. PR은 draft가 아닌 일반 review 상태로 생성한다.
+   - 로컬 테스트, Registry·Vault 검증과 diff 검사를 모두 통과했기 때문이다.
+3. PR merge는 이번 단계에서 수행하지 않는다.
+   - 사용자가 우선 PR까지 요청했고 merge는 PR 상태와 CI를 확인한 후 마무리할 예정이기 때문이다.
+
+### 전역 설정이나 외부 시스템에 적용한 변경
+
+- GitHub 원격에 `docs/mastercard-mdes` branch 생성·push
+- GitHub [PR #13](https://github.com/dumbbelloper/hermes-agent/pull/13) 생성
+- `main`, Telegram, credential, Hermes gateway·cron과 Mastercard 시스템은 변경하지 않음
+
+### 알려진 한계와 남은 작업
+
+- GitHub status check 등록 및 최종 결과 확인 필요
+- PR #13 merge는 아직 수행하지 않음
+- MDES 문서 Telegram 전송은 이번 PR 작업 범위에 포함하지 않음
