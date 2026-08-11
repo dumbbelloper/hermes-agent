@@ -277,6 +277,8 @@ Agent는 의미 판단을 담당하고 Python controller는 상태 전이, 임�
 ### Phase 3 — 채널 확장
 
 - [x] 공개 JSON·정적 HTML 기반 비-RSS 공식 사이트 지원
+- [x] Mastercard MDES 공개 기술 문서의 제품·서비스 구조와 첫 환경 변경 공지 수동 검증
+- [ ] 공식 기술 문서 inventory와 release history·API specification·PDF hash 변경 추적 자동화
 - [ ] YouTube 채널 지원
 - [x] 금융·결제 전문 뉴스 출처 4개 추가
 - [ ] 규제기관 출처 추가
@@ -301,6 +303,7 @@ Agent는 의미 판단을 담당하고 Python controller는 상태 전이, 임�
 | 현재 실행 환경 | 결정 | macOS·Linux·Windows WSL2를 1차 지원하고 native Windows는 실험 지원. 설치 workspace의 `.hermes-news/data/`에 local 영속 상태 저장 |
 | Skill 배포 | 결정 | `skills/hermes-news-automation/` self-contained bundle, GitHub direct install과 Hermes tap. 세부 기준은 [Skill 배포 가이드](./SKILL_DISTRIBUTION_GUIDE.md) |
 | 운영 출처 | 결정 | 직접 접근 가능한 공식 출처 9개와 편집 언론 4개, 세부 기준은 [SOURCE_CATALOG.md](./SOURCE_CATALOG.md) |
+| 공식 기술 문서 | 부분 결정 | 뉴스 Registry와 분리해 canonical 문서·version·effective date·specification/PDF hash를 추적. Mastercard MDES는 공개 문서 구조와 첫 변경 공지를 검증했으며 자동 inventory는 후속 |
 | 차단 출처 처리 | 결정 | WAF 우회, 검색 인덱스와 브라우저 자동화 폴백 없이 제외 |
 | 문서 식별과 중복 방지 | 결정 | `record_id`, `source_fingerprint`와 실행 시 Vault index 사용. 세부 기준은 [NOTE_IDENTITY_POLICY.md](./NOTE_IDENTITY_POLICY.md) |
 | 문서 승인 | 결정 | Curator confidence 0.80, 독립 Verifier 0.85와 결정론적 gate 통과 시 자동 발행 |
@@ -311,7 +314,7 @@ Agent는 의미 판단을 담당하고 Python controller는 상태 전이, 임�
 
 ## 11. 현재 문서 작성 작업
 
-운영 출처 13개의 최신 자료 중 결제 기술·표준·보안 변화와 직접 관련된 항목을 소량 선별해 `Inbox/` 초안을 작성한다. 2026-07-30 Skill workspace의 누적 1,595건에서 14건을 문서화했다.
+운영 출처 13개의 최신 자료와 직접 검증한 공식 기술 문서 중 결제 기술·표준·보안 변화와 관련된 항목을 소량 선별해 `Inbox/` 초안을 작성한다. 2026-08-11 현재 Skill workspace의 누적 1,662건에서 17건을 문서화했다. 이 중 1건은 뉴스 Registry 밖의 Mastercard MDES 공식 기술 문서를 직접 검증한 결과다.
 
 - [x] 안정적인 신규 항목 탐지와 원문 제목·링크 보존 검증
 - [x] agent artifact의 한국어 요약·중요성·근거 필수화
