@@ -219,7 +219,10 @@ class AutonomousOperationsTests(unittest.TestCase):
             Path("/workspace"),
             {"PATH": "/bin", "HERMES_NEWS_MAX_ITEMS": "99"},
         )
-        self.assertEqual("/workspace", environment["HERMES_NEWS_WORKSPACE"])
+        self.assertEqual(
+            str(Path("/workspace").resolve()),
+            environment["HERMES_NEWS_WORKSPACE"],
+        )
         self.assertEqual("1", environment["HERMES_NEWS_MAX_ITEMS"])
 
     def test_precheck_fails_closed_for_dirty_or_non_main_repository(self) -> None:
