@@ -115,6 +115,20 @@ Agent는 변경안, diff, plan, 영향 분석과 rollback 절차를 만들 수 �
 - 승인 범위를 해당 action 1회로 제한한다.
 - 실행 결과와 actor를 기록한다.
 
+#### 제한된 무인 자동화의 standing authorization
+
+반복형 G2 작업은 사람이 사전에 범위와 종료 조건을 명시한 standing authorization을 부여한 경우에만 실행 직전 승인을 생략할 수 있다. 다음 조건을 모두 만족해야 한다.
+
+- 대상 repository, 고정 recipient, 허용 action과 branch prefix를 명시한다.
+- `git push`와 PR 생성·수정까지만 허용하며 보호 branch merge, release, deploy와 credential 변경을 포함하지 않는다.
+- 로컬 on/off switch와 최대 30일의 승인 만료 시각을 함께 적용한다.
+- quota, identity, clean worktree, diff, test 또는 logging 검증 실패 시 닫힌 상태로 중단한다.
+- task별 독립 worktree·branch·감사 로그를 사용하고 shared append log를 수정하지 않는다.
+- 실행 결과를 PR과 고정 알림 채널에 남기며 승인자는 언제든 switch를 끌 수 있다.
+- 30일마다 사람이 대상, 권한, 사용량과 실패 이력을 재검토하고 `on`으로 승인 기간을 갱신한다.
+
+현재 이 프로젝트의 standing authorization은 `dumbbelloper/hermes-agent` 저장소의 `automation/*` branch push, PR 생성·수정, 그리고 기존 프로젝트 Telegram credential이 지정한 고정 recipient 알림으로 제한한다. 자동 merge는 허용하지 않는다.
+
 ### G3 — Production 또는 고객 영향
 
 예시:
@@ -170,8 +184,8 @@ Agent는 변경안, diff, plan, 영향 분석과 rollback 절차를 만들 수 �
 | --- | --- | --- |
 | status, diff, log, blame | G0 | 허용 |
 | 로컬 branch와 commit | G1 | 허용하되 기록 |
-| 모든 `git push` | G2 | 실행 직전 승인 |
-| PR 생성·수정·닫기 | G2 | 승인 |
+| 모든 `git push` | G2 | 실행 직전 승인 또는 위 조건을 만족하는 제한된 standing authorization |
+| PR 생성·수정·닫기 | G2 | 승인 또는 위 조건을 만족하는 제한된 standing authorization |
 | 보호 branch merge | G3 | 독립 reviewer와 GitHub ruleset |
 | force push, tag 삭제 | G4 | 기본 거부 |
 | repository 삭제·이전·공개 전환 | G4 | 기본 거부 |

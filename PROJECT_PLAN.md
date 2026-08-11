@@ -1,6 +1,6 @@
 # Hermes Agent 프로젝트 설계
 
-> 기준일: 2026-07-29
+> 기준일: 2026-08-11
 >
 > 상태: Phase 0·1 완료 · Phase 2·3·4 부분 완료 · self-contained Hermes Skill v0.1.0 공개 배포 · 최초 실환경 cron 검증 필요
 
@@ -244,6 +244,7 @@ Agent는 의미 판단을 담당하고 Python controller는 상태 전이, 임�
 - [x] 선별 GitHub Release Atom 수집
 - [x] workspace credential 파일 기반 Telegram 문서 알림
 - [x] Hermes gateway·cron 운영 가이드
+- [x] live Codex quota gate, 30일 on/off switch와 task별 worktree·로그 규칙
 - [ ] 출처별 retry backoff, circuit breaker와 장기 운영 지표
 
 구현 세부 사항과 실행법은 [Automation/README.md](./Automation/README.md)에서 관리한다.
@@ -314,7 +315,7 @@ Agent는 의미 판단을 담당하고 Python controller는 상태 전이, 임�
 
 ## 11. 현재 문서 작성 작업
 
-운영 출처 13개의 최신 자료와 직접 검증한 공식 기술 문서 중 결제 기술·표준·보안 변화와 관련된 항목을 소량 선별해 `Inbox/` 초안을 작성한다. 2026-08-11 현재 Skill workspace의 누적 1,662건에서 17건을 문서화했다. 이 중 1건은 뉴스 Registry 밖의 Mastercard MDES 공식 기술 문서를 직접 검증한 결과다.
+운영 출처 13개의 최신 자료와 직접 검증한 공식 기술 문서 중 결제 기술·표준·보안 변화와 관련된 항목을 소량 선별해 `Inbox/` 초안을 작성한다. 현재 문서 수는 `Inbox/*.md`에서 계산한다. Skill workspace의 누적 정상 레코드 수는 [Source Catalog](./SOURCE_CATALOG.md)의 운영 현황을 기준으로 하며, 뉴스 Registry 밖의 Mastercard MDES 공식 기술 문서도 별도 검증 결과로 관리한다. 병렬 agent는 이 문단의 수치를 매 task마다 수정하지 않는다.
 
 - [x] 안정적인 신규 항목 탐지와 원문 제목·링크 보존 검증
 - [x] agent artifact의 한국어 요약·중요성·근거 필수화

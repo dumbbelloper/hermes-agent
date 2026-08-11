@@ -52,7 +52,6 @@ class DocumentSyncTests(unittest.TestCase):
             )
         )
         source_count = sum(source["enabled"] for source in registry["sources"])
-        inbox_count = len(list((REPOSITORY_ROOT / "Inbox").glob("*.md")))
         digest_count = len(list((REPOSITORY_ROOT / "Digests").glob("*.md")))
 
         readme = (REPOSITORY_ROOT / "README.md").read_text(encoding="utf-8")
@@ -66,13 +65,7 @@ class DocumentSyncTests(unittest.TestCase):
         self.assertIn("총 {}개 출처".format(source_count), readme)
         self.assertIn("총 {}개다".format(source_count), catalog)
         self.assertIsNotNone(record_count)
-        self.assertIn(
-            "누적 {}건에서 {}건을 문서화했다".format(
-                record_count.group(1),
-                inbox_count,
-            ),
-            plan,
-        )
+        self.assertIn("문서 수는 `Inbox/*.md`에서 계산한다", plan)
         self.assertIn("초기 수집 결과 Digest {}개 생성".format(digest_count), plan)
 
     def test_deployment_status_records_verified_path_and_tap_limit(self) -> None:
@@ -82,6 +75,15 @@ class DocumentSyncTests(unittest.TestCase):
         self.assertIn("skills.sh identifier를 우선 사용", guide)
         self.assertIn("Hermes 0.19.0", guide)
         self.assertIn("검색 제약", guide)
+
+    def test_parallel_work_logs_use_unique_task_files(self) -> None:
+        agents = (REPOSITORY_ROOT / "AGENTS.md").read_text(encoding="utf-8")
+        readme = (REPOSITORY_ROOT / "README.md").read_text(encoding="utf-8")
+        index = REPOSITORY_ROOT / "Work Logs" / "README.md"
+        self.assertIn("Work Logs/YYYY/MM/", agents)
+        self.assertIn("루트 `WORK_LOG.md`는 과거 기록 archive", agents)
+        self.assertIn("[Work Logs](./Work%20Logs/README.md)", readme)
+        self.assertTrue(index.is_file())
 
 
 if __name__ == "__main__":
