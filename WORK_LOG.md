@@ -2676,3 +2676,469 @@ git check-ignore .hermes-news/config/telegram.json \
 ### 알려진 한계와 남은 작업
 
 - PR merge는 사용자 요청 범위에 포함하지 않음
+
+## 2026-08-05 10:16 KST — 현시점 뉴스 수집·검증 및 Obsidian 발행
+
+### 사용자 요청과 목적
+
+- `hermes-news-automation` Skill로 현시점의 신규 결제·금융 정보를 수집
+- 공식 원문과 독립 검증을 통과한 항목만 Obsidian 문서로 작성하고 Telegram 전달
+
+### 수행한 변경
+
+- 활성 출처 13개를 최신 상태로 수집하고 controller queue 5건 처리
+- Amex canonical JavaScript shell 4건에 공식 AEM JSON fallback 적용
+- Amex–Fanatics 결제 파트너·제휴 카드·포인트 전환 계획 1건 작성
+- Amex–ALL Accor 포인트 전환·호텔 등급 매칭 1건 작성
+- AmexForFoodies 프로모션 1건을 `irrelevant`로 기록
+- Amex 비즈니스 여행·경비 설문 1건을 독립 검증 이슈로 `quarantined` 기록
+- Visa–BioCatch 인수 1건을 원문 추출 실패로 `retryable` 기록
+- 프로젝트 계획과 출처 카탈로그의 누적 record·Inbox 수치 동기화
+
+### 생성·수정한 문서와 파일
+
+- [Amex–Fanatics 결제·카드·리워드 제휴](./Inbox/2026-08-04%20At%20Fanatics%20Fest%202026%2C%20American%20Express%20Helped%20Bring%20Sports%20Home.md)
+- [Amex–ALL Accor 로열티 제휴](./Inbox/2026-07-22%20American%20Express%20and%20ALL%20Accor%20Expand%20the%20Power%20of%20Membership%20with%20New%20Global%20Partnership.md)
+- [프로젝트 계획](./PROJECT_PLAN.md)
+- [출처 카탈로그](./SOURCE_CATALOG.md)
+- [작업 로그](./WORK_LOG.md)
+- Git에서 제외되는 `.hermes-news/data/`의 raw·normalized·state와 automation
+  run·decision·artifact·delivery ledger
+
+### 실행한 검증과 결과
+
+```text
+python3 skills/hermes-news-automation/scripts/run.py automation-start --max-items 5
+python3 skills/hermes-news-automation/scripts/run.py automation-extract ...
+python3 skills/hermes-news-automation/scripts/run.py automation-submit ...
+python3 skills/hermes-news-automation/scripts/run.py automation-notify ...
+python3 skills/hermes-news-automation/scripts/run.py automation-finish ...
+PYTHONPATH=skills/hermes-news-automation/scripts/runtime \
+  python3 -m unittest discover -s Automation/tests -v
+python3 Automation/run.py validate-registry
+python3 Automation/run.py validate-notes --vault-dir .
+PYTHONPYCACHEPREFIX=/tmp/hermes-agent-pycache \
+  python3 -m compileall -q skills/hermes-news-automation/scripts/runtime/hermes_agent
+git diff --check
+```
+
+- 활성 출처 13개 모두 수집 성공, source failure 0건
+- Skill workspace 누적 정상 record 1,662건, source state 13개 모두 `healthy`
+- run `20260805T005534147479Z-17d8acfa` 최종 상태
+  `completed_with_exceptions`
+- queue 결과: `notified` 2건, `irrelevant` 1건, `quarantined` 1건,
+  `retryable` 1건
+- Telegram 문서 2건 전송 성공, unknown delivery 0건
+- 전체 단위·통합·배포 검증 59개 통과
+- 활성 Registry 13개 검증 통과, 프로젝트·Skill 기본 Registry 일치
+- Vault 문서 16개, validation issue 0건
+- Python bytecode compile 통과
+
+### 결정과 근거
+
+1. Fanatics Fest 기사에는 행사 홍보 외에 일부 판매 채널의 결제 파트너 지정,
+   Amex Network 기반 제휴 카드와 포인트 전환 계획이 있어 발행한다.
+   - 계획·대상 범위를 명시하면 카드·리워드 인프라 변화로 직접 관련되기 때문이다.
+2. ALL Accor 제휴는 12개 지역의 단계적 등급 매칭과 Membership Rewards 전환을
+   추가하므로 발행한다.
+   - 모든 회원·동시 출시·고정 전환·고정 비율로 과장하지 않고 자격과 지역별
+     조건을 보존했다.
+3. 비즈니스 여행 설문은 독립 Verifier가 조사 기간과 표본 규모·자격 조건의 초안
+   누락을 발견해 수정 발행하지 않고 격리한다.
+   - 독립 검증 결과를 우회하지 않는 fail-closed 규칙을 지키기 위해서다.
+4. Visa–BioCatch 인수는 중요 후보지만 canonical 원문을 확보하지 못해 제목만으로
+   문서화하지 않는다.
+   - web 도구가 URL을 거부했고 `visa-press` 공식 fallback이 아직 없기 때문이다.
+
+### 전역 설정이나 외부 시스템에 적용한 변경
+
+- 공개 뉴스 출처 13개에 읽기 요청 수행
+- 설정된 Telegram 수신자에게 검증 완료 문서 2건 전송
+- credential, shell profile, Hermes gateway, cron과 Git 설정은 변경하지 않음
+
+### 알려진 한계와 남은 작업
+
+- Visa–BioCatch 인수는 `visa-press` 공식 HTML fallback을 추가한 뒤 재처리 필요
+- 격리된 Amex 여행·경비 설문은 조사 기간·표본 범위를 포함한 새 초안과 독립
+  검증이 필요
+- `--max-items 5` 제한과 decision ledger에 따라 이번 run이 source-level 신규
+  감지 항목 전체를 문서 후보로 처리한 것은 아님
+
+## 2026-08-11 09:48 KST — 현재 Chrome 화면 확인 가능 여부 점검
+
+### 사용자 요청과 목적
+
+- 현재 MacBook의 Chrome에서 실행 중인 화면을 Codex가 확인할 수 있는지 확인
+
+### 수행한 변경
+
+- 현재 대화에 Chrome 확장 프로그램 또는 Computer Use 연결이 제공되었는지 점검
+- 공식 OpenAI 문서에서 Chrome 기존 탭 접근 조건과 macOS 화면 접근 권한을 확인
+
+### 생성·수정한 문서와 파일
+
+- [작업 로그](./WORK_LOG.md)
+
+### 실행한 검증과 결과
+
+- 현재 세션에는 Chrome 또는 Computer Use 제어 도구가 연결되어 있지 않아 열린
+  Chrome 화면을 직접 확인할 수 없음
+- 공식 문서상 ChatGPT Chrome 확장 프로그램을 연결하면 허용된 기존 Chrome 탭을
+  문맥으로 읽거나 조작할 수 있음
+- 공식 문서상 macOS Computer Use는 화면 기록 및 손쉬운 사용 권한이 필요함
+
+### 결정과 근거
+
+- 현재 화면을 보고 있다고 오인되지 않도록 직접 접근 불가 상태를 명시함
+- 사용자가 공유한 스크린샷을 분석하거나, Chrome 확장 프로그램/Computer Use를
+  명시적으로 설치·허용하는 방식을 대안으로 안내함
+
+### 전역 설정이나 외부 시스템에 적용한 변경
+
+- 없음
+
+### 알려진 한계와 남은 작업
+
+- 실제 Chrome 화면 확인은 사용자가 스크린샷을 첨부하거나 Chrome 확장 프로그램
+  또는 Computer Use를 연결하고 필요한 권한을 승인해야 가능함
+
+## 2026-08-11 10:18 KST — 현재 프로젝트 구조·품질 분석
+
+### 사용자 요청과 목적
+
+- 현재 프로젝트의 목적, 구조, 실행 흐름, 품질 상태와 주요 개선 과제를 파악
+- 사용자 작업 중인 변경을 보존한 상태에서 코드·문서·테스트를 읽기 전용으로 점검
+
+### 수행한 변경
+
+- Git 상태, 추적 파일, 패키지 metadata와 최근 이력을 확인
+- 수집기, Source Registry, 저장소, 무인 controller, 원문 fallback, Vault index,
+  Telegram delivery와 Skill pre-check의 실행 흐름 분석
+- 추적 파일 기준 언어·확장자별 파일 수와 줄 수, 테스트 정의 수와 대형 모듈 확인
+- 오프라인 회귀 테스트, Registry·Vault 검증, Python compile과 wheel build 실행
+- 코드나 설정은 변경하지 않고 분석 결과만 이 작업 로그에 추가
+
+### 생성·수정한 문서와 파일
+
+- [작업 로그](./WORK_LOG.md) — 현재 프로젝트 분석 기록 추가
+- 기존 코드, Registry, Skill, 운영 데이터와 사용자 작성 중 문서는 변경하지 않음
+
+### 실행한 검증과 결과
+
+```text
+git status --short --branch
+git log --oneline --decorate -8
+PYTHONPATH=skills/hermes-news-automation/scripts/runtime \
+  python3 -m unittest discover -s Automation/tests -v
+python3 Automation/run.py validate-registry
+python3 Automation/run.py validate-notes --vault-dir .
+python3 -m compileall -q skills/hermes-news-automation/scripts
+python3 -m pip wheel --no-deps --no-build-isolation --wheel-dir <temporary-directory> .
+```
+
+- `main`은 `origin/main`과 같은 commit이며 작업 시작 전 수정 3개·미추적 2개 존재
+- 추적 파일 94개, 총 14,175줄: Markdown 6,896줄, Python 6,257줄 중심
+- Python runtime은 20개 모듈이며 `automation.py` 1,117줄, `cli.py` 614줄로
+  controller와 CLI에 복잡도가 집중
+- 테스트 함수 59개를 실행해 전부 통과
+- 활성 Source Registry 13개 검증 통과: 공식 9개, 편집 언론 4개
+- Vault 문서 16개, identity issue 0건
+- Python compile과 `hermes_news_automation-0.1.0` wheel build 성공
+- `pygount`가 설치되어 있지 않아 Git 추적 파일을 Python으로 집계했으며 dependency는
+  추가하지 않음
+
+### 결정과 근거
+
+1. 현재 프로젝트를 일반 Hermes Agent 구현체가 아니라 결제·금융 뉴스 수집과
+   Obsidian 발행을 위한 self-contained Hermes Skill 프로젝트로 분류한다.
+   - 패키지명, CLI entrypoint, Source Registry와 Skill 절차가 모두 이 workflow를
+     중심으로 구성되어 있기 때문이다.
+2. 현 상태는 기능 완성도와 회귀 안정성이 높은 v0.1.0이지만 운영 성숙 단계는
+   아직 진행 중으로 판단한다.
+   - 59개 오프라인 테스트와 3개 OS CI가 있으나 장기 운영 지표, backoff,
+     circuit breaker와 정기 품질 표본 보정이 남아 있기 때문이다.
+3. 우선 개선 대상으로 stale lock 소유권과 Telegram delivery crash window를 선정한다.
+   - `submit()`의 note/event 부작용 전체가 하나의 소유권 검증 임계구역으로 묶이지
+     않고, `sending` 예약 후 프로세스 중단 시 재실행이 항목을 `notified`로 바꿀 수
+     있어 실제 전달 여부와 run 결과가 어긋날 가능성이 있기 때문이다.
+4. 다음 구조 개선 후보는 `automation.py`와 `cli.py`의 책임 분리다.
+   - 전체 Python 6,257줄 중 두 파일이 1,731줄이고 상태 저장, artifact 검증,
+     note rendering, run orchestration과 명령 wiring이 집중되어 있기 때문이다.
+
+### 전역 설정이나 외부 시스템에 적용한 변경
+
+- 없음
+- dependency, Git branch·commit, Hermes 설정, cron, gateway, credential, Telegram과
+  공개 뉴스 출처를 변경하거나 호출하지 않음
+- wheel은 임시 디렉터리에만 생성
+
+### 알려진 한계와 남은 작업
+
+- 네트워크를 사용하는 실제 13개 출처 수집과 Telegram 전송은 이번 분석에서 실행하지
+  않았으며 마지막 실환경 결과는 기존 2026-08-05 기록을 기준으로 확인
+- Python 최소 지원 버전은 3.9지만 CI는 Python 3.11 한 버전만 검증
+- 테스트 coverage 수치, linter와 type checker gate는 현재 프로젝트에 구성되어 있지 않음
+- stale lock takeover 중 이전 프로세스의 부작용 차단과 `sending` delivery 복구 정책은
+  별도 설계·회귀 테스트 후 구현 필요
+- `automation.py`·`cli.py` 분리는 동작 변경 없이 단계적으로 진행해야 함
+
+## 2026-08-11 10:28 KST — Mastercard MDES 공식 문서 작업 준비와 통제 확인
+
+### 사용자 요청과 목적
+
+- AI 가드레일과 기존 GitHub commit·PR·merge 절차를 확인
+- 현재 실행 중인 Chrome의 Mastercard MDES 공식 문서를 Hermes Agent로 다루는
+  후속 수집·검증·Obsidian 문서화 작업 준비
+
+### 수행한 변경
+
+- [Enterprise AI Agent Guardrails](./ENTERPRISE_AI_GUARDRAILS.md)의 현재 프로젝트
+  위험 등급과 source control 승인 경계 확인
+- GitHub CLI로 인증 상태, 저장소, 병합 PR 12건, 열린 PR과 commit graph를 읽기
+  전용으로 조회
+- Hermes browser·Computer Use 상태와 공식 Browser Automation 문서 확인
+- Cua Driver의 macOS 권한·상태와 현재 Chrome window를 읽기 전용으로 점검
+- Apple Events를 통해 Chrome 활성 tab이 Mastercard MDES 공식 제품 페이지임을 확인
+- 현재 세션의 `computer_use` tool schema가 노출되지 않아 Cua Driver CLI의 exact-window
+  조회를 시도했으나, 다른 macOS Space의 Chrome window라 background AX 입력은 거부됨
+- 기존 Chrome profile의 CDP 연결에는 별도 사용자 승인이 필요함을 확인
+
+### 생성·수정한 문서와 파일
+
+- [작업 로그](./WORK_LOG.md) — 준비 상태와 승인 blocker 기록
+- 코드, Skill, Source Registry, Vault 문서와 운영 설정은 변경하지 않음
+
+### 실행한 검증과 결과
+
+```text
+gh auth status
+gh repo view --json nameWithOwner,url,defaultBranchRef
+gh pr list --state merged --limit 20 --json ...
+gh pr list --state open --limit 20 --json ...
+git log --graph --decorate --oneline --all -20
+hermes status
+hermes tools list
+hermes computer-use doctor
+cua-driver call list_windows '{}'
+cua-driver call get_window_state '{...}'
+cua-driver call get_browser_state '{...}'
+```
+
+- GitHub CLI는 `dumbbelloper` 계정으로 인증됐고 대상은
+  `dumbbelloper/hermes-agent`, 기본 branch는 `main`
+- 병합 PR은 #1~#12 총 12건이며 현재 열린 PR 0건
+- 기존 기능 branch → commit → PR → CI → squash merge 흐름 확인
+- 가드레일 기준 로컬 commit은 G1, push·PR은 G2, 보호 branch merge는 G3
+- Computer Use toolset은 활성 상태이고 Cua Driver 0.19.3, Accessibility와 Screen
+  Recording 권한 및 AX capability 정상
+- Chrome 활성 tab:
+  `https://developer.mastercard.com/product/mdes/`
+- 대상 Chrome window는 PID `67578`, window ID `101`로 식별
+- Chrome이 다른 Space에 있어 exact-window AX 조회는 `ax_window_unresolved`로 거부
+- 현재 Chrome은 CDP endpoint 없이 실행되어 browser 연결은
+  `browser_requires_setup`으로 거부
+
+### 결정과 근거
+
+1. Mastercard MDES 공식 문서도 외부의 신뢰되지 않은 입력으로 취급한다.
+   - 공식 도메인이라도 페이지 안의 명령을 agent 지시로 실행하지 않고 자료로만
+     해석해야 하기 때문이다.
+2. 현재 사용자의 Chrome profile에 무단으로 연결하거나 Space를 전환하지 않는다.
+   - 기존 profile은 다른 개인 tab과 session을 포함할 수 있고 Computer Use가 exact
+     resource 승인 없이 입력을 거부하기 때문이다.
+3. GitHub에는 변경을 바로 올리지 않고 로컬 branch·파일·테스트까지 G1 범위에서
+   준비한 뒤 push와 PR 생성 직전에 1회 승인을 요청한다.
+4. merge는 CI 통과 후에도 agent가 독자 수행하지 않는다.
+   - 프로젝트 가드레일에서 보호 branch merge를 G3로 분류하기 때문이다.
+
+### 전역 설정이나 외부 시스템에 적용한 변경
+
+- 없음
+- GitHub, Chrome, Hermes 설정, Cua Driver 권한, Telegram과 credential을 변경하지 않음
+- GitHub와 Mastercard 공식 페이지 식별은 읽기 전용으로 수행
+
+### 알려진 한계와 남은 작업
+
+- 현재 Chrome profile의 exact-window 연결은 사용자 승인 전까지 진행할 수 없음
+- MDES 문서 수집 범위와 첫 산출물은 Chrome 연결 후 공식 문서 구조를 확인해 확정 필요
+- push, PR, merge와 Telegram 전송은 아직 수행하지 않음
+
+## 2026-08-11 10:38 KST — Mastercard MDES 공식 문서 구조 검증과 첫 변경 문서 작성
+
+### 사용자 요청과 목적
+
+- 직전 작업 로그의 Mastercard MDES 공식 문서 작업을 이어서 진행
+- 현재 Chrome tab을 Computer Use로 직접 확인
+- MDES 서비스 구조와 현재 유효한 기술 변경을 공식 원문으로 검증하고 Obsidian 문서로 정리
+
+### 수행한 변경
+
+- Computer Use exact-window capture로 Chrome의 MDES 제품 페이지와 `Our services` 절을 확인
+- MDES 제품 개요, issuer·merchant 설명과 공개 서비스 문서 7개의 Overview·API Basics를 읽기 전용으로 조사
+- issuer, merchant, PSP·OBOTR와 token requestor 책임, token lifecycle, API별 역할과 보안 경계를 개념 노트로 정리
+- 2026-07-15 발효된 MTF domain migration 공지를 별도 Inbox 문서로 작성
+- MTF에서 영향받는 Customer Service, Digital Enablement, Token Connect와 TRID API의 환경·credential 변경을 대조
+- Mastercard 일반 Developer Products 목록 제외와 직접 접근 가능한 MDES 개별 기술 문서 후보를 구분하도록 출처 카탈로그 수정
+- 프로젝트 계획에 공식 기술 문서의 inventory·release history·API specification·PDF hash 변경 추적 단계를 추가
+- 로컬 `docs/mastercard-mdes` branch를 생성하고 기존 미commit Amex 문서 변경은 그대로 보존
+
+### 생성·수정한 문서와 파일
+
+- [Mastercard Digital Enablement Service 개념 노트](./Concepts/Mastercard%20Digital%20Enablement%20Service.md)
+- [Mastercard MDES MTF Domain Change Notification](./Inbox/2026-07-15%20Mastercard%20MDES%20MTF%20Domain%20Change%20Notification.md)
+- [수집 출처 운영 분류](./SOURCE_CATALOG.md)
+- [프로젝트 계획](./PROJECT_PLAN.md)
+- [작업 로그](./WORK_LOG.md)
+
+### 실행한 검증과 결과
+
+```text
+computer_use capture --pid 67578 --window-id 101 --mode som
+web_extract https://developer.mastercard.com/product/mdes/ 및 공식 하위 문서
+python3 Automation/run.py validate-notes --vault-dir .
+python3 Automation/run.py note-status --vault-dir . --record-id ... --source-fingerprint ...
+PYTHONPATH=skills/hermes-news-automation/scripts/runtime \
+  python3 -m unittest discover -s Automation/tests -v
+git diff --check
+```
+
+- Computer Use가 1568×983 Chrome window를 background exact-window capture로 읽었고 MDES 제품 페이지의 서비스 7개를 화면에서 확인
+- 공식 공개 원문에서 MDES 제품·참여자 페이지 3개, 서비스 Overview 7개, 주요 API Basics 6개와 MTF 변경 공지를 확인
+- Vault 문서 17건, identity issue 0건
+- 신규 MTF 문서의 `note-status`: `skip`
+- 신규 문서 2개의 Obsidian wiki link issue 0건
+- 전체 단위·통합·문서 동기화 테스트 59개 통과
+- 첫 테스트에서는 프로젝트 계획의 문서 수 표현이 기존 정확 문자열 계약과 달라 1건 실패했고, 누적 1,662건·문서 17건으로 동기화한 뒤 재실행에서 통과
+- `git diff --check` 통과
+
+### 결정과 근거
+
+1. MDES는 하나의 API가 아니라 참여자와 lifecycle 단계별 서비스군으로 문서화한다.
+   - Pre-Digitization, Customer Service, Token Connect, Authentication Facilitator, Digital Enablement, Bulk Tokenization과 TRID의 책임·호출 주체가 다르기 때문이다.
+2. Mastercard Developer Products 일반 목록은 운영 자동 수집 제외 상태를 유지하되, 직접 접근 가능한 MDES 개별 문서는 기술 문서 후보로 분리한다.
+   - 목록 전체의 안정적 항목 경계·revision metadata는 없지만 특정 canonical 문서는 일반 HTTP 추출이 가능하기 때문이다.
+3. 첫 Inbox 자료는 제품 소개가 아니라 발효일과 운영 영향이 명시된 MTF migration 공지를 선택한다.
+   - endpoint뿐 아니라 Sandbox·Production credential 분리와 네 서비스의 실제 통합 변경을 요구하는 고가치 기술 변화이기 때문이다.
+4. 공지의 endpoint 표를 구현 기준으로 복제하지 않고 현재 API Reference 재검증을 요구한다.
+   - 문서 표는 이후 수정될 수 있고 공개 공지 안에서도 endpoint 표기 일관성을 별도로 검증해야 하기 때문이다.
+5. 공지 페이지에 별도 게시일이 없어 `published_at`은 공식적으로 명시된 새 MTF 발효일 2026-07-15로 기록하고 한계를 본문에 남긴다.
+
+### 전역 설정이나 외부 시스템에 적용한 변경
+
+- 공식 Mastercard Developers 공개 페이지를 로그인·credential 없이 읽기 전용으로 조회
+- Computer Use로 사용자가 지정한 Chrome window를 읽기 전용 capture
+- 로컬 Git branch `docs/mastercard-mdes` 생성
+- Chrome tab, Mastercard project, API credential, Sandbox·MTF·Production, Telegram, Hermes 설정과 GitHub 원격은 변경하지 않음
+
+### 알려진 한계와 남은 작업
+
+- Mastercard project, Sandbox·MTF와 Production API를 실제 호출하지 않아 서명·payload encryption·endpoint 동작은 검증하지 않음
+- API Reference의 OpenAPI specification 원본, release history 전체와 연결된 Mastercard Technical Resource Center PDF inventory·hash 수집은 후속 작업
+- 공식 문서 페이지별 revision date가 일관되게 노출되는지와 변경 감지 canonical key를 추가 조사해야 함
+- 현재 branch에는 작업 시작 전부터 존재한 Amex 관련 미commit 문서와 동기화 변경도 함께 남아 있으며 이번 작업에서 덮어쓰거나 commit하지 않음
+- push, PR, merge와 Telegram 전송은 수행하지 않음
+
+## 2026-08-11 11:04 KST — MDES Telegram 미수신 원인 확인과 PR 준비
+
+### 사용자 요청과 목적
+
+- MDES 문서 작성 후 Telegram 메시지가 오지 않은 원인 확인
+- 오늘 오전 `git status`에 표시되는 전체 작업을 commit하고 GitHub Pull Request까지 게시
+
+### 수행한 변경
+
+- Telegram 설정 파일의 존재와 최소 권한, automation delivery ledger와 최신 run 상태를 credential 값에 접근하지 않고 확인
+- 신규 MDES 문서의 record ID가 delivery ledger에 등록됐는지 대조
+- 현재 branch의 수정·미추적 파일 전체를 이번 PR 범위로 확정
+
+### 생성·수정한 문서와 파일
+
+- [작업 로그](./WORK_LOG.md)
+- 진단 과정에서 Telegram 설정, delivery ledger와 문서 본문은 변경하지 않음
+
+### 실행한 검증과 결과
+
+- Telegram 설정 파일 존재, 권한 `-rw-------`
+- delivery ledger의 기존 4건은 모두 `sent`; 신규 MDES record ID는 없음
+- `sending`, `unknown` 또는 실패 delivery 없음
+- 최신 automation run은 2026-08-05 실행이며 이번 2026-08-11 MDES 수동 문서는 포함되지 않음
+- 전체 테스트 59개 통과
+- Source Registry 13개 검증 통과
+- Vault 문서 17건, identity issue 0건
+- `git diff --check` 통과
+
+### 결정과 근거
+
+1. Telegram 미수신은 API 실패나 credential 오류가 아니라 전송 단계 미실행으로 판정한다.
+   - 이번 MDES 문서는 automation run 밖에서 수동 작성됐고 `automation-notify` 또는 `notify-telegram`을 호출하지 않았으며 delivery 예약도 없기 때문이다.
+2. 오늘 오전 작업은 현재 `git status`에 표시되는 Amex 문서 2건, MDES 문서 2건과 동기화 문서 전체를 하나의 PR 범위로 포함한다.
+   - 사용자가 현재 상태의 전체 작업을 명시적으로 commit·push·PR하도록 승인했기 때문이다.
+
+### 전역 설정이나 외부 시스템에 적용한 변경
+
+- 진단은 로컬 파일 읽기만 수행
+- Telegram 메시지 전송, credential·설정 변경은 수행하지 않음
+- commit·push·PR 결과는 후속 작업 기록에 실제 결과로 추가
+
+### 알려진 한계와 남은 작업
+
+- 신규 MDES 문서를 Telegram으로 보내려면 별도의 G2 전송 승인이 필요
+- PR merge는 PR 게시와 CI 결과 확인 뒤 사용자의 후속 지시 범위에서 수행
+
+## 2026-08-11 11:06 KST — 오전 수집·MDES 문서 commit, push와 PR 생성
+
+### 사용자 요청과 목적
+
+- 오늘 오전 `git status`에 표시된 전체 변경을 하나의 작업 범위로 commit
+- 원격 feature branch에 push하고 `main` 대상 Pull Request 생성
+- merge 전 PR과 CI 검토가 가능한 상태로 준비
+
+### 수행한 변경
+
+- 수정 3개와 미추적 문서 4개를 모두 stage하고 단일 작업 commit 생성
+- `docs/mastercard-mdes` branch를 `origin`에 push하고 upstream 연결
+- GitHub `main` 대상 PR #13 생성
+- PR 본문에 Amex 문서 2건, MDES 개념·변경 문서, 동기화 범위와 검증 결과 기록
+
+### 생성·수정한 문서와 파일
+
+- commit 대상은 직전 작업 기록의 문서 7개와 동일
+- [PR #13 오전 수집 결과와 Mastercard MDES 공식 문서 정리](https://github.com/dumbbelloper/hermes-agent/pull/13)
+- [작업 로그](./WORK_LOG.md) — 실제 GitHub 반영 결과 추가
+
+### 실행한 검증과 결과
+
+```text
+git add --all
+git diff --cached --check
+git commit -m "오전 수집 결과와 Mastercard MDES 공식 문서 정리"
+git push --set-upstream origin docs/mastercard-mdes
+gh pr create --base main --head docs/mastercard-mdes ...
+gh pr view --json ...
+```
+
+- 작업 commit: `e8993f0 오전 수집 결과와 Mastercard MDES 공식 문서 정리`
+- push 성공, local·remote feature branch upstream 연결
+- PR #13: `OPEN`, draft 아님, base `main`, head `docs/mastercard-mdes`
+- 생성 직후 mergeability는 GitHub 계산 전 `UNKNOWN`, status check는 아직 등록되지 않음
+
+### 결정과 근거
+
+1. 사용자가 명시한 현재 `git status` 전체를 한 commit으로 포함한다.
+   - Amex 수집 문서와 MDES 문서가 동일한 오전 작업 로그·문서 수 동기화에 함께 연결되어 있기 때문이다.
+2. PR은 draft가 아닌 일반 review 상태로 생성한다.
+   - 로컬 테스트, Registry·Vault 검증과 diff 검사를 모두 통과했기 때문이다.
+3. PR merge는 이번 단계에서 수행하지 않는다.
+   - 사용자가 우선 PR까지 요청했고 merge는 PR 상태와 CI를 확인한 후 마무리할 예정이기 때문이다.
+
+### 전역 설정이나 외부 시스템에 적용한 변경
+
+- GitHub 원격에 `docs/mastercard-mdes` branch 생성·push
+- GitHub [PR #13](https://github.com/dumbbelloper/hermes-agent/pull/13) 생성
+- `main`, Telegram, credential, Hermes gateway·cron과 Mastercard 시스템은 변경하지 않음
+
+### 알려진 한계와 남은 작업
+
+- GitHub status check 등록 및 최종 결과 확인 필요
+- PR #13 merge는 아직 수행하지 않음
+- MDES 문서 Telegram 전송은 이번 PR 작업 범위에 포함하지 않음

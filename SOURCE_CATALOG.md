@@ -1,6 +1,6 @@
 # 수집 출처 운영 분류
 
-> 기준일: 2026-07-29
+> 기준일: 2026-08-11
 >
 > 상태: 운영 범위 확정
 
@@ -60,7 +60,7 @@
 | `pymnts` | PYMNTS / Payments News | [공식 RSS](https://www.pymnts.com/feed/) | 편집 언론 | 결제 발행량과 속보성이 높음, 최신 10건 수집 통과. 비결제 일반 기사 필터 필요 |
 | `techcrunch-fintech` | TechCrunch / Fintech | [공식 RSS](https://techcrunch.com/category/fintech/feed/) | 편집 언론 | fintech·agentic payment·투자 동향, 최신 20건 수집 통과. 행사 홍보 필터 필요 |
 
-현재 고정 운영 범위는 공식 출처 9개와 편집 언론 4개, 총 13개다. 2026-07-29 Skill workspace의 최신 수집 기준 누적 정상 레코드는 1,595건이며 격리는 0건이다. 신규 언론 4곳은 반복 수집에서 4/4 성공했고 최신 실행에서도 모든 항목이 `unchanged`였다. Registry 변경은 이 문서의 판정과 코드·fixture 검증을 함께 갱신해야 한다.
+현재 고정 운영 범위는 공식 출처 9개와 편집 언론 4개, 총 13개다. 2026-08-05 Skill workspace의 최신 수집 기준 누적 정상 레코드는 1,662건이며 source-level 격리는 0건이다. 편집 언론 4곳은 최신 실행에서도 모두 정상 수집됐고 신규 레코드를 반영했다. Registry 변경은 이 문서의 판정과 코드·fixture 검증을 함께 갱신해야 한다.
 
 ## 3. 추가 구현 후보
 
@@ -69,6 +69,7 @@
 | EMVCo Specifications | [공식 검색](https://www.emvco.com/specifications/) | 직접 접근 가능, 검색 페이지로 redirect | 규격명·버전·수정일·문서 URL 단위 parser와 파일 변경 검증 |
 | PCI SSC Document Library | [공식 문서함](https://www.pcisecuritystandards.org/document_library/) | 직접 접근 가능 | 문서명·버전·수정일·파일 URL 단위 parser와 파일 변경 검증 |
 | Visa Developer Use Cases | [공식 Use Cases](https://developer.visa.com/use-cases) | 정적 HTML에서 제목·URL 추출 가능하나 게시일 없음 | 공식 게시일 또는 별도 변경일을 재현 가능하게 얻을 수 있을 때 승격 |
+| Mastercard MDES Documentation | [MDES 제품 개요](https://developer.mastercard.com/product/mdes/) | 제품 개요와 7개 서비스 문서는 직접 접근 가능하고, 2026-07-15 MTF 변경 공지는 발효일·영향 서비스·endpoint를 제공. 통합 문서 목록과 revision metadata는 미확인 | canonical 문서 inventory, release history·effective date·API specification/PDF hash 변경 감지, fixture와 반복 검증 |
 | American Banker Payments | [Payments](https://www.americanbanker.com/payments) | 정적 목록 접근 가능, 전문성 높으나 공개 RSS 미확인·유료벽 존재 | 안정 목록 parser, 메타데이터 정책과 반복 수집 검증 |
 | Bloomberg Markets | [공식 RSS](https://feeds.bloomberg.com/markets/news.rss) | feed는 활성이나 범위가 넓고 결제 신호 밀도가 낮음 | 결제·fintech 관련성 필터와 유료 기사 처리 정책 검증 |
 
@@ -77,7 +78,7 @@
 | 조직·채널 | 공식 URI | 제외 사유 | 재검토 조건 |
 | --- | --- | --- | --- |
 | Mastercard Press Releases | [공식 목록](https://www.mastercard.com/us/en/news-and-trends/press.html) | 일반 HTTP에서 Akamai `Access Denied` 403. 검색 인덱스·브라우저 폴백을 운영하지 않음 | 인증 없는 공식 RSS·JSON·API 제공 |
-| Mastercard Developer Products | [공식 포털](https://developer.mastercard.com/products) | HTML에 항목이 없는 JavaScript 셸, 브라우저 렌더링 필요 | 서버 렌더링 목록 또는 공식 feed/API 제공 |
+| Mastercard Developer Products | [공식 포털](https://developer.mastercard.com/products) | 일반 제품 목록 HTML에는 항목이 없는 JavaScript 셸. 직접 접근 가능한 MDES 개별 문서는 3절의 기술 문서 후보로 별도 관리 | 서버 렌더링 목록 또는 공식 feed/API 제공 |
 | American Express Developer Documentation | [공식 포털](https://developer.americanexpress.com/documentation) | HTML에 문서 본문이 없는 JavaScript 셸, 브라우저 렌더링 필요 | 서버 렌더링 목록 또는 공식 feed/API 제공 |
 | UnionPay 개발자 문서 | [공식 홈페이지](https://www.unionpayintl.com/en/) | 현재 사용 가능한 공개 개발자 포털 URI를 확인하지 못함 | 현재 운영되는 공식 문서 URI 확인 |
 | JCB 별도 개발자 문서 허브 | [JCB Global](https://www.global.jcb/en/) | 별도 공개 개발자 문서 허브를 확인하지 못함 | 현재 운영되는 공식 문서 URI 확인 |
