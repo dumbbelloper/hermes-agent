@@ -1,8 +1,8 @@
 # Hermes Agent 무인 자동화 가이드
 
-> 기준일: 2026-07-28
+> 기준일: 2026-08-11
 >
-> 상태: v0.1.0 배포 완료 · 최초 실환경 cron 검증 필요
+> 상태: v0.1.0 배포 완료 · quota gate와 자율 PR controller 구현 · 실환경 cron 승격 진행 중
 >
 > 대상: macOS, Linux, Windows WSL2, native Windows
 
@@ -315,6 +315,56 @@ hermes cron create "every 3h" \
 - 완성된 Obsidian 문서는 project notifier가 고정 Telegram chat으로 전송한다.
 - cron agent 자체 실패는 Hermes의 `--deliver telegram` 대상으로 전달된다.
 - Telegram home channel을 구성하지 않았다면 최초에는 `--deliver local`을 사용한다.
+
+### 10.1 Token quota gate와 자율 PR job
+
+이 저장소의 운영 job은 일반 `precheck.py` 대신 checkout의 `Automation/autonomy.py precheck`를 호출하는 작은 wrapper를 `~/.hermes/scripts/`에 둔다. controller는 자신이 들어 있는 exact repository path에 결속되며, wrapper는 순서대로 다음을 확인한다.
+
+wrapper 원본은 [Automation/hermes-news-autonomy-wrapper.py](Automation/hermes-news-autonomy-wrapper.py)이며 다음처럼 설치한다.
+
+```bash
+install -m 700 Automation/hermes-news-autonomy-wrapper.py ~/.hermes/scripts/hermes-news-autonomy.py
+```
+
+1. `.hermes-news/config/autonomy.json`의 `enabled`와 30일 standing authorization 만료 시각
+2. OpenAI Codex account의 live primary rate-limit window
+3. primary window 사용률 80% 미만과 provider limit 미도달
+4. coordinator checkout이 clean `main`인지 확인한 뒤 origin 전체 ref를 fetch하고 fast-forward-only 동기화
+5. fetch URL과 push URL이 모두 지정 GitHub repository allowlist와 일치하는지 확인
+6. 기존 news pre-check의 실제 delta queue
+
+앞 단계가 하나라도 실패하면 `wakeAgent: false`로 종료하며 모델 token을 사용하지 않는다. 허용된 cycle도 최대 1개 item만 queue하고 다음 3시간 cycle에서 quota를 다시 확인한다. `/usage` session counter나 과거 JSONL token 합계는 account quota 대신 사용하지 않는다.
+
+자율 agent가 깨어난 뒤에는 다음 범위의 standing authorization만 사용한다.
+
+- `dumbbelloper/hermes-agent`의 `automation/*` feature branch 생성
+- task별 독립 Git worktree에서 문서 작성과 검증
+- local commit, feature branch push, PR 생성·수정
+- 기존 프로젝트 Telegram credential이 가리키는 고정 recipient에 완성 문서와 task log 전송
+
+금지 범위는 `main` 직접 push, PR merge, release·deploy, force push, branch 보호 변경, credential·recipient 변경과 자동화 정책 자체 수정이다.
+
+### 10.2 병렬 실행과 task별 로그
+
+root checkout은 clean `main` coordinator로 유지하고 실제 작성은 `.hermes-news/worktrees/<task-id>/`의 독립 worktree에서 수행한다. 각 task는 `automation/<type>-<task-id>` branch를 사용한다.
+
+```text
+Work Logs/YYYY/MM/YYYY-MM-DDTHHMMSS.ffffffZ-<task-id>-<slug>.md
+```
+
+루트 `WORK_LOG.md`는 historical archive다. 병렬 worker는 shared append log나 공용 월별 index를 수정하지 않는다. 같은 task의 후속 commit만 같은 로그 파일을 수정한다. 이 규칙은 문서 내용 충돌과 작업 로그 tail 충돌을 동시에 방지한다.
+
+### 10.3 on/off/status
+
+```bash
+python3 Automation/autonomy.py status
+python3 Automation/autonomy.py on
+python3 Automation/autonomy.py off
+```
+
+- `on`: switch를 먼저 fail-closed로 끈 뒤 gateway start와 cron resume가 모두 성공한 경우에만 standing authorization을 현재 시각부터 30일 갱신
+- `off`: switch를 끄고 cron pause. 다른 messaging·cron 사용 가능성을 위해 gateway는 중지하지 않음
+- `status`: credential을 출력하지 않고 switch, repository gate와 live quota decision만 표시
 
 주기 변경:
 

@@ -1,5 +1,9 @@
 # 작업 로그
 
+> 상태: 2026-08-11부터 읽기 전용 historical archive
+>
+> 신규 기록: [task별 Work Logs](./Work%20Logs/README.md)
+
 Hermes Agent 프로젝트에서 수행한 작업과 검증 결과를 시간순으로 기록한다.
 
 ## 2026-07-24 — 프로젝트 초기 설계와 Enterprise AI Guardrails

@@ -22,7 +22,7 @@ Skill은 controller runtime을 자체 포함하므로 repository 전체를 복�
 
 AI agent를 회사와 팀 업무에 안전하게 적용하기 위한 조직 수준의 통제 기준은 [ENTERPRISE_AI_GUARDRAILS.md](./ENTERPRISE_AI_GUARDRAILS.md)에서 관리합니다.
 
-프로젝트에서 수행한 작업과 검증 결과는 [WORK_LOG.md](./WORK_LOG.md)에서 확인할 수 있습니다.
+프로젝트에서 수행한 최신 작업과 검증 결과는 task별 [Work Logs](./Work%20Logs/README.md)에서 확인할 수 있습니다. 루트 [WORK_LOG.md](./WORK_LOG.md)는 2026-08-11 이전 기록을 보존하는 archive입니다.
 
 초기 공식 출처 18개를 대상으로 2026-07-24에 수행한 수집 방식, 메타데이터·원문 품질, 관련성 분류, 중복 및 장애 복구 검증 결과는 역사적 기준선인 [DATA_COLLECTION_VALIDATION_REPORT.md](./DATA_COLLECTION_VALIDATION_REPORT.md)에서 확인할 수 있습니다.
 

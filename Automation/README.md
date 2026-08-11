@@ -188,6 +188,28 @@ python3 Automation/run.py automation-abort \
 
 macOS, Linux와 Windows의 Hermes gateway, Skill 연결, token 절약 pre-check와 cron 설정은 [Hermes Agent 무인 자동화 가이드](../HERMES_AUTOMATION_GUIDE.md)를 따른다.
 
+### 자율 운영 switch와 quota gate
+
+`Automation/autonomy.py`는 live OpenAI Codex rate-limit window, 30일 standing authorization switch와 clean `main` coordinator를 확인한 뒤에만 기존 news pre-check를 실행한다. 기본값은 primary window 80% 사용 시 새 agent 작업을 시작하지 않는 fail-closed 정책이며, 허용된 cycle도 최대 1개 item만 처리하고 다음 3시간 cycle에서 quota를 다시 확인한다.
+
+```bash
+python3 Automation/autonomy.py status
+python3 Automation/autonomy.py on
+python3 Automation/autonomy.py off
+```
+
+`on`은 switch를 먼저 fail-closed로 끄고 gateway 시작과 고정 cron job resume가 모두 성공한 경우에만 30일 승인 기간을 갱신한다. `off`는 switch를 먼저 끈 뒤 cron job을 pause하며 gateway 자체는 다른 서비스가 사용할 수 있도록 유지한다. controller는 자신이 들어 있는 exact repository path 밖의 control 요청을 거부한다. 작업 로그 파일명은 다음 명령으로 충돌 없이 생성한다.
+
+cron wrapper는 [hermes-news-autonomy-wrapper.py](hermes-news-autonomy-wrapper.py)를 `~/.hermes/scripts/hermes-news-autonomy.py`에 mode `0700`으로 설치한다. repository fetch URL과 push URL은 모두 allowlist를 통과해야 한다.
+
+```bash
+python3 Automation/autonomy.py task-log \
+  --task-id <run-or-task-id> \
+  --slug <short-name>
+```
+
+병렬 task는 각자 `automation/*` branch와 Git worktree를 사용하고 [Work Logs](../Work%20Logs/README.md)에 독립 로그 파일을 생성한다. 자동화가 허용하는 외부 변경은 해당 branch push, PR 생성·수정과 고정 Telegram recipient 알림까지이며 merge는 수행하지 않는다.
+
 ## 데이터 구조
 
 ```text
