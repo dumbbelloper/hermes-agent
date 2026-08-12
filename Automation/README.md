@@ -200,7 +200,7 @@ python3 Automation/autonomy.py off
 
 `on`은 switch를 먼저 fail-closed로 끄고 gateway 시작과 고정 cron job resume가 모두 성공한 경우에만 30일 승인 기간을 갱신한다. `off`는 switch를 먼저 끈 뒤 cron job을 pause하며 gateway 자체는 다른 서비스가 사용할 수 있도록 유지한다. controller는 자신이 들어 있는 exact repository path 밖의 control 요청을 거부한다. 작업 로그 파일명은 다음 명령으로 충돌 없이 생성한다.
 
-cron wrapper는 [hermes-news-autonomy-wrapper.py](hermes-news-autonomy-wrapper.py)를 `~/.hermes/scripts/hermes-news-autonomy.py`에 mode `0700`으로 설치한다. repository fetch URL과 push URL은 모두 allowlist를 통과해야 한다.
+cron wrapper는 [hermes-news-autonomy-wrapper.py](hermes-news-autonomy-wrapper.py)를 `~/.hermes/scripts/hermes-news-autonomy.py`에 mode `0700`으로 설치한다. Hermes scheduler는 pre-run script를 script directory에서 실행하므로 `~/.hermes/scripts/hermes-news-autonomy.workspace`에 repository 절대 경로를 mode `0600`으로 기록한다. `HERMES_NEWS_WORKSPACE`가 명시되면 환경변수가 이 파일보다 우선한다. repository fetch URL과 push URL은 모두 allowlist를 통과해야 한다.
 
 ```bash
 python3 Automation/autonomy.py task-log \

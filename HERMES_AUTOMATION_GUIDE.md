@@ -324,7 +324,11 @@ wrapper 원본은 [Automation/hermes-news-autonomy-wrapper.py](Automation/hermes
 
 ```bash
 install -m 700 Automation/hermes-news-autonomy-wrapper.py ~/.hermes/scripts/hermes-news-autonomy.py
+printf '%s\n' "$PWD" > ~/.hermes/scripts/hermes-news-autonomy.workspace
+chmod 600 ~/.hermes/scripts/hermes-news-autonomy.workspace
 ```
+
+Hermes scheduler는 pre-run script를 `~/.hermes/scripts`에서 실행한다. wrapper는 `HERMES_NEWS_WORKSPACE`가 없으면 위 owner-only `.workspace` sidecar에서 repository 절대 경로를 읽으며, 이 파일이 없을 때만 현재 작업 디렉터리로 fallback한다.
 
 1. `.hermes-news/config/autonomy.json`의 `enabled`와 30일 standing authorization 만료 시각
 2. OpenAI Codex account의 live primary rate-limit window
