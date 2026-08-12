@@ -18,6 +18,7 @@ from unittest.mock import patch
 
 REPOSITORY_ROOT = Path(__file__).parents[2]
 AUTONOMY_SCRIPT = REPOSITORY_ROOT / "Automation" / "autonomy.py"
+WRAPPER_SCRIPT = REPOSITORY_ROOT / "Automation" / "hermes-news-autonomy-wrapper.py"
 
 
 def load_module():
@@ -454,6 +455,44 @@ class AutonomousOperationsTests(unittest.TestCase):
             self.assertEqual(0, completed.returncode, msg=completed.stderr)
             self.assertEqual(
                 {"wakeAgent": False, "reason": "disabled"},
+                json.loads(completed.stdout),
+            )
+
+    def test_cron_wrapper_uses_configured_workspace_outside_scheduler_cwd(self) -> None:
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            scripts = root / "scripts"
+            scheduler_cwd = root / "scheduler"
+            workspace = root / "workspace"
+            scripts.mkdir()
+            scheduler_cwd.mkdir()
+            (workspace / "Automation").mkdir(parents=True)
+            wrapper = scripts / "hermes-news-autonomy.py"
+            wrapper.write_text(WRAPPER_SCRIPT.read_text(encoding="utf-8"), encoding="utf-8")
+            (scripts / "hermes-news-autonomy.workspace").write_text(
+                str(workspace) + "\n",
+                encoding="utf-8",
+            )
+            (workspace / "Automation" / "autonomy.py").write_text(
+                "import json\n"
+                "print(json.dumps({'wakeAgent': False, 'reason': 'workspace_loaded'}))\n",
+                encoding="utf-8",
+            )
+
+            completed = subprocess.run(
+                [sys.executable, str(wrapper)],
+                cwd=str(scheduler_cwd),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                timeout=30,
+                check=False,
+                env={key: value for key, value in os.environ.items() if key != "HERMES_NEWS_WORKSPACE"},
+            )
+
+            self.assertEqual(0, completed.returncode, msg=completed.stderr)
+            self.assertEqual(
+                {"wakeAgent": False, "reason": "workspace_loaded"},
                 json.loads(completed.stdout),
             )
 
