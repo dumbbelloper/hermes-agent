@@ -19,6 +19,7 @@ from unittest.mock import patch
 REPOSITORY_ROOT = Path(__file__).parents[2]
 AUTONOMY_SCRIPT = REPOSITORY_ROOT / "Automation" / "autonomy.py"
 WRAPPER_SCRIPT = REPOSITORY_ROOT / "Automation" / "hermes-news-autonomy-wrapper.py"
+CRON_PROMPT = REPOSITORY_ROOT / "Automation" / "AUTONOMOUS_CRON_PROMPT.md"
 
 
 def load_module():
@@ -45,6 +46,24 @@ class AutonomousOperationsTests(unittest.TestCase):
         if completed.returncode != 0:
             raise AssertionError(completed.stderr)
         return completed.stdout.strip()
+
+    def test_cron_prompt_forbids_unattended_approval_waits(self) -> None:
+        prompt = CRON_PROMPT.read_text(encoding="utf-8")
+
+        self.assertIn("heredoc", prompt)
+        self.assertIn("승인 대기", prompt)
+        self.assertIn("즉시", prompt)
+        self.assertIn("automation-abort", prompt)
+
+    def test_cron_prompt_finishes_without_git_side_effects_when_no_note_is_published(self) -> None:
+        prompt = CRON_PROMPT.read_text(encoding="utf-8")
+
+        self.assertIn("게시할 Inbox 문서가 0건", prompt)
+        self.assertIn("task log", prompt)
+        self.assertIn("PR", prompt)
+        self.assertIn("Telegram", prompt)
+        self.assertIn("생성하지", prompt)
+        self.assertIn("automation-finish", prompt)
 
     def test_quota_policy_allows_when_primary_usage_is_below_threshold(self) -> None:
         module = load_module()
