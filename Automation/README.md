@@ -190,7 +190,7 @@ macOS, Linux와 Windows의 Hermes gateway, Skill 연결, token 절약 pre-check�
 
 ### 자율 운영 switch와 quota gate
 
-`Automation/autonomy.py`는 live OpenAI Codex rate-limit window, 30일 standing authorization switch와 clean `main` coordinator를 확인한 뒤에만 기존 news pre-check를 실행한다. 기본값은 primary window 80% 사용 시 새 agent 작업을 시작하지 않는 fail-closed 정책이며, 허용된 cycle도 최대 1개 item만 처리하고 다음 3시간 cycle에서 quota를 다시 확인한다.
+`Automation/autonomy.py`는 macOS laptop의 닫힌 clamshell, live OpenAI Codex rate-limit window, 30일 standing authorization switch와 clean `main` coordinator를 확인한 뒤에만 기존 news pre-check를 실행한다. 닫힌 clamshell에서는 DarkWake가 agent 작업 도중 다시 잠드는 것을 막기 위해 `clamshell_closed`로 정상 skip한다. 기본값은 primary window 80% 사용 시 새 agent 작업을 시작하지 않는 fail-closed 정책이며, 허용된 cycle도 최대 1개 item만 처리하고 다음 3시간 cycle에서 quota를 다시 확인한다.
 
 ```bash
 python3 Automation/autonomy.py status

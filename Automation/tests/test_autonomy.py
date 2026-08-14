@@ -213,6 +213,53 @@ class AutonomousOperationsTests(unittest.TestCase):
         )
         self.assertEqual({"wakeAgent": False, "reason": "disabled"}, result)
 
+    def test_macos_clamshell_probe_detects_closed_lid(self) -> None:
+        module = load_module()
+
+        def closed_lid_runner(command, **kwargs):
+            return subprocess.CompletedProcess(
+                command,
+                returncode=0,
+                stdout='  |   "AppleClamshellState" = Yes\n',
+                stderr="",
+            )
+
+        self.assertTrue(
+            module.macos_clamshell_is_closed(
+                platform_name="darwin",
+                command_runner=closed_lid_runner,
+            )
+        )
+
+    def test_precheck_skips_closed_clamshell_before_external_gates(self) -> None:
+        module = load_module()
+        options = SimpleNamespace(
+            workspace=str(REPOSITORY_ROOT),
+            maximum_used_percent=80,
+        )
+        stdout = io.StringIO()
+        with ExitStack() as stack:
+            stack.enter_context(patch.object(module, "is_enabled", return_value=True))
+            stack.enter_context(
+                patch.object(module, "macos_clamshell_is_closed", return_value=True)
+            )
+            query_quota = stack.enter_context(patch.object(module, "query_quota"))
+            repository_ready = stack.enter_context(
+                patch.object(module, "_repository_ready")
+            )
+            news_precheck = stack.enter_context(patch.object(module, "_news_precheck"))
+            stack.enter_context(redirect_stdout(stdout))
+            return_code = module._precheck(options)
+
+        self.assertEqual(0, return_code)
+        self.assertEqual(
+            {"wakeAgent": False, "reason": "clamshell_closed"},
+            json.loads(stdout.getvalue()),
+        )
+        query_quota.assert_not_called()
+        repository_ready.assert_not_called()
+        news_precheck.assert_not_called()
+
     def test_precheck_injects_quota_into_wake_context(self) -> None:
         module = load_module()
         quota = {
@@ -421,6 +468,9 @@ class AutonomousOperationsTests(unittest.TestCase):
         stderr = io.StringIO()
         with ExitStack() as stack:
             stack.enter_context(patch.object(module, "is_enabled", return_value=True))
+            stack.enter_context(
+                patch.object(module, "macos_clamshell_is_closed", return_value=False)
+            )
             stack.enter_context(
                 patch.object(module, "query_quota", return_value={"allowed": True})
             )

@@ -140,6 +140,35 @@ def write_switch(
             temporary_path.unlink(missing_ok=True)
 
 
+def macos_clamshell_is_closed(
+    *,
+    platform_name: str = sys.platform,
+    command_runner: Any = None,
+) -> bool:
+    """Return whether a macOS portable reports a closed display clamshell."""
+    if platform_name != "darwin":
+        return False
+    runner = command_runner or subprocess.run
+    try:
+        completed = runner(
+            ["/usr/sbin/ioreg", "-r", "-k", "AppleClamshellState", "-d", "4"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            timeout=5,
+            check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return False
+    if completed.returncode != 0:
+        return False
+    match = re.search(
+        r'"AppleClamshellState"\s*=\s*(Yes|No)\b',
+        completed.stdout,
+    )
+    return bool(match and match.group(1) == "Yes")
+
+
 def decide_precheck(
     *,
     enabled: bool,
@@ -436,6 +465,9 @@ def _precheck(options: argparse.Namespace) -> int:
     enabled = is_enabled(switch)
     if not enabled:
         print(json.dumps({"wakeAgent": False, "reason": "disabled"}))
+        return 0
+    if macos_clamshell_is_closed():
+        print(json.dumps({"wakeAgent": False, "reason": "clamshell_closed"}))
         return 0
     try:
         quota = query_quota(options.maximum_used_percent)
