@@ -1,6 +1,6 @@
 # Hermes Agent 무인 자동화 가이드
 
-> 기준일: 2026-08-11
+> 기준일: 2026-08-14
 >
 > 상태: v0.1.0 배포 완료 · quota gate와 자율 PR controller 구현 · 실환경 cron 승격 진행 중
 >
@@ -75,7 +75,7 @@ workflow를 이해할 수 있어야 한다.
 
 | 환경 | 등급 | gateway | lock backend | 운영 조건 |
 | --- | --- | --- | --- | --- |
-| macOS | 1차 지원 | `launchd` | Python 표준 라이브러리, `fcntl` lock | Mac이 켜져 있고 잠자지 않아야 함 |
+| macOS | 1차 지원 | `launchd` | Python 표준 라이브러리, `fcntl` lock | Mac이 켜져 있고 잠자지 않아야 하며, 닫힌 laptop clamshell에서는 정상 skip |
 | Linux | 1차 지원 | `systemd` user 또는 system service | Python 표준 라이브러리, `fcntl` lock | local persistent filesystem 권장 |
 | Windows + WSL2 | 1차 지원 | WSL의 `systemd` | Linux와 동일 | WSL instance와 systemd가 계속 실행되어야 함 |
 | native Windows 10/11 | 실험 지원 | Windows Scheduled Task | Python 표준 라이브러리, `msvcrt` lock | 이 프로젝트의 Windows E2E 검증 전 운영 승격 금지 |
@@ -441,6 +441,10 @@ gateway 중단으로 logical lock이 만료되면 다음 실행이 기존 run을
 ## 13. 전원과 상시 실행
 
 - macOS laptop은 전원과 네트워크를 유지하고 자동 sleep을 막아야 한다.
+- macOS의 maintenance DarkWake는 Hermes agent cycle을 완료할 만큼 지속되지 않는다.
+  controller는 `AppleClamshellState=Yes`이면 quota 조회·Git 동기화·source 수집 전에
+  `wakeAgent: false`, `reason: clamshell_closed`로 종료한다. 이는 실패 이력을 만들지
+  않지만, 덮개가 다시 열릴 때까지 뉴스 처리가 지연된다는 뜻이다.
 - Linux server는 systemd, filesystem 여유 공간, log rotation과 backup을 확인한다.
 - WSL2는 Windows host와 WSL instance가 모두 실행 중이어야 한다.
 - native Windows Scheduled Task는 사용자 로그인 기준이다. 무로그인 boot-time
