@@ -43,6 +43,13 @@ QUEUE_STATES = {
     "notify_unknown",
 }
 FINAL_DECISIONS = {"irrelevant", "quarantined"}
+TERMINAL_QUEUE_STATES = {
+    "irrelevant",
+    "quarantined",
+    "retryable",
+    "notified",
+    "notify_unknown",
+}
 SAFE_EVENT_KEY = re.compile(r"^[a-z0-9][a-z0-9._-]{7,127}$")
 HANGUL = re.compile(r"[가-힣]")
 FORBIDDEN_OUTPUT = (
@@ -308,6 +315,20 @@ class AutomationStore:
             _atomic_write(self.deliveries_path, _json_bytes(deliveries))
             return True
 
+    def reserve_run_delivery(self, key: str, run_id: str, kind: str) -> bool:
+        with _state_mutex(self.mutex_path):
+            deliveries = dict(_load_json(self.deliveries_path, {}))
+            if key in deliveries:
+                return False
+            deliveries[key] = {
+                "status": "sending",
+                "run_id": run_id,
+                "kind": kind,
+                "reserved_at": isoformat_utc(utc_now()),
+            }
+            _atomic_write(self.deliveries_path, _json_bytes(deliveries))
+            return True
+
     def finish_delivery(
         self,
         key: str,
@@ -331,6 +352,14 @@ class AutomationStore:
                 entry["error"] = error
             deliveries[key] = entry
             _atomic_write(self.deliveries_path, _json_bytes(deliveries))
+
+    def delivery_status(self, key: str) -> Optional[str]:
+        with _state_mutex(self.mutex_path):
+            entry = _load_json(self.deliveries_path, {}).get(key)
+            if not isinstance(entry, Mapping):
+                return None
+            status = entry.get("status")
+            return str(status) if status is not None else None
 
     def reserve_event(
         self,
@@ -981,9 +1010,18 @@ class UnattendedController:
         if index.issues:
             raise AutomationError("vault validation failed before notification")
         queue = self.state.load_queue(run_id)
+        has_published_document = any(
+            item["state"] in {"committed", "notified", "notify_unknown"}
+            for item in queue
+        )
+        queue_is_terminal = all(
+            item["state"] in TERMINAL_QUEUE_STATES for item in queue
+        )
         sent = 0
         skipped = 0
         unknown = 0
+        sent_heartbeats = 0
+        skipped_heartbeats = 0
         for item in queue:
             if item["state"] != "committed":
                 continue
@@ -1011,11 +1049,65 @@ class UnattendedController:
             self.state.finish_delivery(key, "sent", messages=messages)
             self._set_item_state(run_id, item["record"]["id"], "notified")
             sent += 1
+        if queue_is_terminal and not has_published_document and unknown == 0:
+            key = "run:{}:telegram-heartbeat".format(run_id)
+            if not self.state.reserve_run_delivery(key, run_id, "run_heartbeat"):
+                skipped_heartbeats += 1
+            else:
+                manifest = self.state.load_manifest(run_id)
+                current_queue = self.state.load_queue(run_id)
+                message = self._heartbeat_message(run_id, manifest, current_queue)
+                try:
+                    messages = notifier.send_text(message)
+                except TelegramError as error:
+                    self.state.finish_delivery(
+                        key,
+                        "unknown",
+                        error=str(error),
+                    )
+                    unknown += 1
+                else:
+                    self.state.finish_delivery(key, "sent", messages=messages)
+                    sent_heartbeats += 1
         return {
             "sent_documents": sent,
             "already_reserved": skipped,
+            "sent_heartbeats": sent_heartbeats,
+            "already_reserved_heartbeats": skipped_heartbeats,
             "unknown_deliveries": unknown,
         }
+
+    @staticmethod
+    def _heartbeat_message(
+        run_id: str,
+        manifest: Mapping[str, Any],
+        queue: Sequence[Mapping[str, Any]],
+    ) -> str:
+        reports = list(manifest.get("reports", []))
+        failures = sum(report.get("status") == "failed" for report in reports)
+        outcomes: Dict[str, int] = {}
+        for item in queue:
+            state = str(item.get("state", "unknown"))
+            outcomes[state] = outcomes.get(state, 0) + 1
+        return "\n".join(
+            (
+                "✅ Hermes 결제 뉴스 cron 처리 완료",
+                "- Run: {}".format(run_id),
+                "- 시작: {}".format(manifest.get("started_at", "unknown")),
+                "- 수집 출처: {} (실패 {})".format(len(reports), failures),
+                "- 검토 후보: {}".format(len(queue)),
+                "- 게시 문서: 0",
+                "- 제외: {} / 격리: {} / 재시도: {}".format(
+                    outcomes.get("irrelevant", 0),
+                    outcomes.get("quarantined", 0),
+                    outcomes.get("retryable", 0),
+                ),
+                "- 기존 처리로 건너뜀: {}".format(
+                    manifest.get("suppressed_by_ledger", 0)
+                ),
+                "결과: 게시할 새 결제 뉴스가 없습니다.",
+            )
+        )
 
     def finish(self, run_id: str) -> Mapping[str, Any]:
         self.state.assert_owner(run_id)
@@ -1037,6 +1129,19 @@ class UnattendedController:
             report.get("status") == "failed"
             for report in manifest.get("reports", [])
         )
+        heartbeat_delivery = self.state.delivery_status(
+            "run:{}:telegram-heartbeat".format(run_id)
+        )
+        published_documents = counts.get("notified", 0) + counts.get(
+            "notify_unknown", 0
+        )
+        if not published_documents and heartbeat_delivery is None:
+            heartbeat_delivery = "missing"
+        heartbeat_delivery_uncertain = heartbeat_delivery in {
+            "missing",
+            "sending",
+            "unknown",
+        }
         manifest.update(
             {
                 "status": (
@@ -1045,11 +1150,13 @@ class UnattendedController:
                     and not counts.get("retryable")
                     and not counts.get("quarantined")
                     and not counts.get("notify_unknown")
+                    and not heartbeat_delivery_uncertain
                     else "completed_with_exceptions"
                 ),
                 "finished_at": isoformat_utc(utc_now()),
                 "outcomes": counts,
                 "source_failures": source_failures,
+                "heartbeat_delivery": heartbeat_delivery,
             }
         )
         self.state.save_manifest(run_id, manifest)

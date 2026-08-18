@@ -288,7 +288,7 @@ Hermes는 관리자 권한 없는 Windows Scheduled Task를 로그인 시점에 
 이 프로젝트는 native Windows에서 code-level lock backend와 공통 launcher를
 제공하지만, 다음을 모두 통과하기 전에는 중요 운영 환경에 사용하지 않는다.
 
-- 동일 snapshot 반복 시 신규 문서·Telegram 메시지 0건
+- 동일 snapshot 반복 시 신규 문서 0건, run별 Telegram heartbeat 1건
 - 동시 실행 시 하나만 lock 획득
 - 한국어 문서 UTF-8 보존
 - gateway 재시작 후 stale run 회수
@@ -313,6 +313,7 @@ hermes cron create "every 3h" \
 - `--workdir`는 초기화한 workspace의 절대 경로다.
 - 정상 실행은 `[SILENT]`로 cron 자체의 중복 응답을 억제한다.
 - 완성된 Obsidian 문서는 project notifier가 고정 Telegram chat으로 전송한다.
+- 게시 문서가 없는 정상 run은 실행 사실과 수집·검토 결과를 담은 heartbeat 1건을 같은 chat으로 전송한다.
 - cron agent 자체 실패는 Hermes의 `--deliver telegram` 대상으로 전달된다.
 - Telegram home channel을 구성하지 않았다면 최초에는 `--deliver local`을 사용한다.
 
@@ -404,7 +405,7 @@ python3 "$HERMES_NEWS_SKILL_DIR/scripts/run.py" validate-notes
 운영 승격 조건:
 
 - Vault validation issue 0건
-- 동일 snapshot 반복 시 신규 문서와 Telegram 메시지 0건
+- 동일 snapshot 반복 시 신규 문서 0건과 중복되지 않는 run heartbeat 1건
 - `.hermes-news/data/automation/runs/`에 완료 manifest 생성
 - `.hermes-news/data/automation/deliveries.json`에 전송 결과 기록
 - 관련성 또는 검증 실패 항목은 발행되지 않고 decision/run ledger에 남음

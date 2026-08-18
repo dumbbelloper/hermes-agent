@@ -55,14 +55,15 @@ class AutonomousOperationsTests(unittest.TestCase):
         self.assertIn("즉시", prompt)
         self.assertIn("automation-abort", prompt)
 
-    def test_cron_prompt_finishes_without_git_side_effects_when_no_note_is_published(self) -> None:
+    def test_cron_prompt_sends_heartbeat_without_git_side_effects_when_no_note_is_published(self) -> None:
         prompt = CRON_PROMPT.read_text(encoding="utf-8")
 
         self.assertIn("게시할 Inbox 문서가 0건", prompt)
         self.assertIn("task log", prompt)
         self.assertIn("PR", prompt)
-        self.assertIn("Telegram", prompt)
+        self.assertIn("heartbeat", prompt)
         self.assertIn("생성하지", prompt)
+        self.assertIn("automation-notify", prompt)
         self.assertIn("automation-finish", prompt)
 
     def test_quota_policy_allows_when_primary_usage_is_below_threshold(self) -> None:

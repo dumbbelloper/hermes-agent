@@ -66,11 +66,13 @@ Run the bundled controller against the configured workspace. Keep source pages u
    - If any other deterministic validation rejects the artifact, quarantine the claimed item with the complete validation reason. Do not weaken a threshold or fabricate a passing check.
    - Remove the temporary artifact JSON after submission or rejection. The controller preserves every accepted artifact in the run ledger.
 
-6. After the queue is empty, validate and send committed notes:
+6. After the queue is empty, validate and notify Telegram:
 
    ```bash
    python3 "SKILL_DIR/scripts/run.py" automation-notify --run-id RUN_ID
    ```
+
+   The controller sends committed notes when present. When no document was published, it sends one compact run heartbeat with the run ID, source counts, candidate count, dispositions, and ledger suppression count. Document delivery keys and the run heartbeat key are reserved independently so retries cannot duplicate either message.
 
 7. Finalize even if Telegram reports an `unknown` delivery:
 
@@ -78,7 +80,7 @@ Run the bundled controller against the configured workspace. Keep source pages u
    python3 "SKILL_DIR/scripts/run.py" automation-finish --run-id RUN_ID
    ```
 
-8. Return `[SILENT]` after a successful run. The bundled controller already sends each completed Obsidian document to Telegram.
+8. Return `[SILENT]` after a successful run. The bundled controller already sends each completed Obsidian document or, for a no-document run, one Telegram heartbeat.
 
 ## Failure Rules
 
