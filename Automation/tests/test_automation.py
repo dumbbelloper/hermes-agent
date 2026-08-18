@@ -71,6 +71,11 @@ class MemoryCollectionStore:
 class RecordingNotifier:
     def __init__(self) -> None:
         self.documents = []
+        self.messages = []
+
+    def send_text(self, text):
+        self.messages.append(text)
+        return 1
 
     def send_files(self, paths):
         paths = list(paths)
@@ -214,6 +219,10 @@ class UnattendedAutomationTests(unittest.TestCase):
             delivery = controller.notify(run_id, notifier)
             self.assertEqual(1, delivery["sent_documents"])
             self.assertEqual(1, len(notifier.documents))
+            self.assertEqual(0, len(notifier.messages))
+            repeated_delivery = controller.notify(run_id, notifier)
+            self.assertEqual(0, repeated_delivery["sent_heartbeats"])
+            self.assertEqual(0, len(notifier.messages))
             completed = controller.finish(run_id)
             self.assertEqual("completed", completed["status"])
 
@@ -223,6 +232,131 @@ class UnattendedAutomationTests(unittest.TestCase):
             controller.notify(second["run_id"], notifier)
             controller.finish(second["run_id"])
             self.assertEqual(1, len(notifier.documents))
+            self.assertEqual(1, len(notifier.messages))
+
+    def test_no_document_run_sends_one_deduplicated_telegram_heartbeat(self) -> None:
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "Inbox").mkdir()
+            controller = UnattendedController(
+                root / "data",
+                root,
+                collection_store=MemoryCollectionStore([record()]),
+            )
+            manifest = controller.begin([source()], [report()], 5, 30)
+            run_id = manifest["run_id"]
+            item = controller.claim_next(run_id)
+            controller.reject(
+                run_id,
+                item["record"]["id"],
+                "irrelevant",
+                "결제 산업과 직접 관련되지 않은 일반 홍보 자료로 판정했다.",
+            )
+            notifier = RecordingNotifier()
+
+            first = controller.notify(run_id, notifier)
+            second = controller.notify(run_id, notifier)
+
+            self.assertEqual(0, first["sent_documents"])
+            self.assertEqual(1, first["sent_heartbeats"])
+            self.assertEqual(0, second["sent_heartbeats"])
+            self.assertEqual(1, second["already_reserved_heartbeats"])
+            self.assertEqual(1, len(notifier.messages))
+            self.assertIn(run_id, notifier.messages[0])
+            self.assertIn("수집 출처: 1 (실패 0)", notifier.messages[0])
+            self.assertIn("검토 후보: 1", notifier.messages[0])
+            self.assertIn("게시 문서: 0", notifier.messages[0])
+            self.assertIn("제외: 1", notifier.messages[0])
+            controller.finish(run_id)
+
+    def test_pending_or_processing_queue_never_sends_false_heartbeat(self) -> None:
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "Inbox").mkdir()
+            controller = UnattendedController(
+                root / "data",
+                root,
+                collection_store=MemoryCollectionStore([record()]),
+            )
+            manifest = controller.begin([source()], [report()], 5, 30)
+            run_id = manifest["run_id"]
+            notifier = RecordingNotifier()
+
+            pending = controller.notify(run_id, notifier)
+            item = controller.claim_next(run_id)
+            processing = controller.notify(run_id, notifier)
+
+            self.assertEqual(0, pending["sent_heartbeats"])
+            self.assertEqual(0, processing["sent_heartbeats"])
+            self.assertEqual([], notifier.messages)
+            controller.reject(
+                run_id,
+                item["record"]["id"],
+                "irrelevant",
+                "결제 산업과 직접 관련되지 않은 일반 홍보 자료로 판정했다.",
+            )
+            terminal = controller.notify(run_id, notifier)
+            self.assertEqual(1, terminal["sent_heartbeats"])
+            controller.finish(run_id)
+
+    def test_unknown_heartbeat_is_preserved_and_never_retried(self) -> None:
+        class FailingNotifier:
+            def __init__(self) -> None:
+                self.calls = 0
+
+            def send_text(self, text):
+                self.calls += 1
+                raise automation_module.TelegramError("timeout after request")
+
+            def send_files(self, paths):
+                raise AssertionError("no document should be sent")
+
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "Inbox").mkdir()
+            controller = UnattendedController(
+                root / "data",
+                root,
+                collection_store=MemoryCollectionStore([]),
+            )
+            manifest = controller.begin([source()], [report()], 5, 30)
+            run_id = manifest["run_id"]
+            notifier = FailingNotifier()
+
+            first = controller.notify(run_id, notifier)
+            second = controller.notify(run_id, notifier)
+
+            self.assertEqual(1, first["unknown_deliveries"])
+            self.assertEqual(1, second["already_reserved_heartbeats"])
+            self.assertEqual(1, notifier.calls)
+            deliveries = json.loads(
+                (root / "data" / "automation" / "deliveries.json").read_text(
+                    encoding="utf-8"
+                )
+            )
+            self.assertEqual(
+                "unknown",
+                deliveries["run:{}:telegram-heartbeat".format(run_id)]["status"],
+            )
+            completed = controller.finish(run_id)
+            self.assertEqual("completed_with_exceptions", completed["status"])
+            self.assertEqual("unknown", completed["heartbeat_delivery"])
+
+    def test_finish_marks_missing_no_document_heartbeat_as_exception(self) -> None:
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "Inbox").mkdir()
+            controller = UnattendedController(
+                root / "data",
+                root,
+                collection_store=MemoryCollectionStore([]),
+            )
+            manifest = controller.begin([source()], [report()], 5, 30)
+
+            completed = controller.finish(manifest["run_id"])
+
+            self.assertEqual("completed_with_exceptions", completed["status"])
+            self.assertEqual("missing", completed["heartbeat_delivery"])
 
     def test_active_run_blocks_overlap(self) -> None:
         with TemporaryDirectory() as directory:

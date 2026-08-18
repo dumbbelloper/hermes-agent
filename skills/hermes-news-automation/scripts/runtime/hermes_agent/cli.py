@@ -218,7 +218,7 @@ def parser() -> argparse.ArgumentParser:
 
     automation_notify = commands.add_parser(
         "automation-notify",
-        help="send committed notes once using the Telegram delivery ledger",
+        help="send committed notes or one no-document run heartbeat",
     )
     _automation_paths(automation_notify)
     automation_notify.add_argument("--run-id", required=True)

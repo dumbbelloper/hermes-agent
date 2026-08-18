@@ -163,7 +163,7 @@ python3 Automation/run.py automation-submit \
 
 Artifact는 관련성 confidence `0.80` 이상, 검증 confidence `0.85` 이상, 모든 verification check 통과, 한국어 요약, 원문 evidence와 identity 일치를 만족해야 한다. 상세 계약은 [artifact schema](../skills/hermes-news-automation/references/artifact-schema.md)에서 관리한다.
 
-문서 검증 후 Telegram 전송과 run 종료:
+queue 처리 후 Telegram 전송과 run 종료:
 
 ```bash
 python3 Automation/run.py automation-notify \
@@ -184,7 +184,7 @@ python3 Automation/run.py automation-abort \
   --reason "실행을 계속할 수 없는 원인"
 ```
 
-전체 실행에는 만료 가능한 logical lock이 적용된다. 동일 fingerprint의 `irrelevant`·`quarantined` 결정은 다시 queue에 넣지 않는다. Telegram은 전송 전에 delivery key를 예약해 `sending`, `sent`, `unknown` 상태를 보존하며 불확실한 전송을 자동 반복하지 않는다.
+전체 실행에는 만료 가능한 logical lock이 적용된다. 동일 fingerprint의 `irrelevant`·`quarantined` 결정은 다시 queue에 넣지 않는다. 게시 문서가 있으면 문서를 전송하고, 게시 문서가 없으면 run ID·출처·후보·disposition 수를 담은 heartbeat를 한 번 전송한다. Telegram은 문서별 delivery key와 run별 heartbeat key를 전송 전에 예약해 `sending`, `sent`, `unknown` 상태를 보존하며 불확실한 전송을 자동 반복하지 않는다. 새 후보가 0건인 fast-path도 heartbeat를 전송한 뒤 agent를 깨우지 않고 finish한다.
 
 macOS, Linux와 Windows의 Hermes gateway, Skill 연결, token 절약 pre-check와 cron 설정은 [Hermes Agent 무인 자동화 가이드](../HERMES_AUTOMATION_GUIDE.md)를 따른다.
 

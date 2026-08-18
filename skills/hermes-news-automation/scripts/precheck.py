@@ -113,6 +113,25 @@ def main() -> int:
         )
         return 0
 
+    heartbeat = "sent"
+    try:
+        notify = _command(
+            workspace,
+            runner,
+            "automation-notify",
+            "--run-id",
+            run_id,
+        )
+    except subprocess.TimeoutExpired as error:
+        heartbeat = "unknown"
+        print("automation-notify timed out: {}".format(error), file=sys.stderr)
+    except OSError as error:
+        heartbeat = "failed"
+        print("automation-notify failed: {}".format(error), file=sys.stderr)
+    else:
+        if notify.returncode != 0:
+            sys.stderr.write(notify.stderr or "automation-notify failed\n")
+            heartbeat = "unknown" if notify.returncode == 1 else "failed"
     finish = _command(
         workspace,
         runner,
@@ -123,7 +142,15 @@ def main() -> int:
     if finish.returncode != 0:
         sys.stderr.write(finish.stderr or "automation-finish failed\n")
         return finish.returncode
-    print(json.dumps({"wakeAgent": False, "reason": "no_changes"}))
+    print(
+        json.dumps(
+            {
+                "wakeAgent": False,
+                "reason": "no_changes",
+                "heartbeat": heartbeat,
+            }
+        )
+    )
     return 0
 
 

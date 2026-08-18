@@ -144,6 +144,136 @@ class SkillDistributionTests(unittest.TestCase):
                     module._runner(),
                 )
 
+    def test_precheck_sends_heartbeat_before_finishing_empty_run(self) -> None:
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            workspace = root / "workspace"
+            (workspace / "Inbox").mkdir(parents=True)
+            precheck = SKILL_SOURCE / "scripts" / "precheck.py"
+            spec = importlib.util.spec_from_file_location(
+                "hermes_news_empty_precheck_test",
+                precheck,
+            )
+            if spec is None or spec.loader is None:
+                self.fail("cannot load precheck module")
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            completed = [
+                subprocess.CompletedProcess(
+                    [],
+                    0,
+                    stdout=json.dumps(
+                        {
+                            "run_id": "run-empty",
+                            "queue_items": 0,
+                        }
+                    ),
+                    stderr="",
+                ),
+                subprocess.CompletedProcess(
+                    [],
+                    0,
+                    stdout=json.dumps(
+                        {
+                            "status": "processed",
+                            "sent_heartbeats": 1,
+                            "unknown_deliveries": 0,
+                        }
+                    ),
+                    stderr="",
+                ),
+                subprocess.CompletedProcess(
+                    [],
+                    0,
+                    stdout=json.dumps({"status": "completed"}),
+                    stderr="",
+                ),
+            ]
+            calls = []
+
+            def command(_workspace, _runner, *arguments):
+                calls.append(arguments)
+                return completed.pop(0)
+
+            with patch.dict(
+                os.environ,
+                {"HERMES_NEWS_WORKSPACE": str(workspace)},
+                clear=False,
+            ), patch.object(module, "_runner", return_value=Path("run.py")), patch.object(
+                module, "_command", side_effect=command
+            ):
+                self.assertEqual(0, module.main())
+
+            self.assertEqual("automation-start", calls[0][0])
+            self.assertEqual(
+                ("automation-notify", "--run-id", "run-empty"),
+                calls[1],
+            )
+            self.assertEqual(
+                ("automation-finish", "--run-id", "run-empty"),
+                calls[2],
+            )
+
+    def test_precheck_finishes_empty_run_when_notification_raises(self) -> None:
+        for notification_error in (
+            subprocess.TimeoutExpired("automation-notify", 20),
+            OSError("cannot launch notifier"),
+        ):
+            with self.subTest(
+                error=type(notification_error).__name__
+            ), TemporaryDirectory() as directory:
+                root = Path(directory)
+                workspace = root / "workspace"
+                (workspace / "Inbox").mkdir(parents=True)
+                precheck = SKILL_SOURCE / "scripts" / "precheck.py"
+                spec = importlib.util.spec_from_file_location(
+                    "hermes_news_exception_precheck_test",
+                    precheck,
+                )
+                if spec is None or spec.loader is None:
+                    self.fail("cannot load precheck module")
+                module = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(module)
+                calls = []
+
+                def command(_workspace, _runner, *arguments):
+                    calls.append(arguments)
+                    if arguments[0] == "automation-start":
+                        return subprocess.CompletedProcess(
+                            [],
+                            0,
+                            stdout=json.dumps(
+                                {"run_id": "run-empty", "queue_items": 0}
+                            ),
+                            stderr="",
+                        )
+                    if arguments[0] == "automation-notify":
+                        raise notification_error
+                    return subprocess.CompletedProcess(
+                        [],
+                        0,
+                        stdout=json.dumps({"status": "completed"}),
+                        stderr="",
+                    )
+
+                with patch.dict(
+                    os.environ,
+                    {"HERMES_NEWS_WORKSPACE": str(workspace)},
+                    clear=False,
+                ), patch.object(
+                    module, "_runner", return_value=Path("run.py")
+                ), patch.object(module, "_command", side_effect=command):
+                    self.assertEqual(0, module.main())
+
+                self.assertEqual(
+                    [
+                        "automation-start",
+                        "automation-notify",
+                        "automation-finish",
+                    ],
+                    [call[0] for call in calls],
+                )
+
     @staticmethod
     def _run(
         runner: Path,
