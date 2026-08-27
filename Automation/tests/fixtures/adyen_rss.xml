@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Adyen release notes</title>
+    <item>
+      <title>Pay by Link</title>
+      <link>https://docs.adyen.com/online-payments/release-notes?integration_type=pay_by_link&amp;utm_source=rss_feed#releaseNote=2026-01-16-pay-by-link</link>
+      <guid>2026-01-16-2fztk</guid>
+      <pubDate>Fri, 16 Jan 2026 00:00:00 +0100</pubDate>
+    </item>
+    <item>
+      <title>Pay by Link</title>
+      <link>https://docs.adyen.com/online-payments/release-notes?integration_type=pay_by_link&amp;utm_source=rss_feed#releaseNote=2026-01-13-pay-by-link</link>
+      <guid>2026-01-16-0cumv</guid>
+      <pubDate>Tue, 13 Jan 2026 00:00:00 +0100</pubDate>
+    </item>
+  </channel>
+</rss>

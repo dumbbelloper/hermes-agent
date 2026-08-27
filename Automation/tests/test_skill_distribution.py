@@ -71,7 +71,7 @@ class SkillDistributionTests(unittest.TestCase):
                 "validate-registry",
                 environment=environment,
             )
-            self.assertEqual(13, registry["enabled"])
+            self.assertEqual(17, registry["enabled"])
 
     def test_skill_markdown_links_stay_inside_bundle(self) -> None:
         content = (SKILL_SOURCE / "SKILL.md").read_text(encoding="utf-8")

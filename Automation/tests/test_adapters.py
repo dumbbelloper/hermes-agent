@@ -9,6 +9,7 @@ from hermes_agent.adapters.rss import RssAtomAdapter
 from hermes_agent.adapters.amex import AmexNewsroomAdapter
 from hermes_agent.adapters.unionpay import UnionPayNewsAdapter
 from hermes_agent.adapters.visa import VisaPressAdapter, VisaReleaseNotesAdapter
+from hermes_agent.adapters.wise import WiseChangelogAdapter
 from hermes_agent.models import FetchResult, SourceConfig
 
 
@@ -112,6 +113,62 @@ class AdapterTests(unittest.TestCase):
         )
         self.assertEqual("Guidance", items[0].category)
 
+    def test_rss_rdf(self) -> None:
+        config = source(
+            "bis-cpmi-publications",
+            "https://www.bis.org/doclist/cpmi_publs.rss",
+            "rss_atom",
+            "www.bis.org",
+        )
+        items = list(
+            RssAtomAdapter().parse(
+                config,
+                response(
+                    FIXTURES / "rss_rdf.xml",
+                    config.uri,
+                    "application/rss+xml",
+                ),
+            )
+        )
+        self.assertEqual(1, len(items))
+        self.assertEqual(
+            "Enhancing cross-border payments step by step",
+            items[0].title,
+        )
+        self.assertEqual("2026-05-27T14:36:00Z", items[0].published_at)
+        self.assertEqual("CPMI brief", items[0].category)
+        self.assertEqual(
+            "https://www.bis.org/cpmi/publ/brief13.htm",
+            items[0].url,
+        )
+
+    def test_rss_promotes_semantic_fragment_to_query_parameter(self) -> None:
+        config = source(
+            "adyen-online-payments-release-notes",
+            "https://docs.adyen.com/online-payments/release-notes.xml",
+            "rss_atom",
+            "docs.adyen.com",
+            {"fragment_query_name": "release_note"},
+        )
+        items = list(
+            RssAtomAdapter().parse(
+                config,
+                response(
+                    FIXTURES / "adyen_rss.xml",
+                    config.uri,
+                    "application/rss+xml",
+                ),
+            )
+        )
+        self.assertEqual(2, len(items))
+        self.assertEqual(
+            "https://docs.adyen.com/online-payments/release-notes"
+            "?integration_type=pay_by_link&utm_source=rss_feed"
+            "&release_note=2026-01-16-pay-by-link",
+            items[0].url,
+        )
+        self.assertNotEqual(items[0].url, items[1].url)
+
     def test_visa_html(self) -> None:
         config = source(
             "visa-press",
@@ -177,6 +234,41 @@ class AdapterTests(unittest.TestCase):
         self.assertEqual(
             "https://www.unionpayintl.com/en/mediaCenter/newsCenter/companyNews/3016449.shtml",
             items[0].url,
+        )
+
+    def test_wise_changelog_json(self) -> None:
+        config = source(
+            "wise-platform-changelog",
+            "https://docs.wise.com/page-data/changelog/data.json",
+            "wise_changelog_json",
+            "docs.wise.com",
+            {"article_base_uri": "https://docs.wise.com/changelog"},
+        )
+        items = list(
+            WiseChangelogAdapter().parse(
+                config,
+                response(
+                    FIXTURES / "wise_changelog.json",
+                    config.uri,
+                    "application/json",
+                ),
+            )
+        )
+        self.assertEqual(2, len(items))
+        self.assertEqual(
+            "Wise Platform API changelog — 2026-08-24",
+            items[0].title,
+        )
+        self.assertEqual("2026-08-24", items[0].published_at)
+        self.assertEqual("changelog-2026-08-24", items[0].external_id)
+        self.assertEqual(
+            "https://docs.wise.com/changelog?entry=changelog-2026-08-24",
+            items[0].url,
+        )
+        self.assertEqual("api-changelog", items[0].category)
+        self.assertEqual(
+            "Add support for custom reference in bank transaction import simulation.",
+            items[0].description,
         )
 
     def test_amex_aem_json_deduplicates_lists(self) -> None:

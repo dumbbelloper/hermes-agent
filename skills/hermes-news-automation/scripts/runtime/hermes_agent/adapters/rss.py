@@ -1,9 +1,10 @@
-"""RSS 2.0 and Atom feed adapter using the Python standard library."""
+"""RSS 1.0, RSS 2.0, and Atom feed adapter using the standard library."""
 
 from __future__ import annotations
 
 import xml.etree.ElementTree as ET
 from typing import Iterable, Optional
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from .base import AdapterError
 from ..models import Candidate, FetchResult, SourceConfig
@@ -48,13 +49,13 @@ class RssAtomAdapter:
             raise AdapterError("feed response is not valid XML") from error
 
         root_name = local_name(root.tag)
-        if root_name == "rss":
-            return self._parse_rss(root)
+        if root_name in {"rss", "rdf"}:
+            return self._parse_rss(source, root)
         if root_name == "feed":
             return self._parse_atom(root)
         raise AdapterError("unsupported feed root: {}".format(root_name))
 
-    def _parse_rss(self, root: ET.Element):
+    def _parse_rss(self, source: SourceConfig, root: ET.Element):
         items = [
             element
             for element in root.iter()
@@ -62,7 +63,7 @@ class RssAtomAdapter:
         ]
         candidates = []
         for item in items:
-            link = child_text(item, "link")
+            link = self._rss_link(source, child_text(item, "link"))
             guid = child_text(item, "guid")
             candidates.append(
                 Candidate(
@@ -72,7 +73,7 @@ class RssAtomAdapter:
                         item, "pubDate", "published", "date"
                     )
                     or "",
-                    category=child_text(item, "category"),
+                    category=child_text(item, "category", "subject"),
                     description=child_text(
                         item, "description", "summary", "encoded"
                     ),
@@ -80,6 +81,24 @@ class RssAtomAdapter:
                 )
             )
         return candidates
+
+    @staticmethod
+    def _rss_link(source: SourceConfig, link: Optional[str]) -> Optional[str]:
+        query_name = str(source.options.get("fragment_query_name", "")).strip()
+        if not link or not query_name:
+            return link
+        parts = urlsplit(link)
+        if not parts.fragment:
+            return link
+        fragment_pairs = parse_qsl(parts.fragment, keep_blank_values=True)
+        fragment_value = (
+            fragment_pairs[0][1] if len(fragment_pairs) == 1 else parts.fragment
+        )
+        query = parse_qsl(parts.query, keep_blank_values=True)
+        query.append((query_name, fragment_value))
+        return urlunsplit(
+            (parts.scheme, parts.netloc, parts.path, urlencode(query), "")
+        )
 
     def _parse_atom(self, root: ET.Element):
         entries = [

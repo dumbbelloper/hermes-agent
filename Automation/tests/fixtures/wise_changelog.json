@@ -1,0 +1,54 @@
+{
+  "templateId": "markdown",
+  "props": {
+    "ast": {
+      "$$mdtype": "Tag",
+      "name": "article",
+      "attributes": {},
+      "children": [
+        {
+          "$$mdtype": "Tag",
+          "name": "ChangelogEntry",
+          "attributes": {
+            "date": "2026-08-24",
+            "id": "changelog-2026-08-24",
+            "versions": "[{\"version\":\"2026Q3\",\"status\":\"latest\"}]"
+          },
+          "children": [
+            {
+              "$$mdtype": "Tag",
+              "name": "ul",
+              "attributes": {},
+              "children": [
+                {
+                  "$$mdtype": "Tag",
+                  "name": "li",
+                  "attributes": {},
+                  "children": [
+                    "Add support for custom reference in ",
+                    {
+                      "$$mdtype": "Tag",
+                      "name": "MarkdownLink",
+                      "attributes": {"href": "/api-reference/simulation"},
+                      "children": ["bank transaction import simulation"]
+                    },
+                    "."
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "$$mdtype": "Tag",
+          "name": "ChangelogEntry",
+          "attributes": {
+            "date": "2026-08-20",
+            "id": "changelog-2026-08-20"
+          },
+          "children": ["Webhook schema documentation updated."]
+        }
+      ]
+    }
+  }
+}
