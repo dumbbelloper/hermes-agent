@@ -46,6 +46,7 @@ def built_in_adapters() -> AdapterRegistry:
     from .rss import RssAtomAdapter
     from .unionpay import UnionPayNewsAdapter
     from .visa import VisaPressAdapter, VisaReleaseNotesAdapter
+    from .wise import WiseChangelogAdapter
 
     registry = AdapterRegistry()
     registry.register("amex_newsroom_json", AmexNewsroomAdapter)
@@ -54,4 +55,5 @@ def built_in_adapters() -> AdapterRegistry:
     registry.register("unionpay_news_json", UnionPayNewsAdapter)
     registry.register("visa_press_html", VisaPressAdapter)
     registry.register("visa_release_notes_html", VisaReleaseNotesAdapter)
+    registry.register("wise_changelog_json", WiseChangelogAdapter)
     return registry

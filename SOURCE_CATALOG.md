@@ -1,8 +1,8 @@
 # 수집 출처 운영 분류
 
-> 기준일: 2026-08-11
+> 기준일: 2026-08-27
 >
-> 상태: 운영 범위 확정
+> 상태: 1차 공식 출처 확장 완료
 
 이 문서는 Hermes Agent가 실제로 자동 수집할 공식 출처와 선별 편집 언론, 추가 구현 후 검토할 후보 및 운영 제외 출처를 관리한다. 조사 범위는 [SOURCE_SCOPE_CHECKLIST.md](./SOURCE_SCOPE_CHECKLIST.md), 과거 품질 실험은 [DATA_COLLECTION_VALIDATION_REPORT.md](./DATA_COLLECTION_VALIDATION_REPORT.md), 실행 설정은 [Automation/config/sources.json](./Automation/config/sources.json)을 따른다.
 
@@ -50,6 +50,10 @@
 | `jcb-press` | JCB Press | [공식 JSON](https://www.global.jcb/en/press/news_file.json) | 공식 JSON | 일반 HTTP 200, 구조화 목록과 allowlist 기반 canonical HTML 원문 fallback, 실제 반복 수집과 회귀 테스트 통과 |
 | `emvco-news` | EMVCo News | [공식 RSS](https://www.emvco.com/news/feed/) | RSS | 일반 HTTP 200, 표준 feed, 실제 반복 수집과 RSS·Atom 테스트 통과 |
 | `pci-blog` | PCI SSC Blog | [공식 RSS](https://blog.pcisecuritystandards.org/rss.xml) | RSS | 일반 HTTP 200, 표준 feed, 실제 반복 수집과 RSS 테스트 통과 |
+| `bank-of-korea-payment-research` | 한국은행 지급결제 조사연구자료 | [공식 RSS](https://www.bok.or.kr/portal/bbs/B0000232/news.rss?menuNo=200706) | RSS | 결제·CBDC·스테이블코인 직접 신호, 100건 수집·격리 0건, 두 번째 실행 전부 unchanged |
+| `bis-cpmi-publications` | BIS/CPMI Publications | [공식 RSS](https://www.bis.org/doclist/cpmi_publs.rss) | RSS 1.0/RDF | 국경간결제·청산·결제 인프라 직접 신호, RDF fixture와 25건 반복 수집 통과 |
+| `adyen-online-payments-release-notes` | Adyen Online Payments Release Notes | [공식 RSS](https://docs.adyen.com/online-payments/release-notes.xml) | RSS | 결제 API·SDK·월렛·3DS 변경, semantic fragment identity 보존, 612건 반복 수집 통과 |
+| `wise-platform-changelog` | Wise Platform API Changelog | [공식 JSON](https://docs.wise.com/page-data/changelog/data.json) | 공식 JSON | 날짜별 API·webhook·deprecation 변경, 전용 adapter와 38건 반복 수집 통과 |
 
 ### 2.2 미국 금융·결제 편집 언론
 
@@ -60,7 +64,7 @@
 | `pymnts` | PYMNTS / Payments News | [공식 RSS](https://www.pymnts.com/feed/) | 편집 언론 | 결제 발행량과 속보성이 높음, 최신 10건 수집 통과. 비결제 일반 기사 필터 필요 |
 | `techcrunch-fintech` | TechCrunch / Fintech | [공식 RSS](https://techcrunch.com/category/fintech/feed/) | 편집 언론 | fintech·agentic payment·투자 동향, 최신 20건 수집 통과. 행사 홍보 필터 필요 |
 
-현재 고정 운영 범위는 공식 출처 9개와 편집 언론 4개, 총 13개다. 2026-08-05 Skill workspace의 최신 수집 기준 누적 정상 레코드는 1,662건이며 source-level 격리는 0건이다. 편집 언론 4곳은 최신 실행에서도 모두 정상 수집됐고 신규 레코드를 반영했다. Registry 변경은 이 문서의 판정과 코드·fixture 검증을 함께 갱신해야 한다.
+현재 고정 운영 범위는 공식 출처 13개와 편집 언론 4개, 총 17개다. 확장 전 2026-08-05 Skill workspace 기준 누적 정상 레코드는 1,662건이었다. 2026-08-27 별도 데이터 디렉터리에서 신규 공식 출처 4개를 두 번 수집했으며 source-level 격리 0건과 두 번째 실행 멱등성을 확인했다. Registry 변경은 이 문서의 판정과 코드·fixture 검증을 함께 갱신해야 한다.
 
 ## 3. 추가 구현 후보
 
@@ -70,6 +74,10 @@
 | PCI SSC Document Library | [공식 문서함](https://www.pcisecuritystandards.org/document_library/) | 직접 접근 가능 | 문서명·버전·수정일·파일 URL 단위 parser와 파일 변경 검증 |
 | Visa Developer Use Cases | [공식 Use Cases](https://developer.visa.com/use-cases) | 정적 HTML에서 제목·URL 추출 가능하나 게시일 없음 | 공식 게시일 또는 별도 변경일을 재현 가능하게 얻을 수 있을 때 승격 |
 | Mastercard MDES Documentation | [MDES 제품 개요](https://developer.mastercard.com/product/mdes/) | 제품 개요와 7개 서비스 문서는 직접 접근 가능하고, 2026-07-15 MTF 변경 공지는 발효일·영향 서비스·endpoint를 제공. 통합 문서 목록과 revision metadata는 미확인 | canonical 문서 inventory, release history·effective date·API specification/PDF hash 변경 감지, fixture와 반복 검증 |
+| Stripe Changelog | [공식 Changelog](https://docs.stripe.com/changelog) | 날짜·제품·개별 변경 URL을 서버 HTML에서 추출 가능 | 전용 HTML adapter, 제품 filter, release 묶음과 개별 항목 중복제거 |
+| Google Pay API Release Notes | [공식 Release Notes](https://developers.google.com/pay/api/web/support/release-notes) | 날짜별 월렛 API 변경을 서버 HTML에서 확인 | 날짜·항목 fingerprint stable ID와 fixture·반복 수집 |
+| Circle Developer Release Notes | [공식 Release Notes](https://developers.circle.com/release-notes) | USDC·CCTP 제품별 날짜 항목과 sitemap `lastmod` 제공 | sitemap 후보 선별, 본문 hash, 제품군 간 중복제거 |
+| Paxos Changelog | [공식 Changelog](https://docs.paxos.com/changelog) | 날짜·API 폐기 일정·스테이블코인 전환 변경 제공 | 전용 parser, 결제·전환·토큰 계약 filter와 반복 검증 |
 | American Banker Payments | [Payments](https://www.americanbanker.com/payments) | 정적 목록 접근 가능, 전문성 높으나 공개 RSS 미확인·유료벽 존재 | 안정 목록 parser, 메타데이터 정책과 반복 수집 검증 |
 | Bloomberg Markets | [공식 RSS](https://feeds.bloomberg.com/markets/news.rss) | feed는 활성이나 범위가 넓고 결제 신호 밀도가 낮음 | 결제·fintech 관련성 필터와 유료 기사 처리 정책 검증 |
 

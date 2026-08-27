@@ -161,6 +161,76 @@
       }
     },
     {
+      "id": "bank-of-korea-payment-research",
+      "organization": "Bank of Korea",
+      "channel": "payment-research",
+      "uri": "https://www.bok.or.kr/portal/bbs/B0000232/news.rss?menuNo=200706",
+      "adapter": "rss_atom",
+      "enabled": true,
+      "priority": 1,
+      "freshness_days": 180,
+      "allowed_domains": [
+        "www.bok.or.kr"
+      ],
+      "language": "ko",
+      "options": {
+        "max_quarantine_ratio": 0.1
+      }
+    },
+    {
+      "id": "bis-cpmi-publications",
+      "organization": "Bank for International Settlements",
+      "channel": "cpmi-publications",
+      "uri": "https://www.bis.org/doclist/cpmi_publs.rss",
+      "adapter": "rss_atom",
+      "enabled": true,
+      "priority": 1,
+      "freshness_days": 365,
+      "allowed_domains": [
+        "www.bis.org"
+      ],
+      "language": "en",
+      "options": {
+        "max_quarantine_ratio": 0.1
+      }
+    },
+    {
+      "id": "adyen-online-payments-release-notes",
+      "organization": "Adyen",
+      "channel": "online-payments-release-notes",
+      "uri": "https://docs.adyen.com/online-payments/release-notes.xml",
+      "adapter": "rss_atom",
+      "enabled": true,
+      "priority": 1,
+      "freshness_days": 120,
+      "allowed_domains": [
+        "docs.adyen.com"
+      ],
+      "language": "en",
+      "options": {
+        "fragment_query_name": "release_note",
+        "max_quarantine_ratio": 0.1
+      }
+    },
+    {
+      "id": "wise-platform-changelog",
+      "organization": "Wise",
+      "channel": "api-changelog",
+      "uri": "https://docs.wise.com/page-data/changelog/data.json",
+      "adapter": "wise_changelog_json",
+      "enabled": true,
+      "priority": 1,
+      "freshness_days": 120,
+      "allowed_domains": [
+        "docs.wise.com"
+      ],
+      "language": "en",
+      "options": {
+        "article_base_uri": "https://docs.wise.com/changelog",
+        "max_quarantine_ratio": 0.1
+      }
+    },
+    {
       "id": "payments-dive",
       "organization": "Payments Dive",
       "channel": "payments-news",

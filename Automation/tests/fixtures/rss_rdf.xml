@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rdf:RDF
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns="http://purl.org/rss/1.0/"
+  xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <channel rdf:about="https://www.bis.org/doclist/cpmi_publs.rss">
+    <title>CPMI publications</title>
+    <link>https://www.bis.org/cpmi_publ/index.htm</link>
+  </channel>
+  <item rdf:about="https://www.bis.org/cpmi/publ/brief13.htm">
+    <title>Enhancing cross-border payments step by step</title>
+    <link>https://www.bis.org/cpmi/publ/brief13.htm</link>
+    <dc:date>2026-05-27T14:36:00Z</dc:date>
+    <dc:subject>CPMI brief</dc:subject>
+  </item>
+</rdf:RDF>

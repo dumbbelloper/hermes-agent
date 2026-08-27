@@ -303,7 +303,7 @@ Agent는 의미 판단을 담당하고 Python controller는 상태 전이, 임�
 | 구현 언어와 런타임 | 결정 | Python 3.9 이상, runtime dependency 없음 |
 | 현재 실행 환경 | 결정 | macOS·Linux·Windows WSL2를 1차 지원하고 native Windows는 실험 지원. 설치 workspace의 `.hermes-news/data/`에 local 영속 상태 저장 |
 | Skill 배포 | 결정 | `skills/hermes-news-automation/` self-contained bundle, GitHub direct install과 Hermes tap. 세부 기준은 [Skill 배포 가이드](./SKILL_DISTRIBUTION_GUIDE.md) |
-| 운영 출처 | 결정 | 직접 접근 가능한 공식 출처 9개와 편집 언론 4개, 세부 기준은 [SOURCE_CATALOG.md](./SOURCE_CATALOG.md) |
+| 운영 출처 | 결정 | 직접 접근 가능한 공식 출처 13개와 편집 언론 4개, 세부 기준은 [SOURCE_CATALOG.md](./SOURCE_CATALOG.md) |
 | 공식 기술 문서 | 부분 결정 | 뉴스 Registry와 분리해 canonical 문서·version·effective date·specification/PDF hash를 추적. Mastercard MDES는 공개 문서 구조와 첫 변경 공지를 검증했으며 자동 inventory는 후속 |
 | 차단 출처 처리 | 결정 | WAF 우회, 검색 인덱스와 브라우저 자동화 폴백 없이 제외 |
 | 문서 식별과 중복 방지 | 결정 | `record_id`, `source_fingerprint`와 실행 시 Vault index 사용. 세부 기준은 [NOTE_IDENTITY_POLICY.md](./NOTE_IDENTITY_POLICY.md) |
@@ -315,7 +315,7 @@ Agent는 의미 판단을 담당하고 Python controller는 상태 전이, 임�
 
 ## 11. 현재 문서 작성 작업
 
-운영 출처 13개의 최신 자료와 직접 검증한 공식 기술 문서 중 결제 기술·표준·보안 변화와 관련된 항목을 소량 선별해 `Inbox/` 초안을 작성한다. 현재 문서 수는 `Inbox/*.md`에서 계산한다. Skill workspace의 누적 정상 레코드 수는 [Source Catalog](./SOURCE_CATALOG.md)의 운영 현황을 기준으로 하며, 뉴스 Registry 밖의 Mastercard MDES 공식 기술 문서도 별도 검증 결과로 관리한다. 병렬 agent는 이 문단의 수치를 매 task마다 수정하지 않는다.
+운영 출처 17개의 최신 자료와 직접 검증한 공식 기술 문서 중 결제 기술·표준·보안 변화와 관련된 항목을 소량 선별해 `Inbox/` 초안을 작성한다. 현재 문서 수는 `Inbox/*.md`에서 계산한다. Skill workspace의 누적 정상 레코드 수는 [Source Catalog](./SOURCE_CATALOG.md)의 운영 현황을 기준으로 하며, 뉴스 Registry 밖의 Mastercard MDES 공식 기술 문서도 별도 검증 결과로 관리한다. 병렬 agent는 이 문단의 수치를 매 task마다 수정하지 않는다.
 
 - [x] 안정적인 신규 항목 탐지와 원문 제목·링크 보존 검증
 - [x] agent artifact의 한국어 요약·중요성·근거 필수화

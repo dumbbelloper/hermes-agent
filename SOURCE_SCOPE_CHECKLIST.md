@@ -1,8 +1,8 @@
 # 수집 대상 범위 체크리스트
 
-> 기준일: 2026-07-28
+> 기준일: 2026-08-27
 >
-> 상태: 초기 조사 완료 · 운영 출처 13개 확정
+> 상태: 1차 확장 완료 · 운영 출처 17개 확정
 
 이 문서는 Hermes Agent가 추적할 수 있는 전체 범위와 초기 수집 범위를 함께 관리한다.
 실제 URI별 운영·후보·제외 판정은 [SOURCE_CATALOG.md](./SOURCE_CATALOG.md)를 기준으로 한다.
@@ -136,7 +136,7 @@
 
 - [ ] 금융위원회
 - [ ] 금융감독원
-- [ ] 한국은행
+- [x] 한국은행
 - [ ] 금융보안원
 - [ ] 한국인터넷진흥원
 - [ ] 여신금융협회
@@ -144,15 +144,15 @@
 ### 해외 및 국제
 
 - [ ] 주요 국가의 금융 규제기관
-- [ ] BIS 및 CPMI
+- [x] BIS 및 CPMI
 - [ ] FATF
 - [ ] 결제·스테이블코인 관련 국제기구
 
 ## 8. 결제 사업자 및 산업 인프라
 
-- [ ] 글로벌 PSP 및 결제 프로세서
+- [x] 글로벌 PSP 및 결제 프로세서
 - [ ] Acquirer 및 Merchant 서비스 사업자
-- [ ] 송금 및 Cross-border 결제 사업자
+- [x] 송금 및 Cross-border 결제 사업자
 - [ ] Fraud·Risk·Identity 사업자
 - [ ] 결제 단말기 및 SoftPOS 사업자
 - [ ] Banking-as-a-Service 및 Embedded Finance 사업자
@@ -185,7 +185,7 @@
 - [ ] 디지털 월렛
 - [ ] 블록체인 및 스테이블코인
 
-위 체크는 조사 범위를 의미한다. 운영 자동 수집 범위는 접근 안정성과 구현 검증을 통과한 공식 출처 9개와 편집 언론 4개로 제한한다.
+위 체크는 조사 범위를 의미한다. 운영 자동 수집 범위는 접근 안정성과 구현 검증을 통과한 공식 출처 13개와 편집 언론 4개로 제한한다.
 
 ## 11. 초기 범위 조사 현황
 
@@ -207,7 +207,7 @@
 - [x] 최근 업데이트 시점과 예상 발행 빈도 확인
 - [x] 출처별 우선 수집 방식 결정
 - [x] 실험용 Source Registry 18개 분류
-- [x] 운영 Source Registry 13개 확정
+- [x] 운영 Source Registry 17개 확정
 - [x] 샘플 수집 성공
 
 ### 대상별 조사
@@ -219,6 +219,10 @@
 - [x] JCB
 - [x] EMVCo
 - [x] PCI Security Standards Council
+- [x] 한국은행 지급결제 조사연구자료
+- [x] BIS/CPMI Publications
+- [x] Adyen Online Payments Release Notes
+- [x] Wise Platform API Changelog
 
 ## 12. 범위 변경 원칙
 

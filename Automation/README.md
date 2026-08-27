@@ -271,7 +271,7 @@ PYTHONPATH=skills/hermes-news-automation/scripts/runtime \
 
 현재 테스트 범위:
 
-- American Express AEM JSON, UnionPay JSON, JCB JSON, RSS·Atom, Visa Press·Release Notes HTML 파싱
+- American Express AEM JSON, UnionPay JSON, JCB JSON, RSS 1.0·RSS 2.0·Atom, Visa Press·Release Notes HTML과 Wise changelog JSON 파싱
 - 날짜와 URL 정규화
 - 공식 도메인 검증
 - 안정적인 ID와 멱등성
@@ -306,7 +306,7 @@ frontend와 newsletter는 이 수집 데이터의 소비자다. 수집·정규�
 
 ## 현재 한계
 
-- 공식 출처 9개와 편집 언론 4개를 운영 코드로 승격했다.
+- 공식 출처 13개와 편집 언론 4개를 운영 코드로 승격했다.
 - 출처별 전체 목록을 수집하며 `freshness_days` 기반 증분 요청은 아직 적용하지 않는다.
 - 본문 추출, 관련성 분류와 의미 검증은 Python 코드가 아니라 Hermes Skill과 agent toolset에 의존한다.
 - 같은 `event_key`의 두 번째 문서는 발행하지 않지만 event key 자체는 agent 판단이므로 실제 표본을 이용한 품질 보정이 필요하다.

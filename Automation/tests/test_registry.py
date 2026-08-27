@@ -31,11 +31,14 @@ class RegistryTests(unittest.TestCase):
     def test_project_registry(self) -> None:
         registry = SourceRegistry.load(CONFIG, built_in_adapters())
         self.assertEqual("1.0", registry.schema_version)
-        self.assertEqual(13, len(registry.sources))
+        self.assertEqual(17, len(registry.sources))
         self.assertEqual(
             [
+                "adyen-online-payments-release-notes",
                 "amex-newsroom",
+                "bank-of-korea-payment-research",
                 "banking-dive",
+                "bis-cpmi-publications",
                 "emvco-news",
                 "jcb-press",
                 "payments-dive",
@@ -47,6 +50,7 @@ class RegistryTests(unittest.TestCase):
                 "visa-acceptance-devices-ios-releases",
                 "visa-developer-release-notes",
                 "visa-press",
+                "wise-platform-changelog",
             ],
             sorted(source.id for source in registry.select()),
         )
